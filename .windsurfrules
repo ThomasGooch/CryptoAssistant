@@ -1,0 +1,6 @@
+my testing framework is xUnit with NSubstitute
+my preferred language is C#
+Use Test Driven Development (TDD) approach
+Use SOLID principles
+Use xUnit with NSubstitute
+Do NOT use MediatR nuget package for CRQS implementation
