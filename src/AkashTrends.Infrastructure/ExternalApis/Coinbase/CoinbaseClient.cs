@@ -20,11 +20,18 @@ public class CoinbaseClient : ICoinbaseApiClient
         _httpClient.BaseAddress = new Uri(_options.BaseUrl);
     }
 
-    public async Task<CoinbaseApiResponse> GetPriceAsync(string symbol)
+    public async Task<CoinbasePriceData> GetPriceAsync(string symbol)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"prices/{symbol}-USD/spot");
+            // Remove -USD suffix if it's already there
+            var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
+                ? symbol
+                : $"{symbol}-USD";
+
+            var requestUrl = $"products/{baseSymbol}/ticker";
+            Console.WriteLine($"Requesting: {_httpClient.BaseAddress}{requestUrl}");
+            var response = await _httpClient.GetAsync(requestUrl);
             
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -39,22 +46,22 @@ public class CoinbaseClient : ICoinbaseApiClient
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<CoinbaseApiResponse>(content);
-
-            if (data?.Data == null)
+            Console.WriteLine($"Coinbase API Response: {content}");
+            
+            try
             {
-                throw new ExchangeException("Invalid response from Coinbase API");
-            }
-
-            return new CoinbaseApiResponse
-            {
-                Data = new CoinbasePriceData
+                var data = JsonSerializer.Deserialize<CoinbaseApiResponse>(content);
+                if (data == null)
                 {
-                    Price = data.Data.Price,
-                    Currency = data.Data.Currency,
-                    Timestamp = data.Data.Timestamp
+                    throw new ExchangeException($"Failed to deserialize response: {content}");
                 }
-            };
+
+                return data.ToData();
+            }
+            catch (JsonException ex)
+            {
+                throw new ExchangeException($"Failed to parse Coinbase API response: {content}", ex);
+            }
         }
         catch (HttpRequestException ex)
         {
@@ -66,7 +73,14 @@ public class CoinbaseClient : ICoinbaseApiClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"prices/{symbol}-USD/historic?start={startTime:yyyy-MM-dd}&end={endTime:yyyy-MM-dd}");
+            var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
+                ? symbol
+                : $"{symbol}-USD";
+
+            // Convert timestamps to ISO 8601
+            var start = startTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var end = endTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var response = await _httpClient.GetAsync($"products/{baseSymbol}/candles?start={start}&end={end}&granularity=3600");
             
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -76,19 +90,30 @@ public class CoinbaseClient : ICoinbaseApiClient
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var priceResponse = JsonSerializer.Deserialize<HistoricalPriceResponse>(content);
-
-            if (priceResponse?.Data == null)
+            Console.WriteLine($"Coinbase API Response: {content}");
+            
+            try
             {
-                return new List<CryptoPrice>();
-            }
+                var priceResponse = JsonSerializer.Deserialize<HistoricalPriceResponse>(content);
 
-            var currency = CryptoCurrency.Create(symbol);
-            return priceResponse.Data.Select(p => CryptoPrice.Create(
-                currency,
-                decimal.Parse(p.Price),
-                DateTimeOffset.Parse(p.Time)
-            )).ToList();
+                if (priceResponse?.Data == null || !priceResponse.Data.Any())
+                {
+                    return new List<CryptoPrice>();
+                }
+
+                var currency = CryptoCurrency.Create(symbol);
+                var historicalData = priceResponse.ToHistoricalPriceData();
+
+                return historicalData.Select(p => CryptoPrice.Create(
+                    currency,
+                    decimal.Parse(p.Price),
+                    DateTimeOffset.Parse(p.Time)
+                )).ToList();
+            }
+            catch (JsonException ex)
+            {
+                throw new ExchangeException($"Failed to parse Coinbase API response: {ex.Message}", ex);
+            }
         }
         catch (HttpRequestException ex)
         {

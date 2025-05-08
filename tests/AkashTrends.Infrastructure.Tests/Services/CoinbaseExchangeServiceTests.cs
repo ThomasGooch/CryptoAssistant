@@ -28,18 +28,15 @@ public class CoinbaseExchangeServiceTests
         var price = 50000.00m;
         var timestamp = DateTimeOffset.UtcNow;
 
-        var response = new CoinbaseApiResponse
+        var priceData = new CoinbasePriceData
         {
-            Data = new CoinbasePriceData
-            {
-                Price = price,
-                Currency = "USD",
-                Timestamp = timestamp
-            }
+            Price = price,
+            Currency = "USD",
+            Timestamp = timestamp
         };
 
         _apiClient.GetPriceAsync(symbol)
-            .Returns(Task.FromResult(response));
+            .Returns(Task.FromResult(priceData));
 
         // Act
         var result = await _service.GetCurrentPriceAsync(symbol);
@@ -58,7 +55,7 @@ public class CoinbaseExchangeServiceTests
         var errorMessage = "Invalid symbol";
 
         _apiClient.GetPriceAsync(symbol)
-            .Returns(Task.FromException<CoinbaseApiResponse>(new ExchangeException(errorMessage)));
+            .Returns(Task.FromException<CoinbasePriceData>(new ExchangeException(errorMessage)));
 
         // Act
         var act = () => _service.GetCurrentPriceAsync(symbol);

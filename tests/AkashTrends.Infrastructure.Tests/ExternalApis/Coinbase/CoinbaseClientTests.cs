@@ -48,12 +48,12 @@ public class CoinbaseClientTests
 
         var response = new
         {
-            data = new
-            {
-                amount = price.ToString(),
-                currency = "USD",
-                timestamp = timestamp.ToString("O")
-            }
+            price = price.ToString(),
+            size = "0.01",
+            time = timestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            bid = (price - 100).ToString(),
+            ask = (price + 100).ToString(),
+            volume = "1000.00"
         };
 
         SetupMockResponse(HttpStatusCode.OK, JsonSerializer.Serialize(response));
@@ -62,8 +62,9 @@ public class CoinbaseClientTests
         var result = await _client.GetPriceAsync(symbol);
 
         // Assert
-        result.Data.Price.Should().Be(price);
-        result.Data.Timestamp.Should().BeCloseTo(timestamp, TimeSpan.FromSeconds(1));
+        result.Price.Should().Be(price);
+        result.Currency.Should().Be("USD");
+        result.Timestamp.Should().BeCloseTo(timestamp, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -107,10 +108,13 @@ public class CoinbaseClientTests
         var startTime = DateTimeOffset.UtcNow.AddDays(-1);
         var endTime = DateTimeOffset.UtcNow;
         
+        var timestamp1 = ((DateTimeOffset)startTime.AddHours(1)).ToUnixTimeSeconds();
+        var timestamp2 = ((DateTimeOffset)startTime.AddHours(2)).ToUnixTimeSeconds();
+
         var historicalData = new[]
         {
-            new { price = "49000.00", time = startTime.AddHours(1).ToString("O") },
-            new { price = "50000.00", time = startTime.AddHours(2).ToString("O") }
+            new[] { (decimal)timestamp1, 48000.00m, 49500.00m, 48000.00m, 49000.00m, 100.00m },
+            new[] { (decimal)timestamp2, 49000.00m, 50500.00m, 49000.00m, 50000.00m, 150.00m }
         };
 
         var response = new { data = historicalData };

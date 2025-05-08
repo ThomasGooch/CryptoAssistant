@@ -9,7 +9,7 @@ public interface ICoinbaseApiClient
     /// </summary>
     /// <param name="symbol">The cryptocurrency symbol</param>
     /// <returns>The price response from Coinbase</returns>
-    Task<CoinbaseApiResponse> GetPriceAsync(string symbol);
+    Task<CoinbasePriceData> GetPriceAsync(string symbol);
 
     /// <summary>
     /// Gets historical prices for a cryptocurrency

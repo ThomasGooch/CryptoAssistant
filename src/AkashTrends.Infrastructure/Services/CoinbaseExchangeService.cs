@@ -18,9 +18,9 @@ public class CoinbaseExchangeService : ICryptoExchangeService
     {
         try
         {
-            var response = await _apiClient.GetPriceAsync(symbol);
+            var priceData = await _apiClient.GetPriceAsync(symbol);
             var currency = CryptoCurrency.Create(symbol);
-            return CryptoPrice.Create(currency, response.Data.Price, response.Data.Timestamp);
+            return CryptoPrice.Create(currency, priceData.Price, priceData.Timestamp);
         }
         catch (ExchangeException)
         {
