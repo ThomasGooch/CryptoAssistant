@@ -6,6 +6,8 @@ using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using AkashTrends.API.Hubs;
+using AkashTrends.API.Services;
+using AkashTrends.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +50,8 @@ static string MaskString(string input)
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<ITimeProvider, CryptoTimeProvider>();
+builder.Services.AddRealTimeServices();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
