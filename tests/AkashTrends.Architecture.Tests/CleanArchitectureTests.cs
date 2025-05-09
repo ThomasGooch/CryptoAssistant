@@ -116,12 +116,51 @@ public class CleanArchitectureTests
         Assert.True(typeof(Core.Services.ICryptoExchangeService) != null, "Interfaces should exist");
     }
 
-    // Simplified test for domain entity immutability
     [Fact]
     public void DomainEntities_Should_Be_Immutable()
     {
-        // For now, we'll just check that our domain entities exist
-        Assert.True(typeof(Core.Domain.CryptoPrice) != null, "Domain entities should exist");
+        // Find all domain entities
+        var domainEntities = Types.InAssembly(typeof(Core.Domain.CryptoPrice).Assembly)
+            .That()
+            .ResideInNamespace($"{DomainNamespace}.Domain")
+            .And()
+            .AreClasses()
+            .And()
+            .AreNotAbstract()
+            .GetTypes();
+
+        var mutableEntities = new List<string>();
+        
+        foreach (var entity in domainEntities)
+        {
+            // Skip test classes
+            if (entity.Name.EndsWith("Tests"))
+                continue;
+                
+            // Check for public setters
+            var propertiesWithPublicSetters = entity.GetProperties()
+                .Where(p => p.SetMethod != null && p.SetMethod.IsPublic)
+                .Select(p => $"{entity.Name}.{p.Name}")
+                .ToList();
+                
+            if (propertiesWithPublicSetters.Any())
+            {
+                mutableEntities.Add($"{entity.Name} has public setters: {string.Join(", ", propertiesWithPublicSetters)}");
+            }
+            
+            // Check for non-readonly fields
+            var nonReadonlyFields = entity.GetFields()
+                .Where(f => !f.IsInitOnly && !f.IsLiteral && !f.IsPrivate)
+                .Select(f => $"{entity.Name}.{f.Name}")
+                .ToList();
+                
+            if (nonReadonlyFields.Any())
+            {
+                mutableEntities.Add($"{entity.Name} has non-readonly fields: {string.Join(", ", nonReadonlyFields)}");
+            }
+        }
+        
+        Assert.Empty(mutableEntities);
     }
 
     [Fact]
