@@ -1,8 +1,8 @@
-# AkashTrends - Crypto Trading Analysis Platform
+# AkashTrends - Real-Time Crypto Trading Analysis Platform
 
 ## Overview
 
-AkashTrends is a sophisticated cryptocurrency trading analysis platform that helps traders make informed decisions through real-time market data analysis and technical indicators.
+AkashTrends is a sophisticated cryptocurrency trading analysis platform that helps traders make informed decisions through real-time market data analysis and technical indicators. Built with a clean architecture approach and following SOLID principles, this MVP delivers essential trading analysis tools with a focus on reliability and performance.
 
 ### Why AkashTrends?
 
@@ -11,36 +11,37 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 - **Clean Architecture**: Built with maintainability and testability in mind
 - **Modern Tech Stack**: Leverages the latest .NET 9 features and React with TypeScript
 
-## Current Implementation Status
+## MVP Implementation Status
 
-### Completed Features
-- **Real-time Price Updates**
+### Core Features
+- **Real-time Price Monitoring**
   - Background service for periodic price updates
-  - SignalR integration for broadcasting
+  - SignalR integration for real-time broadcasting
   - Symbol subscription management
   - Error handling and logging
+  - Coinbase API integration
 
-- **Technical Indicators**
+- **Technical Analysis Indicators**
   - Simple Moving Average (SMA)
   - Exponential Moving Average (EMA)
   - Relative Strength Index (RSI)
   - Bollinger Bands
   - Stochastic Oscillator
   - Factory pattern for indicator creation
-  - Strong input validation
+  - Strong input validation and error handling
+
+- **Historical Data Analysis**
+  - Historical price retrieval
+  - Indicator calculation on historical data
+  - Data validation and processing
 
 - **Multiple Timeframe Support**
   - Various timeframes from minute to week
   - Timeframe-specific calculations
   - Proper time range management
 
-- **Coinbase API Integration**
-  - Historical price retrieval
-  - Current price monitoring
-  - Error handling
-
-- **Testing**
-  - Comprehensive test coverage (100+ passing tests)
+- **Testing & Quality Assurance**
+  - Comprehensive test coverage across all layers
   - TDD approach consistently applied
   - Mock-based testing with NSubstitute
 
@@ -67,21 +68,38 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
   - Testability at all layers
   - Proper use of interfaces for dependency inversion
 
-### In Progress
-- API documentation with Swagger/OpenAPI
-- Performance optimizations
-- Caching layer for historical data
+### Current Status
+- **API Layer**: 
+  - REST endpoints for price and indicators implemented
+  - Clean controller design with dependency injection
+  - Minor async optimization needed
+
+- **Infrastructure**:
+  - External API integration complete
+  - Dependency injection configuration in place
+  - Service implementations functional
+
+- **Core Domain**:
+  - CryptoPrice: Immutable value object with validation
+  - Technical Indicators: All major indicators implemented
+  - IIndicator interface with Calculate method
+  - Factory pattern for indicator creation
+
+- **Testing**:
+  - All tests passing
+  - Coverage across all layers
+  - Minor test warning to fix
 
 ### Roadmap
 - **Short-term Priorities**
+  - Complete API documentation with Swagger/OpenAPI
   - Implement caching for historical prices and indicator results
   - Improve error resilience with retry policies and circuit breakers
-  - Complete API documentation with Swagger/OpenAPI
 
 - **Medium-term Goals**
   - Add persistence layer for historical data and user preferences
   - Parallelize indicator calculations for performance
-  - Create React components for charts and indicators
+  - Create React/TypeScript frontend with charts and indicators
 
 - **Long-term Vision**
   - Support for multiple cryptocurrency exchanges
@@ -90,7 +108,7 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 
 ## Technology Stack
 
-### Backend
+### Backend (Implemented)
 - **.NET 9**: Latest features and performance improvements
 - **C#**: Primary programming language
 - **Clean Architecture**: Separation of concerns and maintainability
@@ -98,7 +116,7 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 - **Swagger/OpenAPI**: API documentation and testing
 - **SignalR**: Real-time updates
 
-### Frontend (Coming Soon)
+### Frontend (Planned)
 - **React**: Modern UI framework
 - **TypeScript**: Type-safe development
 - **Material-UI**: Clean, professional design
