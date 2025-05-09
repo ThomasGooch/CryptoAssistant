@@ -10,22 +10,86 @@ public class CleanArchitectureTests
     private const string InfrastructureNamespace = "AkashTrends.Infrastructure";
     private const string ApiNamespace = "AkashTrends.API";
 
-    // Simplified test for domain layer independence
     [Fact]
     public void Domain_Should_Not_DependOn_OtherLayers()
     {
-        // For now, we'll just check that our domain layer exists
-        Assert.True(typeof(Core.Domain.CryptoPrice) != null, "Domain layer should exist");
+        // Arrange
+        var otherLayers = new[]
+        {
+            InfrastructureNamespace,
+            ApiNamespace
+        };
+
+        // Act
+        var coreAssembly = typeof(Core.Domain.CryptoPrice).Assembly;
+        var coreTypes = coreAssembly.GetTypes()
+            .Where(t => t.Namespace != null && t.Namespace.StartsWith(DomainNamespace))
+            .ToList();
+
+        var forbiddenDependencies = new List<string>();
+
+        foreach (var type in coreTypes)
+        {
+            var referencedTypes = type.GetMethods()
+                .SelectMany(m => m.GetParameters())
+                .Select(p => p.ParameterType)
+                .Union(type.GetProperties()
+                    .Select(p => p.PropertyType))
+                .Union(type.GetFields()
+                    .Select(f => f.FieldType))
+                .Where(t => t.Namespace != null);
+
+            foreach (var refType in referencedTypes)
+            {
+                foreach (var forbiddenLayer in otherLayers)
+                {
+                    if (refType.Namespace.StartsWith(forbiddenLayer))
+                    {
+                        forbiddenDependencies.Add($"{type.FullName} depends on {refType.FullName}");
+                    }
+                }
+            }
+        }
+
+        // Assert
+        Assert.Empty(forbiddenDependencies);
     }
 
     // Note: We don't have an Application layer in our current structure
 
-    // Simplified test for infrastructure layer independence
     [Fact]
     public void Infrastructure_Should_Not_DependOn_Api()
     {
-        // For now, we'll just check that our infrastructure layer exists
-        Assert.True(typeof(Infrastructure.Services.CryptoTimeProvider) != null, "Infrastructure layer should exist");
+        // Act
+        var infrastructureAssembly = typeof(Infrastructure.Services.CryptoTimeProvider).Assembly;
+        var infrastructureTypes = infrastructureAssembly.GetTypes()
+            .Where(t => t.Namespace != null && t.Namespace.StartsWith(InfrastructureNamespace))
+            .ToList();
+
+        var forbiddenDependencies = new List<string>();
+
+        foreach (var type in infrastructureTypes)
+        {
+            var referencedTypes = type.GetMethods()
+                .SelectMany(m => m.GetParameters())
+                .Select(p => p.ParameterType)
+                .Union(type.GetProperties()
+                    .Select(p => p.PropertyType))
+                .Union(type.GetFields()
+                    .Select(f => f.FieldType))
+                .Where(t => t.Namespace != null);
+
+            foreach (var refType in referencedTypes)
+            {
+                if (refType.Namespace != null && refType.Namespace.StartsWith(ApiNamespace))
+                {
+                    forbiddenDependencies.Add($"{type.FullName} depends on {refType.FullName}");
+                }
+            }
+        }
+
+        // Assert
+        Assert.Empty(forbiddenDependencies);
     }
 
     // Simplified test for service classes
