@@ -117,7 +117,7 @@ public class PriceUpdateHubTests
         var timeframe = Timeframe.Hour;
 
         // Act
-        await _hub.SubscribeToIndicator(symbol, indicatorType, period, timeframe);
+        await _hub.SubscribeToIndicatorWithTimeframe(symbol, indicatorType, period, timeframe);
 
         // Assert
         await _mockIndicatorService.Received(1)
@@ -168,7 +168,7 @@ public class PriceUpdateHubTests
         var invalidTimeframe = (Timeframe)999;
 
         // Act
-        var act = () => _hub.SubscribeToIndicator(symbol, indicatorType, period, invalidTimeframe);
+        var act = () => _hub.SubscribeToIndicatorWithTimeframe(symbol, indicatorType, period, invalidTimeframe);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>();
@@ -200,7 +200,7 @@ public class PriceUpdateHubTests
         var timeframe = Timeframe.Hour;
 
         // Act
-        await _hub.UnsubscribeFromIndicator(symbol, indicatorType, timeframe);
+        await _hub.UnsubscribeFromIndicatorWithTimeframe(symbol, indicatorType, timeframe);
 
         // Assert
         await _mockIndicatorService.Received(1)

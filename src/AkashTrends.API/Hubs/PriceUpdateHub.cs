@@ -52,7 +52,7 @@ public class PriceUpdateHub : Hub
         await _indicatorService.UpdateIndicatorsAsync();
     }
 
-    public async Task SubscribeToIndicator(string symbol, IndicatorType indicatorType, int period, Timeframe timeframe)
+    public async Task SubscribeToIndicatorWithTimeframe(string symbol, IndicatorType indicatorType, int period, Timeframe timeframe)
     {
         if (string.IsNullOrWhiteSpace(symbol))
         {
@@ -79,7 +79,7 @@ public class PriceUpdateHub : Hub
         await _indicatorService.UnsubscribeFromIndicator(symbol, indicatorType);
     }
 
-    public async Task UnsubscribeFromIndicator(string symbol, IndicatorType indicatorType, Timeframe timeframe)
+    public async Task UnsubscribeFromIndicatorWithTimeframe(string symbol, IndicatorType indicatorType, Timeframe timeframe)
     {
         await _indicatorService.UnsubscribeFromIndicator(symbol, indicatorType, timeframe);
     }

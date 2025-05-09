@@ -116,18 +116,18 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 - **Swagger/OpenAPI**: API documentation and testing
 - **SignalR**: Real-time updates
 
-### Frontend (Planned)
+### Frontend (In Progress)
 - **React**: Modern UI framework
 - **TypeScript**: Type-safe development
-- **Material-UI**: Clean, professional design
-- **React Query**: Efficient data fetching
-- **React Testing Library**: Component testing
+- **Vite**: Fast development and optimized builds
+- **Tailwind CSS**: Utility-first styling
+- **SignalR Client**: Real-time updates from backend
 
 ## Project Structure
 
 ```
 AkashTrends/
-├── src/
+├── src/                          # Backend source code
 │   ├── AkashTrends.API/           # Web API and controllers
 │   │   ├── Controllers/           # API endpoints
 │   │   ├── Hubs/                  # SignalR hubs
@@ -143,10 +143,28 @@ AkashTrends/
 │   └── AkashTrends.Infrastructure/ # External integrations
 │       ├── ExternalApis/          # External API clients
 │       └── Services/              # Service implementations
-└── tests/
-    ├── AkashTrends.API.Tests/     # API integration tests
-    ├── AkashTrends.Core.Tests/    # Core unit tests
-    └── AkashTrends.Infrastructure.Tests/ # Infrastructure tests
+├── client/                       # Frontend source code (React/TypeScript)
+│   ├── public/                    # Static assets
+│   ├── src/                       # React-TypeScript source
+│   │   ├── components/            # UI components
+│   │   │   ├── common/            # Shared components
+│   │   │   ├── crypto/            # Cryptocurrency-specific components
+│   │   │   └── indicators/        # Technical indicator components
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── services/              # API service clients
+│   │   ├── store/                 # State management
+│   │   ├── types/                 # TypeScript type definitions
+│   │   └── utils/                 # Utility functions
+│   ├── tailwind.config.js         # Tailwind CSS configuration
+│   ├── vite.config.ts             # Vite configuration
+│   └── package.json               # Frontend dependencies
+├── tests/                        # Backend tests
+│   ├── AkashTrends.API.Tests/     # API integration tests
+│   ├── AkashTrends.Core.Tests/    # Core unit tests
+│   └── AkashTrends.Infrastructure.Tests/ # Infrastructure tests
+└── scripts/                      # Build and deployment scripts
+    ├── build-all.ps1              # Script to build both frontend and backend
+    └── setup-dev.ps1              # Development environment setup
 ```
 
 ## Getting Started
@@ -163,23 +181,53 @@ AkashTrends/
    cd AkashTrends
    ```
 
-2. Install dependencies:
+2. Use the setup script to install all dependencies:
+   ```powershell
+   ./scripts/setup-dev.ps1
+   ```
+   
+   Or manually install dependencies:
    ```bash
+   # Backend dependencies
    dotnet restore
+   
+   # Frontend dependencies
+   cd client
+   npm install
+   cd ..
    ```
 
 3. Configure Coinbase API:
    - Copy `appsettings.example.json` to `appsettings.json`
    - Add your Coinbase API credentials
 
-4. Run the application:
+4. Run the backend:
    ```bash
    dotnet run --project src/AkashTrends.API
    ```
 
-5. Access the API:
+5. Run the frontend development server (in a separate terminal):
+   ```bash
+   cd client
+   npm run dev
+   ```
+
+6. Access the application:
+   - Frontend: `http://localhost:5173`
    - Swagger UI: `https://localhost:5001/swagger`
    - API Base URL: `https://localhost:5001/api`
+
+### Building for Production
+
+Use the build script to build both frontend and backend:
+```powershell
+./scripts/build-all.ps1
+```
+
+This will:
+1. Build the React frontend with Vite
+2. Copy the built frontend to the .NET API's wwwroot folder
+3. Build the .NET solution
 
 ## Development
 

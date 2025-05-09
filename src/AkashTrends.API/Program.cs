@@ -48,6 +48,18 @@ static string MaskString(string input)
     return $"{input.Substring(0, 4)}...{input.Substring(input.Length - 4)}";
 }
 
+// Add CORS support
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ITimeProvider, CryptoTimeProvider>();
@@ -65,6 +77,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use CORS middleware
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<PriceUpdateHub>("/hubs/price");
