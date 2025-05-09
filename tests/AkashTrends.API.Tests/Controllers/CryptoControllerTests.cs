@@ -66,20 +66,28 @@ public class CryptoControllerTests
     }
 
     [Fact]
-    public async Task Should_ReturnIndicatorValue_When_ParametersAreValid()
+    public async Task GetIndicator_Should_ReturnIndicatorValue_When_ValidInput()
     {
         // Arrange
         var symbol = "BTC";
         var type = IndicatorType.SimpleMovingAverage;
         var period = 14;
-        var prices = new List<CryptoPrice>();
-        var indicatorValue = 45000.00m;
+        var startTime = DateTimeOffset.UtcNow.AddDays(-period);
+        var endTime = DateTimeOffset.UtcNow;
+
+        var prices = Enumerable.Range(0, period)
+            .Select(i => CryptoPrice.Create(
+                CryptoCurrency.Create(symbol),
+                50000m + i * 100m,
+                startTime.AddDays(i)))
+            .ToList();
 
         _exchangeService.GetHistoricalPricesAsync(symbol, Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
             .Returns(prices);
 
         var indicator = Substitute.For<IIndicator>();
-        indicator.Calculate(prices).Returns(new IndicatorResult(indicatorValue, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow));
+        indicator.Calculate(Arg.Any<IReadOnlyList<CryptoPrice>>())
+            .Returns(new IndicatorResult(51000m, startTime, endTime));
 
         _indicatorFactory.CreateIndicator(type, period)
             .Returns(indicator);
@@ -90,19 +98,34 @@ public class CryptoControllerTests
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var response = okResult.Value.Should().BeOfType<IndicatorResponse>().Subject;
-        
+
         response.Symbol.Should().Be(symbol);
         response.Type.Should().Be(type);
-        response.Value.Should().Be(indicatorValue);
+        response.Value.Should().Be(51000m);
+        response.StartTime.Should().Be(startTime);
+        response.EndTime.Should().Be(endTime);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidSymbol(string symbol)
+    {
+        // Act
+        var result = await _controller.GetIndicator(symbol, IndicatorType.SimpleMovingAverage, 14);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task Should_ReturnBadRequest_When_PeriodIsInvalid(int invalidPeriod)
+    public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidPeriod(int period)
     {
         // Act
-        var result = await _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, invalidPeriod);
+        var result = await _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, period);
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();

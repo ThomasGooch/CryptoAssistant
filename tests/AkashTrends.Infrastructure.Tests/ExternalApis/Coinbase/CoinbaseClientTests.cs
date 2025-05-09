@@ -104,36 +104,77 @@ public class CoinbaseClientTests
         var symbol = "BTC";
         var startTime = DateTimeOffset.UtcNow.AddDays(-1);
         var endTime = DateTimeOffset.UtcNow;
-        
-        var timestamp1 = ((DateTimeOffset)startTime.AddHours(1)).ToUnixTimeSeconds();
-        var timestamp2 = ((DateTimeOffset)startTime.AddHours(2)).ToUnixTimeSeconds();
 
-        var historicalData = new[]
+        // Coinbase candle format: [timestamp, low, high, open, close, volume]
+        var candleData = new[]
         {
-            new[] { (decimal)timestamp1, 48000.00m, 49500.00m, 48000.00m, 49000.00m, 100.00m },
-            new[] { (decimal)timestamp2, 49000.00m, 50500.00m, 49000.00m, 50000.00m, 150.00m }
+            new[] { startTime.ToUnixTimeSeconds(), 49000.00m, 51000.00m, 49500.00m, 50000.00m, 100.00m },
+            new[] { endTime.ToUnixTimeSeconds(), 50000.00m, 52000.00m, 50500.00m, 51000.00m, 200.00m }
         };
 
-        var response = new { data = historicalData };
-
-        SetupMockResponse(HttpStatusCode.OK, JsonSerializer.Serialize(response));
+        SetupMockResponse(HttpStatusCode.OK, JsonSerializer.Serialize(candleData));
 
         // Act
         var result = await _client.GetHistoricalPricesAsync(symbol, startTime, endTime);
 
         // Assert
         result.Should().HaveCount(2);
-        result[0].Value.Should().Be(49000.00m);
-        result[1].Value.Should().Be(50000.00m);
+        result[0].Value.Should().Be(50000.00m);
+        result[0].Timestamp.Should().BeCloseTo(startTime, TimeSpan.FromSeconds(1));
+        result[1].Value.Should().Be(51000.00m);
+        result[1].Timestamp.Should().BeCloseTo(endTime, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task Should_HandleEmptyResponse_When_GetHistoricalPrices()
+    {
+        // Arrange
+        var symbol = "BTC";
+        var startTime = DateTimeOffset.UtcNow.AddDays(-1);
+        var endTime = DateTimeOffset.UtcNow;
+
+        SetupMockResponse(HttpStatusCode.OK, JsonSerializer.Serialize(Array.Empty<decimal[]>()));
+
+        // Act
+        var result = await _client.GetHistoricalPricesAsync(symbol, startTime, endTime);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_HandleInvalidCandle_When_GetHistoricalPrices()
+    {
+        // Arrange
+        var symbol = "BTC";
+        var startTime = DateTimeOffset.UtcNow.AddDays(-1);
+        var endTime = DateTimeOffset.UtcNow;
+
+        // Invalid candle with missing data
+        var candleData = new[]
+        {
+            new[] { startTime.ToUnixTimeSeconds(), 49000.00m, 51000.00m }, // Invalid - missing data
+            new[] { endTime.ToUnixTimeSeconds(), 50000.00m, 52000.00m, 50500.00m, 51000.00m, 200.00m } // Valid
+        };
+
+        SetupMockResponse(HttpStatusCode.OK, JsonSerializer.Serialize(candleData));
+
+        // Act
+        var result = await _client.GetHistoricalPricesAsync(symbol, startTime, endTime);
+
+        // Assert
+        result.Should().HaveCount(1); // Only the valid candle should be included
+        result[0].Value.Should().Be(51000.00m);
+        result[0].Timestamp.Should().BeCloseTo(endTime, TimeSpan.FromSeconds(1));
     }
 
     private void SetupMockResponse(HttpStatusCode statusCode, string content)
     {
-        var response = new HttpResponseMessage(statusCode)
+        var responseMessage = new HttpResponseMessage(statusCode)
         {
             Content = new StringContent(content)
         };
-        _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(response));
+        _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(responseMessage));
         _httpClient = new HttpClient(_handler);
         _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor);
     }
