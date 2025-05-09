@@ -11,26 +11,88 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 - **Clean Architecture**: Built with maintainability and testability in mind
 - **Modern Tech Stack**: Leverages the latest .NET 9 features and React with TypeScript
 
-## Features
+## Current Implementation Status
 
-### Technical Indicators
-- Simple Moving Average (SMA)
-- Exponential Moving Average (EMA)
-- Relative Strength Index (RSI)
-- Bollinger Bands
-- Stochastic Oscillator
+### Completed Features
+- **Real-time Price Updates**
+  - Background service for periodic price updates
+  - SignalR integration for broadcasting
+  - Symbol subscription management
+  - Error handling and logging
 
-### Core Capabilities
-- Real-time price monitoring via Coinbase API
-- Historical price analysis
-- Multiple timeframe support
-- Clean, modern REST API
-- Swagger documentation
+- **Technical Indicators**
+  - Simple Moving Average (SMA)
+  - Exponential Moving Average (EMA)
+  - Relative Strength Index (RSI)
+  - Bollinger Bands
+  - Stochastic Oscillator
+  - Factory pattern for indicator creation
+  - Strong input validation
+
+- **Multiple Timeframe Support**
+  - Various timeframes from minute to week
+  - Timeframe-specific calculations
+  - Proper time range management
+
+- **Coinbase API Integration**
+  - Historical price retrieval
+  - Current price monitoring
+  - Error handling
+
+- **Testing**
+  - Comprehensive test coverage (100+ passing tests)
+  - TDD approach consistently applied
+  - Mock-based testing with NSubstitute
+
+### Development Approach
+- **Test-Driven Development (TDD)**
+  - Write tests first, then implement features
+  - Ensure all code is covered by tests
+  - Refactor with confidence
+  - Using xUnit for test framework
+  - NSubstitute for mocking dependencies
+  - Tests organized by feature and layer
+
+- **SOLID Principles**
+  - **S**ingle Responsibility: Each class has one job
+  - **O**pen/Closed: Open for extension, closed for modification
+  - **L**iskov Substitution: Proper use of interfaces and inheritance
+  - **I**nterface Segregation: Focused interfaces with specific purposes
+  - **D**ependency Inversion: High-level modules depend on abstractions
+
+- **Clean Architecture**
+  - Clear separation of concerns
+  - Domain-centric approach
+  - Independence from frameworks and external concerns
+  - Testability at all layers
+  - Proper use of interfaces for dependency inversion
+
+### In Progress
+- API documentation with Swagger/OpenAPI
+- Performance optimizations
+- Caching layer for historical data
+
+### Roadmap
+- **Short-term Priorities**
+  - Implement caching for historical prices and indicator results
+  - Improve error resilience with retry policies and circuit breakers
+  - Complete API documentation with Swagger/OpenAPI
+
+- **Medium-term Goals**
+  - Add persistence layer for historical data and user preferences
+  - Parallelize indicator calculations for performance
+  - Create React components for charts and indicators
+
+- **Long-term Vision**
+  - Support for multiple cryptocurrency exchanges
+  - Machine learning for pattern recognition
+  - User customization for indicators and strategies
 
 ## Technology Stack
 
 ### Backend
 - **.NET 9**: Latest features and performance improvements
+- **C#**: Primary programming language
 - **Clean Architecture**: Separation of concerns and maintainability
 - **xUnit & NSubstitute**: Comprehensive test coverage
 - **Swagger/OpenAPI**: API documentation and testing
@@ -50,15 +112,23 @@ AkashTrends/
 ├── src/
 │   ├── AkashTrends.API/           # Web API and controllers
 │   │   ├── Controllers/           # API endpoints
-│   │   └── Models/               # API request/response models
-│   ├── AkashTrends.Core/         # Domain layer
-│   │   ├── Analysis/            # Technical indicators
-│   │   ├── Domain/             # Domain entities
-│   │   └── Services/           # Core services
+│   │   ├── Hubs/                  # SignalR hubs
+│   │   ├── Services/              # Background services
+│   │   └── Models/                # API request/response models
+│   ├── AkashTrends.Application/   # Application services
+│   ├── AkashTrends.Core/          # Domain layer
+│   │   ├── Analysis/              # Technical indicators
+│   │   │   ├── Indicators/        # Indicator implementations
+│   │   │   └── Timeframe.cs       # Timeframe definitions
+│   │   ├── Domain/                # Domain entities
+│   │   └── Services/              # Core service interfaces
 │   └── AkashTrends.Infrastructure/ # External integrations
+│       ├── ExternalApis/          # External API clients
+│       └── Services/              # Service implementations
 └── tests/
     ├── AkashTrends.API.Tests/     # API integration tests
-    └── AkashTrends.Core.Tests/    # Unit tests
+    ├── AkashTrends.Core.Tests/    # Core unit tests
+    └── AkashTrends.Infrastructure.Tests/ # Infrastructure tests
 ```
 
 ## Getting Started
@@ -104,6 +174,12 @@ dotnet test
 - `GET /api/crypto/price/{symbol}` - Get current price
 - `GET /api/crypto/indicator/{symbol}` - Calculate technical indicator
 - `GET /api/crypto/indicators` - List available indicators
+
+### SignalR Endpoints
+- `hub/priceupdate` - Real-time price and indicator updates
+  - `SubscribeToSymbol(symbol)` - Subscribe to price updates
+  - `SubscribeToIndicator(symbol, indicatorType, period)` - Subscribe to indicator
+  - `SubscribeToIndicator(symbol, indicatorType, period, timeframe)` - Subscribe with timeframe
 
 ## Contributing
 
