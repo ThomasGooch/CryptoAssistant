@@ -1,4 +1,5 @@
 using AkashTrends.API.Hubs;
+using AkashTrends.Core.Analysis;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -29,6 +30,11 @@ public class IndicatorUpdateService : IIndicatorUpdateService
 
     public Task SubscribeToIndicator(string symbol, IndicatorType indicatorType, int period)
     {
+        return SubscribeToIndicator(symbol, indicatorType, period, Timeframe.Hour);
+    }
+
+    public Task SubscribeToIndicator(string symbol, IndicatorType indicatorType, int period, Timeframe timeframe)
+    {
         if (string.IsNullOrWhiteSpace(symbol))
         {
             throw new ArgumentException("Symbol cannot be empty", nameof(symbol));
@@ -39,16 +45,21 @@ public class IndicatorUpdateService : IIndicatorUpdateService
             throw new ArgumentException("Period must be greater than 0", nameof(period));
         }
 
+        if (!Enum.IsDefined(typeof(Timeframe), timeframe))
+        {
+            throw new ArgumentException($"Invalid timeframe: {timeframe}", nameof(timeframe));
+        }
+
         if (!_subscriptions.TryGetValue(symbol, out var indicators))
         {
             indicators = new List<IndicatorSubscription>();
             _subscriptions[symbol] = indicators;
         }
 
-        // Check if this indicator is already subscribed
-        if (!indicators.Any(i => i.Type == indicatorType && i.Period == period))
+        // Check if this indicator is already subscribed with this timeframe
+        if (!indicators.Any(i => i.Type == indicatorType && i.Period == period && i.Timeframe == timeframe))
         {
-            indicators.Add(new IndicatorSubscription(indicatorType, period));
+            indicators.Add(new IndicatorSubscription(indicatorType, period, timeframe));
         }
 
         return Task.CompletedTask;
@@ -59,6 +70,22 @@ public class IndicatorUpdateService : IIndicatorUpdateService
         if (_subscriptions.TryGetValue(symbol, out var indicators))
         {
             indicators.RemoveAll(i => i.Type == indicatorType);
+            
+            // Remove symbol if no indicators are subscribed
+            if (indicators.Count == 0)
+            {
+                _subscriptions.Remove(symbol);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task UnsubscribeFromIndicator(string symbol, IndicatorType indicatorType, Timeframe timeframe)
+    {
+        if (_subscriptions.TryGetValue(symbol, out var indicators))
+        {
+            indicators.RemoveAll(i => i.Type == indicatorType && i.Timeframe == timeframe);
             
             // Remove symbol if no indicators are subscribed
             if (indicators.Count == 0)
@@ -84,40 +111,53 @@ public class IndicatorUpdateService : IIndicatorUpdateService
             {
                 try
                 {
-                    // Get historical prices for the indicator period
+                    // Get historical prices for the indicator period, adjusted for timeframe
                     var endTime = DateTimeOffset.UtcNow;
-                    var startTime = endTime.AddDays(-indicator.Period);
+                    var startTime = CalculateStartTime(endTime, indicator.Period, indicator.Timeframe);
                     var prices = await _exchangeService.GetHistoricalPricesAsync(symbol, startTime, endTime);
 
                     // Calculate indicator
                     var calculatedIndicator = _indicatorFactory.CreateIndicator(indicator.Type, indicator.Period);
                     var result = calculatedIndicator.Calculate(prices);
 
-                    // Broadcast the result
+                    // Broadcast the result with timeframe information
                     await _hubContext.Clients.All.SendAsync(
                         "ReceiveIndicatorUpdate",
                         symbol,
                         indicator.Type,
-                        result.Value);
+                        result.Value,
+                        indicator.Timeframe);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to calculate indicator {IndicatorType} for symbol {Symbol}", 
-                        indicator.Type, symbol);
+                    _logger.LogError(ex, "Failed to calculate indicator {IndicatorType} for symbol {Symbol} with timeframe {Timeframe}", 
+                        indicator.Type, symbol, indicator.Timeframe);
                 }
             }
         }
+    }
+
+    private DateTimeOffset CalculateStartTime(DateTimeOffset endTime, int period, Timeframe timeframe)
+    {
+        // Calculate how far back we need to go based on the timeframe and period
+        // Add some buffer to ensure we have enough data (2x the period)
+        int bufferMultiplier = 2;
+        int minutesToSubtract = (int)timeframe * period * bufferMultiplier;
+        
+        return endTime.AddMinutes(-minutesToSubtract);
     }
 
     private class IndicatorSubscription
     {
         public IndicatorType Type { get; }
         public int Period { get; }
+        public Timeframe Timeframe { get; }
 
-        public IndicatorSubscription(IndicatorType type, int period)
+        public IndicatorSubscription(IndicatorType type, int period, Timeframe timeframe = Timeframe.Hour)
         {
             Type = type;
             Period = period;
+            Timeframe = timeframe;
         }
     }
 }
