@@ -17,6 +17,7 @@ public class CoinbaseClientTests
     private HttpClient _httpClient;
     private readonly CoinbaseApiOptions _options;
     private readonly IOptionsMonitor<CoinbaseApiOptions> _optionsMonitor;
+    private readonly ICoinbaseAuthenticator _authenticator;
     private CoinbaseClient _client;
 
     public CoinbaseClientTests()
@@ -27,15 +28,14 @@ public class CoinbaseClientTests
         
         _options = new CoinbaseApiOptions
         {
-            BaseUrl = "https://api.coinbase.com/v2/",
-            ApiKey = "test-key",
-            ApiSecret = "test-secret"
+            BaseUrl = "https://api.exchange.coinbase.com/"
         };
         
         _optionsMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
         _optionsMonitor.CurrentValue.Returns(_options);
 
-        _client = new CoinbaseClient(_httpClient, _optionsMonitor);
+        _authenticator = Substitute.For<ICoinbaseAuthenticator>();
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor);
     }
 
     [Fact]
@@ -49,10 +49,7 @@ public class CoinbaseClientTests
         var response = new
         {
             price = price.ToString(),
-            size = "0.01",
             time = timestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-            bid = (price - 100).ToString(),
-            ask = (price + 100).ToString(),
             volume = "1000.00"
         };
 
@@ -136,10 +133,8 @@ public class CoinbaseClientTests
         {
             Content = new StringContent(content)
         };
-
         _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(response));
-        _httpClient.Dispose();
         _httpClient = new HttpClient(_handler);
-        _client = new CoinbaseClient(_httpClient, _optionsMonitor);
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor);
     }
 }

@@ -56,7 +56,7 @@ public class CryptoControllerTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public async Task Should_ReturnBadRequest_When_SymbolIsInvalid(string invalidSymbol)
+    public async Task Should_ReturnBadRequest_When_SymbolIsInvalid(string? invalidSymbol)
     {
         // Act
         var result = await _controller.GetPrice(invalidSymbol);
@@ -109,7 +109,7 @@ public class CryptoControllerTests
     }
 
     [Fact]
-    public async Task Should_ReturnAllIndicators_When_GetAvailableIndicatorsCalled()
+    public void Should_ReturnAllIndicators_When_GetAvailableIndicatorsCalled()
     {
         // Arrange
         var indicators = new[]
@@ -122,7 +122,7 @@ public class CryptoControllerTests
             .Returns(indicators);
 
         // Act
-        var result = await _controller.GetAvailableIndicators();
+        var result = _controller.GetAvailableIndicators();
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;

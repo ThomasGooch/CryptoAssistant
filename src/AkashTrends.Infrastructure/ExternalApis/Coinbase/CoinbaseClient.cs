@@ -9,22 +9,24 @@ namespace AkashTrends.Infrastructure.ExternalApis.Coinbase;
 public class CoinbaseClient : ICoinbaseApiClient
 {
     private readonly HttpClient _httpClient;
-    private readonly CoinbaseApiOptions _options;
+    private readonly ICoinbaseAuthenticator _authenticator;
 
     public CoinbaseClient(
         HttpClient httpClient,
+        ICoinbaseAuthenticator authenticator,
         IOptionsMonitor<CoinbaseApiOptions> options)
     {
         _httpClient = httpClient;
-        _options = options.CurrentValue;
-        _httpClient.BaseAddress = new Uri(_options.BaseUrl);
+        _authenticator = authenticator;
+        _httpClient.BaseAddress = new Uri(options.CurrentValue.BaseUrl);
+        
+        _authenticator.ConfigureHttpClient(_httpClient);
     }
 
     public async Task<CoinbasePriceData> GetPriceAsync(string symbol)
     {
         try
         {
-            // Remove -USD suffix if it's already there
             var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
                 ? symbol
                 : $"{symbol}-USD";
@@ -77,7 +79,6 @@ public class CoinbaseClient : ICoinbaseApiClient
                 ? symbol
                 : $"{symbol}-USD";
 
-            // Convert timestamps to ISO 8601
             var start = startTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
             var end = endTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
             var response = await _httpClient.GetAsync($"products/{baseSymbol}/candles?start={start}&end={end}&granularity=3600");
@@ -91,11 +92,10 @@ public class CoinbaseClient : ICoinbaseApiClient
 
             var content = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Coinbase API Response: {content}");
-            
+
             try
             {
                 var priceResponse = JsonSerializer.Deserialize<HistoricalPriceResponse>(content);
-
                 if (priceResponse?.Data == null || !priceResponse.Data.Any())
                 {
                     return new List<CryptoPrice>();
@@ -112,7 +112,7 @@ public class CoinbaseClient : ICoinbaseApiClient
             }
             catch (JsonException ex)
             {
-                throw new ExchangeException($"Failed to parse Coinbase API response: {ex.Message}", ex);
+                throw new ExchangeException($"Failed to parse historical price data: {content}", ex);
             }
         }
         catch (HttpRequestException ex)

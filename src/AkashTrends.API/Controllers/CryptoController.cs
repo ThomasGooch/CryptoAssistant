@@ -74,12 +74,39 @@ public class CryptoController : ControllerBase
     }
 
     [HttpGet("indicators")]
-    public async Task<ActionResult<IndicatorTypesResponse>> GetAvailableIndicators()
+    public ActionResult<IndicatorTypesResponse> GetAvailableIndicators()
     {
         var indicators = _indicatorFactory.GetAvailableIndicators();
         return Ok(new IndicatorTypesResponse
         {
             Indicators = indicators
         });
+    }
+
+    [HttpGet("test-auth")]
+    public async Task<ActionResult<object>> TestAuth()
+    {
+        try
+        {
+            // Try to get BTC account info as a simple auth test
+            var response = await _exchangeService.GetCurrentPriceAsync("BTC");
+            return Ok(new 
+            { 
+                status = "success",
+                message = "Authentication successful",
+                timestamp = DateTimeOffset.UtcNow,
+                testData = response
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new 
+            { 
+                status = "error",
+                message = "Authentication failed",
+                error = ex.Message,
+                innerError = ex.InnerException?.Message
+            });
+        }
     }
 }

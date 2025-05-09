@@ -16,8 +16,8 @@ public static class DependencyInjection
         services.Configure<CoinbaseApiOptions>(
             configuration.GetSection("CoinbaseApi"));
 
-        services.AddHttpClient();
-        services.AddSingleton<ICoinbaseApiClient, CoinbaseClient>();
+        services.AddHttpClient<ICoinbaseApiClient, CoinbaseClient>();
+        services.AddSingleton<ICoinbaseAuthenticator, CoinbaseAuthenticator>();
         services.AddSingleton<ICryptoExchangeService, CoinbaseExchangeService>();
         services.AddSingleton<IIndicatorFactory, IndicatorFactory>();
 
