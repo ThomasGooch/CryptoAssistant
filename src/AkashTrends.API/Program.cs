@@ -5,6 +5,7 @@ using AkashTrends.Infrastructure.ExternalApis;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
+using AkashTrends.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,7 @@ static string MaskString(string input)
 }
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -61,5 +63,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<PriceUpdateHub>("/hubs/price");
 
 app.Run();
