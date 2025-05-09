@@ -65,7 +65,7 @@ public class CoinbaseClientTests
     }
 
     [Fact]
-    public async Task Should_ThrowExchangeException_When_SymbolIsInvalid()
+    public async Task Should_ThrowNotFoundException_When_SymbolIsInvalid()
     {
         // Arrange
         var errorResponse = new
@@ -79,12 +79,12 @@ public class CoinbaseClientTests
         var act = () => _client.GetPriceAsync("INVALID");
 
         // Assert
-        await act.Should().ThrowAsync<ExchangeException>()
+        await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage("Invalid symbol*");
     }
 
     [Fact]
-    public async Task Should_ThrowExchangeException_When_RateLimited()
+    public async Task Should_ThrowRateLimitExceededException_When_RateLimited()
     {
         // Arrange
         SetupMockResponse(HttpStatusCode.TooManyRequests, JsonSerializer.Serialize(new { }));
@@ -93,8 +93,8 @@ public class CoinbaseClientTests
         var act = () => _client.GetPriceAsync("BTC");
 
         // Assert
-        await act.Should().ThrowAsync<ExchangeException>()
-            .WithMessage("Rate limit exceeded*");
+        await act.Should().ThrowAsync<RateLimitExceededException>()
+            .WithMessage("Coinbase API rate limit exceeded*");
     }
 
     [Fact]

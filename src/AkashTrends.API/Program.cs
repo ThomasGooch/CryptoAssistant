@@ -7,7 +7,7 @@ using AkashTrends.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using AkashTrends.API.Hubs;
 using AkashTrends.API.Services;
-using AkashTrends.Infrastructure.Services;
+using AkashTrends.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +75,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Add global exception handling middleware
+app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
 

@@ -1,5 +1,6 @@
 using AkashTrends.API.Models;
 using AkashTrends.Core.Analysis.Indicators;
+using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +26,7 @@ public class CryptoController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(symbol))
         {
-            return BadRequest("Symbol cannot be empty");
+            throw new ValidationException("Symbol cannot be empty");
         }
 
         var price = await _exchangeService.GetCurrentPriceAsync(symbol);
@@ -44,53 +45,39 @@ public class CryptoController : ControllerBase
         [FromQuery] IndicatorType type,
         [FromQuery] int period)
     {
-        try
+        if (string.IsNullOrWhiteSpace(symbol))
         {
-            if (string.IsNullOrWhiteSpace(symbol))
-            {
-                return BadRequest("Symbol cannot be empty");
-            }
-
-            if (period <= 0)
-            {
-                return BadRequest("Period must be greater than 0");
-            }
-
-            Console.WriteLine($"Getting historical prices for {symbol} from {DateTimeOffset.UtcNow.AddDays(-period)} to {DateTimeOffset.UtcNow}");
-
-            // Get historical prices for the indicator period
-            var endTime = DateTimeOffset.UtcNow;
-            var startTime = endTime.AddDays(-period);
-            var prices = await _exchangeService.GetHistoricalPricesAsync(symbol, startTime, endTime);
-
-            Console.WriteLine($"Retrieved {prices.Count} historical prices");
-
-            // Calculate indicator
-            var indicator = _indicatorFactory.CreateIndicator(type, period);
-            var result = indicator.Calculate(prices);
-
-            Console.WriteLine($"Calculated {type} with value {result.Value}");
-
-            return Ok(new IndicatorResponse
-            {
-                Symbol = symbol,
-                Type = type,
-                Value = result.Value,
-                StartTime = result.StartTime,
-                EndTime = result.EndTime
-            });
+            throw new ValidationException("Symbol cannot be empty");
         }
-        catch (Exception ex)
+
+        if (period <= 0)
         {
-            Console.WriteLine($"Error calculating indicator: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            if (ex.InnerException != null)
-            {
-                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                Console.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
-            }
-            throw;
+            throw new ValidationException("Period must be greater than 0");
         }
+
+        Console.WriteLine($"Getting historical prices for {symbol} from {DateTimeOffset.UtcNow.AddDays(-period)} to {DateTimeOffset.UtcNow}");
+
+        // Get historical prices for the indicator period
+        var endTime = DateTimeOffset.UtcNow;
+        var startTime = endTime.AddDays(-period);
+        var prices = await _exchangeService.GetHistoricalPricesAsync(symbol, startTime, endTime);
+
+        Console.WriteLine($"Retrieved {prices.Count} historical prices");
+
+        // Calculate indicator
+        var indicator = _indicatorFactory.CreateIndicator(type, period);
+        var result = indicator.Calculate(prices);
+
+        Console.WriteLine($"Calculated {type} with value {result.Value}");
+
+        return Ok(new IndicatorResponse
+        {
+            Symbol = symbol,
+            Type = type,
+            Value = result.Value,
+            StartTime = result.StartTime,
+            EndTime = result.EndTime
+        });
     }
 
     [HttpGet("indicators")]
@@ -106,27 +93,14 @@ public class CryptoController : ControllerBase
     [HttpGet("test-auth")]
     public async Task<ActionResult<object>> TestAuth()
     {
-        try
-        {
-            // Try to get BTC account info as a simple auth test
-            var response = await _exchangeService.GetCurrentPriceAsync("BTC");
-            return Ok(new 
-            { 
-                status = "success",
-                message = "Authentication successful",
-                timestamp = DateTimeOffset.UtcNow,
-                testData = response
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new 
-            { 
-                status = "error",
-                message = "Authentication failed",
-                error = ex.Message,
-                innerError = ex.InnerException?.Message
-            });
-        }
+        // Try to get BTC account info as a simple auth test
+        var response = await _exchangeService.GetCurrentPriceAsync("BTC");
+        return Ok(new 
+        { 
+            status = "success",
+            message = "Authentication successful",
+            timestamp = DateTimeOffset.UtcNow,
+            testData = response
+        });
     }
 }

@@ -29,6 +29,11 @@ public class CoinbaseClient : ICoinbaseApiClient
 
     public async Task<CoinbasePriceData> GetPriceAsync(string symbol)
     {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            throw new ValidationException("Symbol cannot be empty");
+        }
+
         try
         {
             var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
@@ -41,12 +46,12 @@ public class CoinbaseClient : ICoinbaseApiClient
             
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new ExchangeException($"Invalid symbol: {symbol}");
+                throw new NotFoundException($"Invalid symbol: {symbol}");
             }
             
             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
-                throw new ExchangeException("Rate limit exceeded");
+                throw new RateLimitExceededException("Coinbase API rate limit exceeded");
             }
 
             response.EnsureSuccessStatusCode();
@@ -92,6 +97,16 @@ public class CoinbaseClient : ICoinbaseApiClient
 
     public async Task<IReadOnlyList<CryptoPrice>> GetHistoricalPricesAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime)
     {
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            throw new ValidationException("Symbol cannot be empty");
+        }
+
+        if (startTime >= endTime)
+        {
+            throw new ValidationException("Start time must be before end time");
+        }
+
         try
         {
             var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
@@ -124,14 +139,19 @@ public class CoinbaseClient : ICoinbaseApiClient
             
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new ExchangeException($"Invalid symbol: {symbol}");
+                throw new NotFoundException($"Invalid symbol: {symbol}");
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new RateLimitExceededException("Coinbase API rate limit exceeded");
             }
 
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Bad Request Error: {errorContent}");
-                throw new ExchangeException($"Invalid request parameters: {errorContent}");
+                throw new ValidationException($"Invalid request parameters: {errorContent}");
             }
 
             response.EnsureSuccessStatusCode();
