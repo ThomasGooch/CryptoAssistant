@@ -124,11 +124,45 @@ public class CleanArchitectureTests
         Assert.True(typeof(Core.Domain.CryptoPrice) != null, "Domain entities should exist");
     }
 
-    // Simplified test for service dependencies
     [Fact]
     public void Services_Should_DependOn_Interfaces_NotImplementations()
     {
-        // For now, we'll just check that our services exist
-        Assert.True(typeof(Infrastructure.Services.CryptoTimeProvider) != null, "Services should exist");
+        // Find all service classes in the solution
+        var serviceClasses = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => a.FullName.Contains("AkashTrends"))
+            .SelectMany(a => a.GetTypes())
+            .Where(t => t.Name.EndsWith("Service") && 
+                   !t.Name.EndsWith("TestService") && 
+                   !t.IsInterface && 
+                   !t.IsAbstract)
+            .ToList();
+
+        // Check constructor parameters
+        var nonInterfaceDependencies = new List<string>();
+        
+        foreach (var serviceClass in serviceClasses)
+        {
+            var constructors = serviceClass.GetConstructors();
+            foreach (var constructor in constructors)
+            {
+                foreach (var parameter in constructor.GetParameters())
+                {
+                    // Skip logger parameters which are typically concrete types
+                    if (parameter.ParameterType.Name.Contains("Logger") || 
+                        parameter.ParameterType.Name.Contains("IOptions") ||
+                        parameter.ParameterType.Name.Contains("IConfiguration") ||
+                        parameter.ParameterType.Name.Contains("CancellationToken"))
+                        continue;
+                        
+                    if (!parameter.ParameterType.IsInterface)
+                    {
+                        nonInterfaceDependencies.Add(
+                            $"{serviceClass.Name} depends on concrete class {parameter.ParameterType.Name}");
+                    }
+                }
+            }
+        }
+        
+        Assert.Empty(nonInterfaceDependencies);
     }
 }
