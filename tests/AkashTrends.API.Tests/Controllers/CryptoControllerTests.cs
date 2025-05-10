@@ -6,6 +6,7 @@ using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -16,12 +17,14 @@ public class CryptoControllerTests
     private readonly ICryptoExchangeService _exchangeService;
     private readonly IIndicatorFactory _indicatorFactory;
     private readonly CryptoController _controller;
+    private readonly ILogger<CryptoController> _logger;
 
     public CryptoControllerTests()
     {
         _exchangeService = Substitute.For<ICryptoExchangeService>();
         _indicatorFactory = Substitute.For<IIndicatorFactory>();
-        _controller = new CryptoController(_exchangeService, _indicatorFactory);
+        _logger = Substitute.For<ILogger<CryptoController>>();
+        _controller = new CryptoController(_exchangeService, _indicatorFactory, _logger);
     }
 
     [Fact]

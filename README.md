@@ -72,6 +72,8 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 - **API Layer**: 
   - REST endpoints for price and indicators implemented
   - Clean controller design with dependency injection
+  - Global exception handling middleware implemented
+  - Structured logging with Serilog integrated
   - Minor async optimization needed
 
 - **Infrastructure**:
@@ -89,6 +91,23 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
   - All tests passing
   - Coverage across all layers
   - Minor test warning to fix
+
+### Error Handling & Logging
+
+- **Comprehensive Exception Handling**
+  - Centralized exception handling middleware
+  - Domain-specific exception hierarchy
+  - Environment-aware error responses (detailed in development, sanitized in production)
+  - Proper HTTP status code mapping
+  - Standardized error response format
+
+- **Structured Logging with Serilog**
+  - Console output for development visibility
+  - Daily rolling file logs for production monitoring
+  - Configuration-driven log levels
+  - Contextual logging with proper correlation
+  - Exception details captured with full stack traces
+  - Clean logging practices throughout the codebase
 
 ### Roadmap
 - **Short-term Priorities**

@@ -8,8 +8,19 @@ using Microsoft.Extensions.Configuration;
 using AkashTrends.API.Hubs;
 using AkashTrends.API.Services;
 using AkashTrends.API.Extensions;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/akashtrends-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add JSON file configuration
 builder.Configuration.AddJsonFile("credentials.json", optional: true, reloadOnChange: true);
@@ -88,4 +99,16 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<PriceUpdateHub>("/hubs/price");
 
-app.Run();
+try
+{
+    Log.Information("Starting AkashTrends API");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application start-up failed");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
