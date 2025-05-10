@@ -3,6 +3,7 @@ using AkashTrends.Core.Exceptions;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Tests.TestHelpers;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using System.Net;
@@ -18,6 +19,7 @@ public class CoinbaseClientTests
     private readonly CoinbaseApiOptions _options;
     private readonly IOptionsMonitor<CoinbaseApiOptions> _optionsMonitor;
     private readonly ICoinbaseAuthenticator _authenticator;
+    private readonly ILogger<CoinbaseClient> _logger;
     private CoinbaseClient _client;
 
     public CoinbaseClientTests()
@@ -35,7 +37,8 @@ public class CoinbaseClientTests
         _optionsMonitor.CurrentValue.Returns(_options);
 
         _authenticator = Substitute.For<ICoinbaseAuthenticator>();
-        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor);
+        _logger = Substitute.For<ILogger<CoinbaseClient>>();
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger);
     }
 
     [Fact]
@@ -65,7 +68,7 @@ public class CoinbaseClientTests
     }
 
     [Fact]
-    public async Task Should_ThrowExchangeException_When_SymbolIsInvalid()
+    public async Task Should_ThrowNotFoundException_When_SymbolIsInvalid()
     {
         // Arrange
         var errorResponse = new
@@ -79,12 +82,12 @@ public class CoinbaseClientTests
         var act = () => _client.GetPriceAsync("INVALID");
 
         // Assert
-        await act.Should().ThrowAsync<ExchangeException>()
+        await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage("Invalid symbol*");
     }
 
     [Fact]
-    public async Task Should_ThrowExchangeException_When_RateLimited()
+    public async Task Should_ThrowRateLimitExceededException_When_RateLimited()
     {
         // Arrange
         SetupMockResponse(HttpStatusCode.TooManyRequests, JsonSerializer.Serialize(new { }));
@@ -93,8 +96,8 @@ public class CoinbaseClientTests
         var act = () => _client.GetPriceAsync("BTC");
 
         // Assert
-        await act.Should().ThrowAsync<ExchangeException>()
-            .WithMessage("Rate limit exceeded*");
+        await act.Should().ThrowAsync<RateLimitExceededException>()
+            .WithMessage("Coinbase API rate limit exceeded*");
     }
 
     [Fact]
@@ -176,6 +179,6 @@ public class CoinbaseClientTests
         };
         _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(responseMessage));
         _httpClient = new HttpClient(_handler);
-        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor);
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger);
     }
 }

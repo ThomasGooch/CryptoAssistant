@@ -2,9 +2,11 @@ using AkashTrends.API.Controllers;
 using AkashTrends.API.Models;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Domain;
+using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -15,12 +17,14 @@ public class CryptoControllerTests
     private readonly ICryptoExchangeService _exchangeService;
     private readonly IIndicatorFactory _indicatorFactory;
     private readonly CryptoController _controller;
+    private readonly ILogger<CryptoController> _logger;
 
     public CryptoControllerTests()
     {
         _exchangeService = Substitute.For<ICryptoExchangeService>();
         _indicatorFactory = Substitute.For<IIndicatorFactory>();
-        _controller = new CryptoController(_exchangeService, _indicatorFactory);
+        _logger = Substitute.For<ILogger<CryptoController>>();
+        _controller = new CryptoController(_exchangeService, _indicatorFactory, _logger);
     }
 
     [Fact]
@@ -58,11 +62,8 @@ public class CryptoControllerTests
     [InlineData(null)]
     public async Task Should_ReturnBadRequest_When_SymbolIsInvalid(string? invalidSymbol)
     {
-        // Act
-        var result = await _controller.GetPrice(invalidSymbol);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() => _controller.GetPrice(invalidSymbol));
     }
 
     [Fact]
@@ -112,11 +113,9 @@ public class CryptoControllerTests
     [InlineData(" ")]
     public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidSymbol(string symbol)
     {
-        // Act
-        var result = await _controller.GetIndicator(symbol, IndicatorType.SimpleMovingAverage, 14);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() => 
+            _controller.GetIndicator(symbol, IndicatorType.SimpleMovingAverage, 14));
     }
 
     [Theory]
@@ -124,11 +123,9 @@ public class CryptoControllerTests
     [InlineData(-1)]
     public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidPeriod(int period)
     {
-        // Act
-        var result = await _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, period);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() => 
+            _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, period));
     }
 
     [Fact]

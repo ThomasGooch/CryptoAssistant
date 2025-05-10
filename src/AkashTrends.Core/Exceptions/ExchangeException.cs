@@ -1,6 +1,9 @@
 namespace AkashTrends.Core.Exceptions;
 
-public class ExchangeException : Exception
+/// <summary>
+/// Exception thrown when there are issues with crypto exchange operations
+/// </summary>
+public class ExchangeException : AkashTrendsException
 {
     public ExchangeException(string message) : base(message)
     {
