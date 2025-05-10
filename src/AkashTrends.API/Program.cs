@@ -1,3 +1,4 @@
+using AkashTrends.Application;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure;
@@ -27,6 +28,7 @@ builder.Configuration.AddJsonFile("credentials.json", optional: true, reloadOnCh
 
 // Add services to the container.
 builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddApplicationServices();
 
 builder.Services.Configure<CoinbaseApiOptions>(options =>
 {

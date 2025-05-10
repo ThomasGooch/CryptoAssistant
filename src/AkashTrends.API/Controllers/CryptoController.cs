@@ -1,4 +1,7 @@
 using AkashTrends.API.Models;
+using AkashTrends.Application.Common.CQRS;
+using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
+using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
@@ -14,15 +17,18 @@ public class CryptoController : ControllerBase
     private readonly ICryptoExchangeService _exchangeService;
     private readonly IIndicatorFactory _indicatorFactory;
     private readonly ILogger<CryptoController> _logger;
+    private readonly IQueryDispatcher _queryDispatcher;
 
     public CryptoController(
         ICryptoExchangeService exchangeService,
         IIndicatorFactory indicatorFactory,
-        ILogger<CryptoController> logger)
+        ILogger<CryptoController> logger,
+        IQueryDispatcher queryDispatcher)
     {
         _exchangeService = exchangeService;
         _indicatorFactory = indicatorFactory;
         _logger = logger;
+        _queryDispatcher = queryDispatcher;
     }
 
     [HttpGet("price/{symbol}")]
@@ -30,20 +36,17 @@ public class CryptoController : ControllerBase
     {
         _logger.LogInformation($"Getting current price for {symbol}");
 
-        if (string.IsNullOrWhiteSpace(symbol))
-        {
-            _logger.LogWarning($"Invalid symbol provided: {symbol}");
-            throw new ValidationException("Symbol cannot be empty");
-        }
-
-        var price = await _exchangeService.GetCurrentPriceAsync(symbol);
-        _logger.LogInformation($"Retrieved price for {symbol}: {price.Value}");
+        // Use the query dispatcher to handle the query
+        var query = new GetCurrentPriceQuery { Symbol = symbol };
+        var result = await _queryDispatcher.Dispatch(query);
+        
+        _logger.LogInformation($"Retrieved price for {symbol}: {result.Price}");
 
         return Ok(new CryptoPriceResponse
         {
-            Symbol = symbol,
-            Price = price.Value,
-            Timestamp = price.Timestamp
+            Symbol = result.Symbol,
+            Price = result.Price,
+            Timestamp = result.Timestamp
         });
     }
 
@@ -90,6 +93,42 @@ public class CryptoController : ControllerBase
             StartTime = result.StartTime,
             EndTime = result.EndTime
         });
+    }
+
+    [HttpGet("historical/{symbol}")]
+    public async Task<ActionResult<HistoricalPricesResponse>> GetHistoricalPrices(
+        string symbol,
+        [FromQuery] DateTimeOffset startTime,
+        [FromQuery] DateTimeOffset endTime)
+    {
+        _logger.LogInformation($"Getting historical prices for {symbol} from {startTime} to {endTime}");
+
+        // Use the query dispatcher to handle the query
+        var query = new GetHistoricalPricesQuery
+        {
+            Symbol = symbol,
+            StartTime = startTime,
+            EndTime = endTime
+        };
+
+        var result = await _queryDispatcher.Dispatch(query);
+        
+        _logger.LogInformation($"Retrieved {result.Prices.Count} historical prices for {symbol}");
+
+        // Map to response model
+        var response = new HistoricalPricesResponse
+        {
+            Symbol = result.Symbol,
+            StartTime = result.StartTime,
+            EndTime = result.EndTime,
+            Prices = result.Prices.Select(p => new Models.PricePoint
+            {
+                Price = p.Price,
+                Timestamp = p.Timestamp
+            }).ToList()
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("indicators")]

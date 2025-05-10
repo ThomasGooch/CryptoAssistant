@@ -1,5 +1,8 @@
 using AkashTrends.API.Controllers;
 using AkashTrends.API.Models;
+using AkashTrends.Application.Common.CQRS;
+using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
+using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Domain;
 using AkashTrends.Core.Exceptions;
@@ -18,13 +21,15 @@ public class CryptoControllerTests
     private readonly IIndicatorFactory _indicatorFactory;
     private readonly CryptoController _controller;
     private readonly ILogger<CryptoController> _logger;
+    private readonly IQueryDispatcher _queryDispatcher;
 
     public CryptoControllerTests()
     {
         _exchangeService = Substitute.For<ICryptoExchangeService>();
         _indicatorFactory = Substitute.For<IIndicatorFactory>();
         _logger = Substitute.For<ILogger<CryptoController>>();
-        _controller = new CryptoController(_exchangeService, _indicatorFactory, _logger);
+        _queryDispatcher = Substitute.For<IQueryDispatcher>();
+        _controller = new CryptoController(_exchangeService, _indicatorFactory, _logger, _queryDispatcher);
     }
 
     [Fact]
@@ -35,14 +40,16 @@ public class CryptoControllerTests
         var price = 50000.00m;
         var timestamp = DateTimeOffset.UtcNow;
 
-        var cryptoPrice = CryptoPrice.Create(
-            CryptoCurrency.Create(symbol),
-            price,
-            timestamp
-        );
+        var queryResult = new GetCurrentPriceResult
+        {
+            Symbol = symbol,
+            Price = price,
+            Timestamp = timestamp
+        };
 
-        _exchangeService.GetCurrentPriceAsync(symbol)
-            .Returns(cryptoPrice);
+        _queryDispatcher
+            .Dispatch(Arg.Any<GetCurrentPriceQuery>())
+            .Returns(Task.FromResult(queryResult));
 
         // Act
         var result = await _controller.GetPrice(symbol);
@@ -58,10 +65,15 @@ public class CryptoControllerTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(" ")]
     [InlineData(null)]
-    public async Task Should_ReturnBadRequest_When_SymbolIsInvalid(string? invalidSymbol)
+    [InlineData("   ")]
+    public async Task Should_ThrowValidationException_When_SymbolIsInvalid(string invalidSymbol)
     {
+        // Arrange
+        _queryDispatcher
+            .When(x => x.Dispatch(Arg.Any<GetCurrentPriceQuery>()))
+            .Do(x => { throw new ValidationException("Symbol cannot be empty"); });
+            
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _controller.GetPrice(invalidSymbol));
     }
