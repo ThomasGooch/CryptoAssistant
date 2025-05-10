@@ -1,6 +1,8 @@
 using AkashTrends.API.Controllers;
 using AkashTrends.API.Models;
 using AkashTrends.Application.Common.CQRS;
+using AkashTrends.Application.Features.Crypto.CalculateIndicator;
+using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
 using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 using AkashTrends.Core.Analysis.Indicators;
@@ -88,22 +90,21 @@ public class CryptoControllerTests
         var startTime = DateTimeOffset.UtcNow.AddDays(-period);
         var endTime = DateTimeOffset.UtcNow;
 
-        var prices = Enumerable.Range(0, period)
-            .Select(i => CryptoPrice.Create(
-                CryptoCurrency.Create(symbol),
-                50000m + i * 100m,
-                startTime.AddDays(i)))
-            .ToList();
+        var queryResult = new CalculateIndicatorResult
+        {
+            Symbol = symbol,
+            Type = type,
+            Value = 51000m,
+            StartTime = startTime,
+            EndTime = endTime
+        };
 
-        _exchangeService.GetHistoricalPricesAsync(symbol, Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
-            .Returns(prices);
-
-        var indicator = Substitute.For<IIndicator>();
-        indicator.Calculate(Arg.Any<IReadOnlyList<CryptoPrice>>())
-            .Returns(new IndicatorResult(51000m, startTime, endTime));
-
-        _indicatorFactory.CreateIndicator(type, period)
-            .Returns(indicator);
+        _queryDispatcher
+            .Dispatch(Arg.Is<CalculateIndicatorQuery>(q =>
+                q.Symbol == symbol &&
+                q.Type == type &&
+                q.Period == period))
+            .Returns(Task.FromResult(queryResult));
 
         // Act
         var result = await _controller.GetIndicator(symbol, type, period);
@@ -125,6 +126,11 @@ public class CryptoControllerTests
     [InlineData(" ")]
     public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidSymbol(string symbol)
     {
+        // Arrange
+        _queryDispatcher
+            .When(x => x.Dispatch(Arg.Any<CalculateIndicatorQuery>()))
+            .Do(x => { throw new ValidationException("Symbol cannot be empty"); });
+
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => 
             _controller.GetIndicator(symbol, IndicatorType.SimpleMovingAverage, 14));
@@ -135,13 +141,18 @@ public class CryptoControllerTests
     [InlineData(-1)]
     public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidPeriod(int period)
     {
+        // Arrange
+        _queryDispatcher
+            .When(x => x.Dispatch(Arg.Any<CalculateIndicatorQuery>()))
+            .Do(x => { throw new ValidationException("Period must be greater than 0"); });
+
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => 
             _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, period));
     }
 
     [Fact]
-    public void Should_ReturnAllIndicators_When_GetAvailableIndicatorsCalled()
+    public async Task Should_ReturnAllIndicators_When_GetAvailableIndicatorsCalled()
     {
         // Arrange
         var indicators = new[]
@@ -150,16 +161,22 @@ public class CryptoControllerTests
             IndicatorType.ExponentialMovingAverage
         };
 
-        _indicatorFactory.GetAvailableIndicators()
-            .Returns(indicators);
+        var queryResult = new GetAvailableIndicatorsResult
+        {
+            Indicators = indicators.ToList()
+        };
+
+        _queryDispatcher
+            .Dispatch(Arg.Any<GetAvailableIndicatorsQuery>())
+            .Returns(Task.FromResult(queryResult));
 
         // Act
-        var result = _controller.GetAvailableIndicators();
+        var result = await _controller.GetAvailableIndicators();
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var response = okResult.Value.Should().BeOfType<IndicatorTypesResponse>().Subject;
-        
+
         response.Indicators.Should().BeEquivalentTo(indicators);
     }
 }

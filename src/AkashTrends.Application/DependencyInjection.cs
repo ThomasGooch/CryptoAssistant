@@ -1,4 +1,6 @@
 using AkashTrends.Application.Common.CQRS;
+using AkashTrends.Application.Features.Crypto.CalculateIndicator;
+using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
 using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,8 @@ public static class DependencyInjection
         // Register query handlers
         services.AddTransient<IGetCurrentPriceQueryHandler, GetCurrentPriceQueryHandler>();
         services.AddTransient<IGetHistoricalPricesQueryHandler, GetHistoricalPricesQueryHandler>();
+        services.AddTransient<ICalculateIndicatorQueryHandler, CalculateIndicatorQueryHandler>();
+        services.AddTransient<IGetAvailableIndicatorsQueryHandler, GetAvailableIndicatorsQueryHandler>();
 
         return services;
     }
