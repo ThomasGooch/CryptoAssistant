@@ -14,6 +14,16 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 ## MVP Implementation Status
 
 ### Core Features
+- **CQRS Architecture**
+  - Command Query Responsibility Segregation pattern
+  - Clean separation of queries and commands
+  - Mediator pattern for query dispatching
+  - Organized by use cases:
+    - GetCurrentPrice
+    - GetHistoricalPrices
+    - CalculateIndicator
+    - GetAvailableIndicators
+
 - **Real-time Price Monitoring**
   - Background service for periodic price updates
   - SignalR integration for real-time broadcasting
@@ -52,7 +62,8 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
   - Refactor with confidence
   - Using xUnit for test framework
   - NSubstitute for mocking dependencies
-  - Tests organized by feature and layer
+  - Tests organized by feature and use case
+  - 138 tests with 100% pass rate
 
 - **SOLID Principles**
   - **S**ingle Responsibility: Each class has one job
@@ -70,11 +81,11 @@ AkashTrends is a sophisticated cryptocurrency trading analysis platform that hel
 
 ### Current Status
 - **API Layer**: 
-  - REST endpoints for price and indicators implemented
-  - Clean controller design with dependency injection
+  - REST endpoints using CQRS pattern
+  - Clean controller design with query dispatcher
   - Global exception handling middleware implemented
   - Structured logging with Serilog integrated
-  - Minor async optimization needed
+  - Optimized async/await usage
 
 - **Infrastructure**:
   - External API integration complete
@@ -152,7 +163,15 @@ AkashTrends/
 │   │   ├── Hubs/                  # SignalR hubs
 │   │   ├── Services/              # Background services
 │   │   └── Models/                # API request/response models
-│   ├── AkashTrends.Application/   # Application services
+│   ├── AkashTrends.Application/   # Application layer
+│   │   ├── Common/               # Shared components
+│   │   │   └── CQRS/            # CQRS infrastructure
+│   │   └── Features/            # Use case implementations
+│   │       └── Crypto/          # Cryptocurrency features
+│   │           ├── GetCurrentPrice/      # Current price query
+│   │           ├── GetHistoricalPrices/  # Historical data query
+│   │           ├── CalculateIndicator/   # Indicator calculation
+│   │           └── GetAvailableIndicators/ # Available indicators
 │   ├── AkashTrends.Core/          # Domain layer
 │   │   ├── Analysis/              # Technical indicators
 │   │   │   ├── Indicators/        # Indicator implementations
@@ -179,6 +198,13 @@ AkashTrends/
 │   └── package.json               # Frontend dependencies
 ├── tests/                        # Backend tests
 │   ├── AkashTrends.API.Tests/     # API integration tests
+│   ├── AkashTrends.Application.Tests/ # Application layer tests
+│   │   └── Features/            # Use case tests
+│   │       └── Crypto/          # Cryptocurrency feature tests
+│   │           ├── GetCurrentPrice/      # Current price tests
+│   │           ├── GetHistoricalPrices/  # Historical data tests
+│   │           ├── CalculateIndicator/   # Indicator calculation tests
+│   │           └── GetAvailableIndicators/ # Available indicators tests
 │   ├── AkashTrends.Core.Tests/    # Core unit tests
 │   └── AkashTrends.Infrastructure.Tests/ # Infrastructure tests
 └── scripts/                      # Build and deployment scripts
