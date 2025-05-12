@@ -27,6 +27,17 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
     ? new Date(timestamp).toLocaleTimeString() 
     : '';
 
+  // Show empty state if no symbol
+  if (!symbol.trim()) {
+    return (
+      <div className="crypto-card">
+        <div className="text-gray-500 dark:text-gray-400 text-center py-4">
+          Enter a cryptocurrency symbol to view price
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="crypto-card">
       {isLoading ? (

@@ -7,7 +7,7 @@ namespace AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 /// <summary>
 /// Handler for GetHistoricalPricesQuery
 /// </summary>
-public class GetHistoricalPricesQueryHandler : IGetHistoricalPricesQueryHandler
+public class GetHistoricalPricesQueryHandler : IQueryHandler<GetHistoricalPricesQuery, GetHistoricalPricesResult>
 {
     private readonly ICryptoExchangeService _exchangeService;
 

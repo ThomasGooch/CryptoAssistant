@@ -6,7 +6,7 @@ namespace AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 /// <summary>
 /// Handler for GetAvailableIndicatorsQuery
 /// </summary>
-public class GetAvailableIndicatorsQueryHandler : IGetAvailableIndicatorsQueryHandler
+public class GetAvailableIndicatorsQueryHandler : IQueryHandler<GetAvailableIndicatorsQuery, GetAvailableIndicatorsResult>
 {
     private readonly IIndicatorFactory _indicatorFactory;
 

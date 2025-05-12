@@ -22,10 +22,11 @@ public static class DependencyInjection
         // Register CQRS infrastructure
         services.AddTransient<IQueryDispatcher, QueryDispatcher>();
         // Register query handlers
-        services.AddTransient<IGetCurrentPriceQueryHandler, GetCurrentPriceQueryHandler>();
-        services.AddTransient<IGetHistoricalPricesQueryHandler, GetHistoricalPricesQueryHandler>();
-        services.AddTransient<ICalculateIndicatorQueryHandler, CalculateIndicatorQueryHandler>();
-        services.AddTransient<IGetAvailableIndicatorsQueryHandler, GetAvailableIndicatorsQueryHandler>();
+        services.AddTransient<IQueryHandler<GetAvailableIndicatorsQuery, GetAvailableIndicatorsResult>, GetAvailableIndicatorsQueryHandler>();
+        services.AddTransient<IQueryHandler<GetCurrentPriceQuery, GetCurrentPriceResult>, GetCurrentPriceQueryHandler>();
+        services.AddTransient<IQueryHandler<GetHistoricalPricesQuery, GetHistoricalPricesResult>, GetHistoricalPricesQueryHandler>();
+        services.AddTransient<IQueryHandler<CalculateIndicatorQuery, CalculateIndicatorResult>, CalculateIndicatorQueryHandler>();
+        
 
         return services;
     }

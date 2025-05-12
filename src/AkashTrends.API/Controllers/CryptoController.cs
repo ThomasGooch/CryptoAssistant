@@ -40,7 +40,7 @@ public class CryptoController : ControllerBase
 
         // Use the query dispatcher to handle the query
         var query = new GetCurrentPriceQuery { Symbol = symbol };
-        var result = await _queryDispatcher.Dispatch(query);
+        var result = await _queryDispatcher.Dispatch<GetCurrentPriceQuery, GetCurrentPriceResult>(query);
         
         _logger.LogInformation($"Retrieved price for {symbol}: {result.Price}");
 
@@ -68,7 +68,7 @@ public class CryptoController : ControllerBase
             Period = period
         };
 
-        var result = await _queryDispatcher.Dispatch(query);
+        var result = await _queryDispatcher.Dispatch<CalculateIndicatorQuery, CalculateIndicatorResult>(query);
         
         _logger.LogInformation($"Calculated {type} for {symbol}: {result.Value}");
 
@@ -98,7 +98,7 @@ public class CryptoController : ControllerBase
             EndTime = endTime
         };
 
-        var result = await _queryDispatcher.Dispatch(query);
+        var result = await _queryDispatcher.Dispatch<GetHistoricalPricesQuery, GetHistoricalPricesResult>(query);
         
         _logger.LogInformation($"Retrieved {result.Prices.Count} historical prices for {symbol}");
 
@@ -125,7 +125,7 @@ public class CryptoController : ControllerBase
 
         // Use the query dispatcher to handle the query
         var query = new GetAvailableIndicatorsQuery();
-        var result = await _queryDispatcher.Dispatch(query);
+        var result = await _queryDispatcher.Dispatch<GetAvailableIndicatorsQuery, GetAvailableIndicatorsResult>(query);
         
         _logger.LogInformation($"Retrieved available indicators");
 

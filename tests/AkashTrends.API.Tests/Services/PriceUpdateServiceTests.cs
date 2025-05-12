@@ -40,10 +40,11 @@ public class PriceUpdateServiceTests : IAsyncDisposable
             _mockLogger);
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         _cts.Cancel();
         _cts.Dispose();
+        return ValueTask.CompletedTask;
     }
 
     [Fact]

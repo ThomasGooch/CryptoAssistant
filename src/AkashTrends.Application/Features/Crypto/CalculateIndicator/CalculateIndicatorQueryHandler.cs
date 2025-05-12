@@ -8,7 +8,7 @@ namespace AkashTrends.Application.Features.Crypto.CalculateIndicator;
 /// <summary>
 /// Handler for CalculateIndicatorQuery
 /// </summary>
-public class CalculateIndicatorQueryHandler : ICalculateIndicatorQueryHandler
+public class CalculateIndicatorQueryHandler : IQueryHandler<CalculateIndicatorQuery, CalculateIndicatorResult>
 {
     private readonly ICryptoExchangeService _exchangeService;
     private readonly IIndicatorFactory _indicatorFactory;

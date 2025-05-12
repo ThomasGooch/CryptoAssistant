@@ -15,9 +15,23 @@ class SignalRService {
    */
   public async startConnection(): Promise<void> {
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/price')
+      .withUrl('/hubs/crypto')
       .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information)
       .build();
+
+    // Add error handler
+    this.connection.onclose((error) => {
+      console.error('SignalR connection closed:', error);
+    });
+
+    this.connection.onreconnecting((error) => {
+      console.warn('SignalR reconnecting:', error);
+    });
+
+    this.connection.onreconnected((connectionId) => {
+      console.log('SignalR reconnected:', connectionId);
+    });
 
     // Register handlers for incoming messages
     this.connection.on('ReceivePriceUpdate', (symbol: string, price: number) => {
@@ -52,24 +66,62 @@ class SignalRService {
    */
   public async subscribeToSymbol(symbol: string, callback: (price: number) => void): Promise<void> {
     if (!this.connection) {
-      throw new Error('SignalR connection not established');
+      throw new Error('SignalR connection not initialized');
     }
-    
-    this.priceUpdateCallbacks.set(symbol.toLowerCase(), callback);
-    await this.connection.invoke('SubscribeToSymbol', symbol);
+
+    const trimmedSymbol = symbol?.trim();
+
+    // First, unsubscribe from all current subscriptions
+    await this.unsubscribeFromAllSymbols();
+    this.priceUpdateCallbacks.clear();
+
+    if (!trimmedSymbol) {
+      return;
+    }
+
+    try {
+      // Add new subscription
+      await this.connection.invoke('SubscribeToSymbol', trimmedSymbol.toUpperCase());
+      this.priceUpdateCallbacks.set(trimmedSymbol.toLowerCase(), callback);
+    } catch (err) {
+      console.error('Error subscribing to symbol:', err);
+      throw err;
+    }
   }
 
   /**
    * Unsubscribe from price updates for a symbol
    * @param symbol The cryptocurrency symbol (e.g., BTC)
    */
+  private async unsubscribeFromAllSymbols(): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
+    const symbols = Array.from(this.priceUpdateCallbacks.keys());
+    for (const symbol of symbols) {
+      try {
+        await this.connection.invoke('UnsubscribeFromSymbol', symbol.toUpperCase());
+      } catch (err) {
+        console.warn('Error unsubscribing from symbol:', symbol, err);
+      }
+    }
+  }
+
   public async unsubscribeFromSymbol(symbol: string): Promise<void> {
     if (!this.connection) {
       throw new Error('SignalR connection not established');
     }
     
-    this.priceUpdateCallbacks.delete(symbol.toLowerCase());
-    await this.connection.invoke('UnsubscribeFromSymbol', symbol);
+    const trimmedSymbol = symbol?.trim().toLowerCase();
+    if (!trimmedSymbol) return;
+
+    this.priceUpdateCallbacks.delete(trimmedSymbol);
+    try {
+      await this.connection.invoke('UnsubscribeFromSymbol', trimmedSymbol.toUpperCase());
+    } catch (err) {
+      console.warn('Error unsubscribing from symbol:', symbol, err);
+    }
   }
 
   /**
@@ -90,14 +142,39 @@ class SignalRService {
     if (!this.connection) {
       throw new Error('SignalR connection not established');
     }
+
+    const trimmedSymbol = symbol?.trim();
+    if (!trimmedSymbol) {
+      // Clear callbacks but don't throw error
+      this.indicatorUpdateCallbacks.clear();
+      return;
+    }
     
-    const key = `${symbol.toLowerCase()}_${indicatorType}`;
-    this.indicatorUpdateCallbacks.set(key, callback);
-    
-    if (timeframe !== undefined) {
-      await this.connection.invoke('SubscribeToIndicatorWithTimeframe', symbol, indicatorType, period, timeframe);
-    } else {
-      await this.connection.invoke('SubscribeToIndicator', symbol, indicatorType, period);
+    try {
+      // Remove old subscription if exists
+      const oldKey = Array.from(this.indicatorUpdateCallbacks.keys())[0];
+      if (oldKey) {
+        const [oldSymbol, oldType] = oldKey.split('_');
+        try {
+          await this.connection.invoke('UnsubscribeFromIndicator', oldSymbol.toUpperCase(), Number(oldType));
+        } catch (err) {
+          console.warn('Error unsubscribing from old indicator:', err);
+        }
+        this.indicatorUpdateCallbacks.delete(oldKey);
+      }
+
+      const key = `${trimmedSymbol.toLowerCase()}_${indicatorType}`;
+      this.indicatorUpdateCallbacks.set(key, callback);
+      
+      if (timeframe !== undefined) {
+        await this.connection.invoke('SubscribeToIndicatorWithTimeframe', trimmedSymbol.toUpperCase(), indicatorType, period, timeframe);
+      } else {
+        await this.connection.invoke('SubscribeToIndicator', trimmedSymbol.toUpperCase(), indicatorType, period);
+      }
+    } catch (err) {
+      console.error('Error subscribing to indicator:', err);
+      this.indicatorUpdateCallbacks.clear();
+      throw err;
     }
   }
 

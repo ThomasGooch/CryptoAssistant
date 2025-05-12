@@ -14,7 +14,8 @@ public class PriceUpdateService : BackgroundService
     private readonly IIndicatorUpdateService _indicatorService;
     private readonly ILogger<PriceUpdateService> _logger;
     private readonly HashSet<string> _subscribedSymbols;
-    private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(5);
+    private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(30);
+    private readonly Dictionary<string, DateTimeOffset> _lastUpdateTimes = new();
 
     public PriceUpdateService(
         IHubContext<PriceUpdateHub> hubContext,
@@ -65,8 +66,15 @@ public class PriceUpdateService : BackgroundService
 
     private async Task UpdatePricesAsync()
     {
+        var now = DateTimeOffset.UtcNow;
         foreach (var symbol in _subscribedSymbols.ToList())
         {
+            // Check if we should update this symbol
+            if (_lastUpdateTimes.TryGetValue(symbol, out var lastUpdate) &&
+                (now - lastUpdate) < TimeSpan.FromSeconds(10))
+            {
+                continue;
+            }
             try
             {
                 var price = await _exchangeService.GetCurrentPriceAsync(symbol);
@@ -74,6 +82,8 @@ public class PriceUpdateService : BackgroundService
                     "ReceivePriceUpdate",
                     symbol,
                     price.Value);
+                
+                _lastUpdateTimes[symbol] = now;
                 
                 // Trigger indicator updates when price changes
                 await _indicatorService.UpdateIndicatorsAsync();

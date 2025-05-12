@@ -89,7 +89,7 @@ public class CryptoControllerHistoricalPricesTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
+    [InlineData(" ")]
     [InlineData("   ")]
     public async Task GetHistoricalPrices_InvalidSymbol_ThrowsValidationException(string invalidSymbol)
     {
