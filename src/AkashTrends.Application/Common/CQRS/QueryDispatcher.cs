@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace AkashTrends.Application.Common.CQRS;
 
 /// <summary>
@@ -27,13 +29,9 @@ public class QueryDispatcher : IQueryDispatcher
     public async Task<TResult> Dispatch<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
     {
         var handlerType = typeof(IQueryHandler<TQuery, TResult>);
-        var handler = _serviceProvider.GetService(handlerType);
-
-        if (handler == null)
-        {
-            throw new InvalidOperationException($"No handler found for query type {typeof(TQuery).Name}");
-        }
-
-        return await ((IQueryHandler<TQuery, TResult>)handler).Handle(query);
+        var handler = _serviceProvider.GetRequiredService(handlerType);
+        return handler == null
+            ? throw new InvalidOperationException($"Handler for {handlerType} is not registered.")
+            : await ((IQueryHandler<TQuery, TResult>)handler).Handle(query);
     }
 }

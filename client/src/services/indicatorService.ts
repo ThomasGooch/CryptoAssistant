@@ -5,7 +5,7 @@ import { IndicatorType } from '../types/domain';
  * Service for interacting with the indicator API endpoints
  */
 class IndicatorService {
-  private baseUrl = '/api/crypto';
+  private baseUrl = '/api/Crypto';
 
   /**
    * Get indicator value for a cryptocurrency

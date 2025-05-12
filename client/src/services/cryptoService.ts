@@ -4,7 +4,7 @@ import type { CryptoPriceResponse } from '../types/api';
  * Service for interacting with the crypto API endpoints
  */
 class CryptoService {
-  private baseUrl = '/api/crypto';
+  private baseUrl = '/api/Crypto';
 
   /**
    * Get the current price for a cryptocurrency

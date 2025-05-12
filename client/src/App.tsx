@@ -24,6 +24,10 @@ function App() {
   const [isLoadingIndicator, setIsLoadingIndicator] = useState(true);
   const [availableIndicators, setAvailableIndicators] = useState<IndicatorType[]>([]);
   
+  // State for real-time updates
+  const [hasInitialData, setHasInitialData] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'error' | 'disconnected'>('disconnected');
+
   // Get SignalR hook
   const { 
     isConnected, 
@@ -32,16 +36,38 @@ function App() {
     subscribeToIndicatorUpdates
   } = useSignalR();
 
+  // Update connection status
+  useEffect(() => {
+    if (isConnected) {
+      setConnectionStatus('connected');
+    } else if (signalRError) {
+      setConnectionStatus('error');
+    } else {
+      setConnectionStatus('disconnected');
+    }
+  }, [isConnected, signalRError]);
+
   // Load initial price data
   useEffect(() => {
+    // Skip if symbol is empty
+    if (!symbol.trim()) {
+      setPrice(0);
+      setTimestamp('');
+      return;
+    }
+
     const fetchPrice = async () => {
       try {
         setIsLoadingPrice(true);
         const priceData = await cryptoService.getCurrentPrice(symbol);
         setPrice(priceData.price);
         setTimestamp(priceData.timestamp);
+        setHasInitialData(true);
       } catch (error) {
         console.error('Error fetching price:', error);
+        // Reset price on error
+        setPrice(0);
+        setTimestamp('');
       } finally {
         setIsLoadingPrice(false);
       }
@@ -66,6 +92,8 @@ function App() {
 
   // Load indicator data when type or period changes
   useEffect(() => {
+    // Skip if symbol is empty
+    if (!symbol.trim()) return;
     const fetchIndicator = async () => {
       try {
         setIsLoadingIndicator(true);
@@ -85,24 +113,66 @@ function App() {
 
   // Subscribe to real-time updates when SignalR is connected
   useEffect(() => {
-    if (isConnected) {
-      // Subscribe to price updates
-      subscribeToPriceUpdates(symbol, (newPrice) => {
-        setPrice(newPrice);
-        setTimestamp(new Date().toISOString());
-      }).catch(console.error);
-
-      // Subscribe to indicator updates
-      subscribeToIndicatorUpdates(symbol, indicatorType, period, (newValue) => {
-        setIndicatorValue(newValue);
-        setEndTime(new Date().toISOString());
-      }).catch(console.error);
+    // Skip if not connected
+    if (!isConnected) {
+      return;
     }
+
+    let isMounted = true;
+    let currentSymbol = symbol.trim();
+
+    const setupSubscriptions = async () => {
+      try {
+        if (!currentSymbol) {
+          // Reset states if symbol is empty
+          setPrice(0);
+          setTimestamp('');
+          setIndicatorValue(0);
+          setStartTime('');
+          setEndTime('');
+          return;
+        }
+
+        // Subscribe to price updates
+        await subscribeToPriceUpdates(currentSymbol, (newPrice) => {
+          if (isMounted) {
+            setPrice(newPrice);
+            setTimestamp(new Date().toISOString());
+          }
+        });
+
+        // Subscribe to indicator updates
+        await subscribeToIndicatorUpdates(currentSymbol, indicatorType, period, (newValue) => {
+          if (isMounted) {
+            setIndicatorValue(newValue);
+            setEndTime(new Date().toISOString());
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up real-time updates:', error);
+        // Reset states on error
+        if (isMounted) {
+          setPrice(0);
+          setTimestamp('');
+          setIndicatorValue(0);
+          setStartTime('');
+          setEndTime('');
+        }
+      }
+    };
+
+    setupSubscriptions();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, [isConnected, symbol, indicatorType, period, subscribeToPriceUpdates, subscribeToIndicatorUpdates]);
 
   // Handle symbol change
   const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSymbol(e.target.value.toUpperCase());
+    const newValue = e.target.value.trim().toUpperCase();
+    setSymbol(newValue);
   };
 
   // Handle indicator type change
@@ -145,13 +215,13 @@ function App() {
               />
             </div>
             
-            {signalRError && (
+            {connectionStatus === 'error' && (
               <div className="mt-4 text-sm text-red-600 dark:text-red-400">
-                Real-time updates unavailable: {signalRError.message}
+                Real-time updates unavailable: {signalRError?.message}
               </div>
             )}
             
-            {isConnected && (
+            {connectionStatus === 'connected' && hasInitialData && (
               <div className="mt-4 text-sm text-green-600 dark:text-green-400">
                 Real-time updates active
               </div>

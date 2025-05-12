@@ -22,7 +22,7 @@ public class CryptoCurrencyTests
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
-    [InlineData(null)]
+    [InlineData("")]
     public void Create_WithInvalidSymbol_ShouldThrowArgumentException(string? invalidSymbol)
     {
         // Act

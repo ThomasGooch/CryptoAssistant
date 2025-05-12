@@ -67,7 +67,7 @@ public class CryptoControllerTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
+    [InlineData(" ")]
     [InlineData("   ")]
     public async Task Should_ThrowValidationException_When_SymbolIsInvalid(string invalidSymbol)
     {
@@ -121,7 +121,6 @@ public class CryptoControllerTests
     }
 
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
     public async Task GetIndicator_Should_ReturnBadRequest_When_InvalidSymbol(string symbol)

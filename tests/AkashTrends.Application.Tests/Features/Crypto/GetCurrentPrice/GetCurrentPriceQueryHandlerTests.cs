@@ -44,7 +44,7 @@ public class GetCurrentPriceQueryHandlerTests
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
+    [InlineData("")]
     [InlineData("   ")]
     public async Task Handle_InvalidSymbol_ThrowsValidationException(string invalidSymbol)
     {

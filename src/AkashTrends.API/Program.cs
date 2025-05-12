@@ -1,11 +1,9 @@
 using AkashTrends.Application;
-using AkashTrends.Core.Analysis.Indicators;
+using AkashTrends.Core;
 using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure;
-using AkashTrends.Infrastructure.ExternalApis;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
-using Microsoft.Extensions.Configuration;
 using AkashTrends.API.Hubs;
 using AkashTrends.API.Services;
 using AkashTrends.API.Extensions;
@@ -27,8 +25,10 @@ builder.Host.UseSerilog();
 builder.Configuration.AddJsonFile("credentials.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddCoreServices();
 builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
 
 builder.Services.Configure<CoinbaseApiOptions>(options =>
 {
@@ -66,7 +66,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -99,7 +99,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<PriceUpdateHub>("/hubs/price");
+app.MapHub<PriceUpdateHub>("/hubs/crypto");
 
 try
 {

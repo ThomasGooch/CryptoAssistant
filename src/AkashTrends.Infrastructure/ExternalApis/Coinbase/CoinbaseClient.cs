@@ -38,11 +38,16 @@ public class CoinbaseClient : ICoinbaseApiClient
             throw new ValidationException("Symbol cannot be empty");
         }
 
+        // Normalize symbol format
+        symbol = symbol.Trim().ToUpperInvariant();
+        if (symbol.Contains("-"))
+        {
+            throw new ValidationException("Please provide the base symbol only (e.g., 'BTC' not 'BTC-USD')");
+        }
+
         try
         {
-            var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
-                ? symbol
-                : $"{symbol}-USD";
+            var baseSymbol = $"{symbol}-USD";
 
             var requestUrl = $"products/{baseSymbol}/ticker";
             _logger.LogInformation("Requesting price data from Coinbase: {0}", $"{_httpClient.BaseAddress}{requestUrl}");

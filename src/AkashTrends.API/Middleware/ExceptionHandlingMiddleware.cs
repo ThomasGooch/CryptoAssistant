@@ -41,7 +41,16 @@ public class ExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
+        _logger.LogError(exception, "An unhandled exception occurred: {Message}. Stack trace: {StackTrace}", 
+            exception.Message,
+            exception.StackTrace);
+
+        if (exception.InnerException != null)
+        {
+            _logger.LogError(exception.InnerException, "Inner exception: {Message}. Stack trace: {StackTrace}",
+                exception.InnerException.Message,
+                exception.InnerException.StackTrace);
+        }
 
         var statusCode = GetStatusCode(exception);
         var response = CreateErrorResponse(exception, statusCode, _environment.IsDevelopment());
