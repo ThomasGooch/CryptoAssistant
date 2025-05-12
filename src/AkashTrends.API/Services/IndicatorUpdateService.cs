@@ -14,6 +14,8 @@ public class IndicatorUpdateService : IIndicatorUpdateService
     private readonly IIndicatorFactory _indicatorFactory;
     private readonly ILogger<IndicatorUpdateService> _logger;
     private readonly Dictionary<string, List<IndicatorSubscription>> _subscriptions;
+    private readonly Dictionary<string, DateTimeOffset> _lastUpdateTimes = new();
+    private readonly TimeSpan _minUpdateInterval = TimeSpan.FromSeconds(30); // Minimum time between updates for the same indicator
 
     public IndicatorUpdateService(
         IHubContext<PriceUpdateHub> hubContext,
@@ -105,8 +107,15 @@ public class IndicatorUpdateService : IIndicatorUpdateService
 
     public async Task UpdateIndicatorsAsync()
     {
+        var now = DateTimeOffset.UtcNow;
         foreach (var (symbol, indicators) in _subscriptions.ToList())
         {
+            // Check if we should update this symbol's indicators
+            if (_lastUpdateTimes.TryGetValue(symbol, out var lastUpdate) &&
+                (now - lastUpdate) < _minUpdateInterval)
+            {
+                continue;
+            }
             foreach (var indicator in indicators.ToList())
             {
                 try
@@ -127,6 +136,8 @@ public class IndicatorUpdateService : IIndicatorUpdateService
                         indicator.Type,
                         result.Value,
                         indicator.Timeframe);
+
+                    _lastUpdateTimes[symbol] = now;
                 }
                 catch (Exception ex)
                 {

@@ -4,6 +4,11 @@ namespace AkashTrends.Infrastructure.Services;
 
 public class CryptoTimeProvider : ITimeProvider
 {
+    public DateTimeOffset GetUtcNow()
+    {
+        return DateTimeOffset.UtcNow;
+    }
+
     public Task Delay(TimeSpan delay, CancellationToken cancellationToken)
     {
         return Task.Delay(delay, cancellationToken);

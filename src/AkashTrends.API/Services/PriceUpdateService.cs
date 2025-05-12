@@ -15,6 +15,7 @@ public class PriceUpdateService : BackgroundService
     private readonly ILogger<PriceUpdateService> _logger;
     private readonly HashSet<string> _subscribedSymbols;
     private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _minUpdateInterval = TimeSpan.FromSeconds(30); // Minimum time between updates for the same symbol
     private readonly Dictionary<string, DateTimeOffset> _lastUpdateTimes = new();
 
     public PriceUpdateService(
@@ -71,7 +72,7 @@ public class PriceUpdateService : BackgroundService
         {
             // Check if we should update this symbol
             if (_lastUpdateTimes.TryGetValue(symbol, out var lastUpdate) &&
-                (now - lastUpdate) < TimeSpan.FromSeconds(10))
+                (now - lastUpdate) < _minUpdateInterval)
             {
                 continue;
             }
