@@ -1,5 +1,6 @@
 using AkashTrends.Core.Cache;
 using AkashTrends.Core.Domain;
+using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure.Cache;
 using Microsoft.Extensions.Caching.Memory;
 using NSubstitute;
@@ -11,14 +12,14 @@ public class CacheServiceTests
 {
     private readonly IMemoryCache _memoryCache;
     private readonly ICacheService _cacheService;
-    private readonly TimeProvider _timeProvider;
+    private readonly ITimeProvider _timeProvider;
     private readonly DateTimeOffset _baseTime;
 
     public CacheServiceTests()
     {
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         _baseTime = DateTimeOffset.UtcNow;
-        _timeProvider = Substitute.For<TimeProvider>();
+        _timeProvider = Substitute.For<ITimeProvider>();
         _timeProvider.GetUtcNow().Returns(_baseTime);
         _cacheService = new CacheService(_memoryCache, _timeProvider);
     }

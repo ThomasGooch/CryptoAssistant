@@ -1,4 +1,5 @@
 using AkashTrends.Core.Cache;
+using AkashTrends.Core.Services;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace AkashTrends.Infrastructure.Cache;
@@ -9,9 +10,9 @@ namespace AkashTrends.Infrastructure.Cache;
 public class CacheService : ICacheService
 {
     private readonly IMemoryCache _cache;
-    private readonly TimeProvider _timeProvider;
+    private readonly ITimeProvider _timeProvider;
 
-    public CacheService(IMemoryCache cache, TimeProvider timeProvider)
+    public CacheService(IMemoryCache cache, ITimeProvider timeProvider)
     {
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));

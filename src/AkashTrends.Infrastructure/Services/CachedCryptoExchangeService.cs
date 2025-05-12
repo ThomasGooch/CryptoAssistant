@@ -11,13 +11,13 @@ public class CachedCryptoExchangeService : ICryptoExchangeService
 {
     private readonly ICryptoExchangeService _exchangeService;
     private readonly ICacheService _cacheService;
-    private readonly TimeProvider _timeProvider;
+    private readonly ITimeProvider _timeProvider;
     private const int HISTORICAL_CACHE_MINUTES = 60; // Cache historical data for 1 hour
 
     public CachedCryptoExchangeService(
         ICryptoExchangeService exchangeService,
         ICacheService cacheService,
-        TimeProvider timeProvider)
+        ITimeProvider timeProvider)
     {
         _exchangeService = exchangeService ?? throw new ArgumentNullException(nameof(exchangeService));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

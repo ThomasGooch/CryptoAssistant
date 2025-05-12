@@ -11,7 +11,7 @@ public class CachedCryptoExchangeServiceTests
 {
     private readonly ICryptoExchangeService _exchangeService;
     private readonly ICacheService _cacheService;
-    private readonly TimeProvider _timeProvider;
+    private readonly ITimeProvider _timeProvider;
     private readonly ICryptoExchangeService _cachedService;
     private readonly DateTimeOffset _baseTime;
 
@@ -20,7 +20,7 @@ public class CachedCryptoExchangeServiceTests
         _exchangeService = Substitute.For<ICryptoExchangeService>();
         _cacheService = Substitute.For<ICacheService>();
         _baseTime = DateTimeOffset.UtcNow;
-        _timeProvider = Substitute.For<TimeProvider>();
+        _timeProvider = Substitute.For<ITimeProvider>();
         _timeProvider.GetUtcNow().Returns(_baseTime);
         _cachedService = new CachedCryptoExchangeService(_exchangeService, _cacheService, _timeProvider);
     }
