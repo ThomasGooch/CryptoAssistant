@@ -36,7 +36,7 @@ public class CacheService : ICacheService
         TimeSpan expiration,
         CancellationToken cancellationToken = default)
     {
-        if (_cache.TryGetValue(key, out CacheEntry<T>? entry))
+        if (_cache.TryGetValue(key, out CacheEntry<T>? entry) && entry is not null)
         {
             if (_timeProvider.GetUtcNow() < entry.ExpirationTime)
             {

@@ -20,7 +20,16 @@ public static class DependencyInjection
 
         services.AddHttpClient<ICoinbaseApiClient, CoinbaseClient>();
         services.AddSingleton<ICoinbaseAuthenticator, CoinbaseAuthenticator>();
-        services.AddSingleton<ICryptoExchangeService, CoinbaseExchangeService>();
+        
+        // Register exchange service with caching decorator
+        services.AddSingleton<CoinbaseExchangeService>();
+        services.AddSingleton<ICryptoExchangeService>(sp =>
+        {
+            var exchangeService = sp.GetRequiredService<CoinbaseExchangeService>();
+            var cacheService = sp.GetRequiredService<ICacheService>();
+            var timeProvider = sp.GetRequiredService<TimeProvider>();
+            return new CachedCryptoExchangeService(exchangeService, cacheService, timeProvider);
+        });
 
         // Add caching services
         services.AddMemoryCache();
