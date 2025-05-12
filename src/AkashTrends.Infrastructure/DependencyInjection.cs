@@ -1,5 +1,7 @@
 using AkashTrends.Core.Analysis.Indicators;
+using AkashTrends.Core.Cache;
 using AkashTrends.Core.Services;
+using AkashTrends.Infrastructure.Cache;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +21,11 @@ public static class DependencyInjection
         services.AddHttpClient<ICoinbaseApiClient, CoinbaseClient>();
         services.AddSingleton<ICoinbaseAuthenticator, CoinbaseAuthenticator>();
         services.AddSingleton<ICryptoExchangeService, CoinbaseExchangeService>();
+
+        // Add caching services
+        services.AddMemoryCache();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ICacheService, CacheService>();
 
         return services;
     }
