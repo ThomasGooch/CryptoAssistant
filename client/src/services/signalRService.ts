@@ -8,6 +8,8 @@ class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private priceUpdateCallbacks: Map<string, (price: number) => void> = new Map();
   private indicatorUpdateCallbacks: Map<string, (value: number) => void> = new Map();
+  private readonly reconnectedCallbacks: Set<() => void> = new Set();
+  private readonly stateChangeCallbacks: Set<(state: { isConnected: boolean; error: Error | null }) => void> = new Set();
 
   /**
    * Start the SignalR connection
@@ -31,6 +33,7 @@ class SignalRService {
 
     this.connection.onreconnected((connectionId) => {
       console.log('SignalR reconnected:', connectionId);
+      this.notifyReconnected();
     });
 
     // Register handlers for incoming messages
@@ -212,6 +215,50 @@ class SignalRService {
       this.priceUpdateCallbacks.clear();
       this.indicatorUpdateCallbacks.clear();
     }
+  }
+
+  public onreconnected(callback: () => void): void {
+    this.reconnectedCallbacks.add(callback);
+  }
+
+  public offreconnected(callback: () => void): void {
+    this.reconnectedCallbacks.delete(callback);
+  }
+
+  private notifyReconnected(): void {
+    this.reconnectedCallbacks.forEach((callback) => callback());
+  }
+
+  public onStateChange(callback: (state: { isConnected: boolean; error: Error | null }) => void): void {
+    this.stateChangeCallbacks.add(callback);
+  }
+
+  public offStateChange(callback: (state: { isConnected: boolean; error: Error | null }) => void): void {
+    this.stateChangeCallbacks.delete(callback);
+  }
+
+  private notifyStateChange(state: { isConnected: boolean; error: Error | null }): void {
+    this.stateChangeCallbacks.forEach((callback) => callback(state));
+  }
+
+  private handleConnectionStateChange(): void {
+    if (this.connection) {
+      this.connection.onclose((error) => {
+        this.notifyStateChange({ isConnected: false, error: error || null });
+      });
+
+      this.connection.onreconnected(() => {
+        this.notifyStateChange({ isConnected: true, error: null });
+      });
+
+      this.connection.onreconnecting((error) => {
+        this.notifyStateChange({ isConnected: false, error: error || null });
+      });
+    }
+  }
+
+  constructor() {
+    this.handleConnectionStateChange();
   }
 }
 

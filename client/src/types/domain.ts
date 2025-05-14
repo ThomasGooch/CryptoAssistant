@@ -36,6 +36,23 @@ export interface PriceData {
 }
 
 /**
+ * Historical price data structure
+ */
+export interface HistoricalPrice {
+  timestamp: Date;
+  price: number;
+}
+
+/**
+ * Historical price response
+ */
+export interface HistoricalPriceResponse {
+  symbol: string;
+  timeframe: Timeframe;
+  prices: HistoricalPrice[];
+}
+
+/**
  * Indicator data structure
  */
 export interface IndicatorData {
