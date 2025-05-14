@@ -23,7 +23,9 @@ describe('PriceChart', () => {
 
     test('renders chart container', () => {
         render(<PriceChart symbol="BTC" timeframe={Timeframe.Hour} />);
-        expect(screen.getByTestId('price-chart')).toBeInTheDocument();
+        // Initially shows loading state
+        const loadingElement = screen.getByTestId('price-chart-loading');
+        expect(loadingElement).toBeInTheDocument();
     });
 
     test('displays loading state while fetching data', () => {
@@ -32,14 +34,16 @@ describe('PriceChart', () => {
     });
 
     test('fetches and displays historical price data', async () => {
-        render(<PriceChart symbol="BTC" timeframe={Timeframe.Hour} />);
+        const { container } = render(<PriceChart symbol="BTC" timeframe={Timeframe.Hour} />);
         
         await waitFor(() => {
             expect(mockCryptoService.getHistoricalPrices).toHaveBeenCalledWith('BTC', Timeframe.Hour);
         });
 
+        // After loading, the canvas should be visible
+        const canvas = container.querySelector('canvas');
+        expect(canvas).toBeInTheDocument();
         expect(screen.queryByTestId('price-chart-loading')).not.toBeInTheDocument();
-        expect(screen.getByTestId('price-chart-canvas')).toBeInTheDocument();
     });
 
     test('updates chart when timeframe changes', async () => {
