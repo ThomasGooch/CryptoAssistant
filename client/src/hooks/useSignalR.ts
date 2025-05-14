@@ -11,14 +11,25 @@ export const useSignalR = () => {
 
   // Connect to SignalR when the hook is first used
   useEffect(() => {
+    let mounted = true;
+
     const connectToSignalR = async () => {
       try {
         await signalRService.startConnection();
-        setIsConnected(true);
-        setError(null);
+        if (mounted) {
+          setIsConnected(true);
+          setError(null);
+        }
       } catch (err) {
-        setIsConnected(false);
-        setError(err instanceof Error ? err : new Error('Failed to connect to SignalR'));
+        if (mounted) {
+          setIsConnected(false);
+          // Only set error if it's a real error, not just disconnected
+          if (err instanceof Error && err.message !== 'Connection closed') {
+            setError(err);
+          } else {
+            setError(null);
+          }
+        }
       }
     };
 
@@ -26,7 +37,36 @@ export const useSignalR = () => {
 
     // Cleanup function to stop the connection when component unmounts
     return () => {
+      mounted = false;
       signalRService.stopConnection();
+    };
+  }, []);
+
+  // Clear error state when reconnected
+  useEffect(() => {
+    const handleReconnect = () => {
+      setError(null);
+    };
+
+    signalRService.onreconnected(handleReconnect);
+
+    // Cleanup the event handler on unmount
+    return () => {
+      signalRService.offreconnected(handleReconnect);
+    };
+  }, []);
+
+  // Handle state changes from mockSignalR
+  useEffect(() => {
+    const handleStateChange = (state: { isConnected: boolean; error: Error | null }) => {
+      setIsConnected(state.isConnected);
+      setError(state.error);
+    };
+
+    signalRService.onStateChange(handleStateChange);
+
+    return () => {
+      signalRService.offStateChange(handleStateChange);
     };
   }, []);
 
@@ -121,6 +161,11 @@ export const useSignalR = () => {
       setError(err instanceof Error ? err : new Error('Failed to unsubscribe from indicator updates'));
     }
   };
+
+  useEffect(() => {
+    console.log('useSignalR: isConnected updated to', isConnected);
+    console.log('useSignalR: error updated to', error);
+  }, [isConnected, error]);
 
   return {
     isConnected,
