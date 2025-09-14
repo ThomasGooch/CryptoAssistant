@@ -75,7 +75,7 @@ jobs:
         flags: backend
         name: backend-coverage
       env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   test-frontend:
     name: Test React Frontend
@@ -122,7 +122,7 @@ jobs:
         flags: frontend
         name: frontend-coverage
       env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   test-status:
     name: Test Status

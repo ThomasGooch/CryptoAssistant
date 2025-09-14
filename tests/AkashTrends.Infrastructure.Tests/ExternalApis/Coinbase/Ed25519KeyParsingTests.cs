@@ -49,14 +49,15 @@ public class Ed25519KeyParsingTests
     public void ExtractEd25519PrivateKeyFromPkcs8_ShouldThrowException_WhenKeyTooShort()
     {
         // Arrange
-        var mockPkcs8Bytes = new byte[16]; // Too short for Ed25519
+        var mockPkcs8Bytes = new byte[15]; // Too short for Ed25519 (needs at least 32 bytes)
 
         // Act
         var act = () => InvokeExtractEd25519PrivateKeyFromPkcs8(mockPkcs8Bytes);
 
-        // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Could not extract Ed25519 private key*");
+        // Assert - When using reflection, exceptions are wrapped in TargetInvocationException
+        act.Should().Throw<TargetInvocationException>()
+            .WithInnerException<InvalidOperationException>()
+            .WithMessage("*Could not extract Ed25519 private key from PKCS#8 format*");
     }
 
     [Fact]
