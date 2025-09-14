@@ -13,7 +13,6 @@ jobs:
   check-build-success:
     name: Check Build Success
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run'
     outputs:
       build-success: ${{ steps.check.outputs.success }}
     
@@ -21,23 +20,26 @@ jobs:
     - name: Check build workflow result
       id: check
       run: |
-        if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-          echo "success=true" >> $GITHUB_OUTPUT
-          echo "✅ Build workflow succeeded"
+        if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+            echo "✅ Build workflow succeeded"
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "❌ Build workflow failed"
+            exit 1
+          fi
         else
-          echo "success=false" >> $GITHUB_OUTPUT
-          echo "❌ Build workflow failed"
-          exit 1
+          # For PR and manual runs, assume build success (tests will build themselves)
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo "✅ Running tests for ${{ github.event_name }} event"
         fi
 
   test-backend:
     name: Test .NET Backend
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_run' && needs.check-build-success.outputs.build-success == 'true') ||
-      github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch'
-    needs: check-build-success
+    if: needs.check-build-success.outputs.build-success == 'true'
+    needs: [check-build-success]
     
     steps:
     - name: Checkout code
@@ -80,11 +82,8 @@ jobs:
   test-frontend:
     name: Test React Frontend
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'workflow_run' && needs.check-build-success.outputs.build-success == 'true') ||
-      github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch'
-    needs: check-build-success
+    if: needs.check-build-success.outputs.build-success == 'true'
+    needs: [check-build-success]
     
     steps:
     - name: Checkout code
