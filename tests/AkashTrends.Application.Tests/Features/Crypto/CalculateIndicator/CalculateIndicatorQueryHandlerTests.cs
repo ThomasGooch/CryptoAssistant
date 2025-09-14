@@ -68,15 +68,14 @@ public class CalculateIndicatorQueryHandlerTests
 
         // Verify service calls
         await _exchangeService.Received(1).GetHistoricalPricesAsync(
-            symbol, 
-            Arg.Any<DateTimeOffset>(), 
+            symbol,
+            Arg.Any<DateTimeOffset>(),
             Arg.Any<DateTimeOffset>());
         _indicatorFactory.Received(1).CreateIndicator(type, period);
         indicator.Received(1).Calculate(prices);
     }
 
     [Theory]
-    [InlineData("")]
     [InlineData("")]
     [InlineData("   ")]
     public async Task Handle_InvalidSymbol_ThrowsValidationException(string invalidSymbol)

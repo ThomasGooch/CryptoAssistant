@@ -200,7 +200,8 @@ public class CoinbaseClient : ICoinbaseApiClient
                         }
                     })
                     .Where(x => x != null)
-                    .ToList()!;
+                    .Cast<CryptoPrice>()
+                    .ToList();
 
                 _logger.LogInformation("Processed {0} historical prices for {1}", result.Count, symbol);
                 return result;

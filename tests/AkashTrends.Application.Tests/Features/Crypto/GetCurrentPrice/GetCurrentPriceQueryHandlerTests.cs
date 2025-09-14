@@ -26,10 +26,10 @@ public class GetCurrentPriceQueryHandlerTests
         // Arrange
         var query = new GetCurrentPriceQuery { Symbol = "BTC" };
         var expectedPrice = CryptoPrice.Create(
-            CryptoCurrency.Create("BTC"), 
-            50000.00m, 
+            CryptoCurrency.Create("BTC"),
+            50000.00m,
             DateTimeOffset.UtcNow);
-        
+
         _exchangeService.GetCurrentPriceAsync("BTC").Returns(expectedPrice);
 
         // Act
@@ -43,7 +43,6 @@ public class GetCurrentPriceQueryHandlerTests
     }
 
     [Theory]
-    [InlineData("")]
     [InlineData("")]
     [InlineData("   ")]
     public async Task Handle_InvalidSymbol_ThrowsValidationException(string invalidSymbol)
@@ -61,7 +60,7 @@ public class GetCurrentPriceQueryHandlerTests
         // Arrange
         var query = new GetCurrentPriceQuery { Symbol = "BTC" };
         var expectedException = new ExchangeException("API error");
-        
+
         _exchangeService.GetCurrentPriceAsync("BTC").Throws(expectedException);
 
         // Act & Assert

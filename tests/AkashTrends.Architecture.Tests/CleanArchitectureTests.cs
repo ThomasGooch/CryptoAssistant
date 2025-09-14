@@ -43,7 +43,7 @@ public class CleanArchitectureTests
             {
                 foreach (var forbiddenLayer in otherLayers)
                 {
-                    if (refType.Namespace.StartsWith(forbiddenLayer))
+                    if (refType.Namespace?.StartsWith(forbiddenLayer) == true)
                     {
                         forbiddenDependencies.Add($"{type.FullName} depends on {refType.FullName}");
                     }
@@ -168,7 +168,7 @@ public class CleanArchitectureTests
     {
         // Find all service classes in the solution
         var serviceClasses = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.FullName.Contains("AkashTrends"))
+            .Where(a => a.FullName?.Contains("AkashTrends") == true)
             .SelectMany(a => a.GetTypes())
             .Where(t => t.Name.EndsWith("Service") &&
                    !t.Name.EndsWith("TestService") &&
