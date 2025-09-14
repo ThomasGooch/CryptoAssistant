@@ -103,7 +103,7 @@ class CryptoService {
    * Test the authentication with the Coinbase API
    * @returns Promise with the authentication test response
    */
-  public async testAuth(): Promise<any> {
+  public async testAuth(): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/test-auth`);
       if (!response.ok) {

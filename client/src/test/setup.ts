@@ -32,7 +32,7 @@ beforeAll(() => {
     transform: vi.fn(),
     rect: vi.fn(),
     clip: vi.fn(),
-  })) as any;
+  })) as CanvasRenderingContext2D;
 });
 
 // Automatically cleanup after each test

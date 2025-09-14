@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Chart } from 'chart.js/auto';
 import type { ChartConfiguration } from 'chart.js';
 import { cryptoService } from '../../services/cryptoService';
@@ -17,7 +17,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ symbol, timeframe }) => 
     const chartRef = useRef<HTMLCanvasElement>(null);
     const chartInstance = useRef<Chart | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             // If symbol is empty, just set empty data and don't make the API call
             if (!symbol.trim()) {
@@ -36,14 +36,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({ symbol, timeframe }) => 
         } finally {
             setLoading(false);
         }
-    };
+    }, [symbol, timeframe]);
 
     useEffect(() => {
         fetchData();
         // Set up periodic refresh every 5 minutes
         const interval = setInterval(fetchData, 5 * 60 * 1000);
         return () => clearInterval(interval);
-    }, [symbol, timeframe]);
+    }, [fetchData]);
 
     useEffect(() => {
         if (!chartRef.current || loading) return;
