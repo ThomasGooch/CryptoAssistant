@@ -1,7 +1,0 @@
-my testing framework is xUnit with NSubstitute
-my preferred language is C#
-Use Test Driven Development (TDD) approach
-Use SOLID principles
-Do NOT use MediatR nuget package for CRQS implementation
-Do NOT use AutoMapper nuget package for object mapping
-Do NOT change the backend source code to fix a frontend issue

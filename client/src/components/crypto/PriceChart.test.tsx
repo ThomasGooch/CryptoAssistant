@@ -74,7 +74,7 @@ describe('PriceChart', () => {
         });
     });
 
-    test('refreshes data periodically', async () => {
+    test('refreshes data periodically', { timeout: 10000 }, async () => {
         // Start with fake timers
         vi.useFakeTimers({ shouldAdvanceTime: true });
         
@@ -102,5 +102,5 @@ describe('PriceChart', () => {
 
         // Cleanup
         vi.useRealTimers();
-    }, { timeout: 10000 });
+    });
 });
