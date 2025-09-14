@@ -22,12 +22,12 @@ public class GetCurrentPriceResult
     /// The symbol of the cryptocurrency
     /// </summary>
     public required string Symbol { get; set; }
-    
+
     /// <summary>
     /// The current price of the cryptocurrency
     /// </summary>
     public decimal Price { get; set; }
-    
+
     /// <summary>
     /// The timestamp when the price was retrieved
     /// </summary>

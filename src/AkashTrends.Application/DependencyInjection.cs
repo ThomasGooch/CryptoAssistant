@@ -26,7 +26,7 @@ public static class DependencyInjection
         services.AddTransient<IQueryHandler<GetCurrentPriceQuery, GetCurrentPriceResult>, GetCurrentPriceQueryHandler>();
         services.AddTransient<IQueryHandler<GetHistoricalPricesQuery, GetHistoricalPricesResult>, GetHistoricalPricesQueryHandler>();
         services.AddTransient<IQueryHandler<CalculateIndicatorQuery, CalculateIndicatorResult>, CalculateIndicatorQueryHandler>();
-        
+
 
         return services;
     }

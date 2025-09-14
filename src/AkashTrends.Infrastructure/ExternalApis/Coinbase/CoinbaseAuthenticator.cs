@@ -17,7 +17,7 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
     public void ConfigureHttpClient(HttpClient client)
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-        
+
         client.DefaultRequestHeaders.Add("CB-ACCESS-KEY", _options.ApiKey);
         client.DefaultRequestHeaders.Add("CB-ACCESS-SIGN", GenerateSignature(timestamp, "GET", "/"));
         client.DefaultRequestHeaders.Add("CB-ACCESS-TIMESTAMP", timestamp);
@@ -30,9 +30,9 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
         try
         {
             var messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
-            
+
             // Check if this is an Ed25519 key
-            if (_options.ApiSecret.Contains("-----BEGIN PRIVATE KEY-----") || 
+            if (_options.ApiSecret.Contains("-----BEGIN PRIVATE KEY-----") ||
                 (!_options.ApiSecret.Contains("-----BEGIN EC PRIVATE KEY-----") && !_options.ApiSecret.Contains("-----END")))
             {
                 // Handle Ed25519 key format
@@ -65,14 +65,14 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
         {
             // Extract the raw Ed25519 private key from PKCS#8 format
             var rawPrivateKey = ExtractEd25519PrivateKeyFromPkcs8(pkcs8Bytes);
-            
+
             // Use NSec to handle Ed25519 signatures
             var signatureAlgorithm = SignatureAlgorithm.Ed25519;
             var key = Key.Import(signatureAlgorithm, rawPrivateKey, KeyBlobFormat.RawPrivateKey);
-            
+
             // Sign the message
             var signature = signatureAlgorithm.Sign(key, messageBytes);
-            
+
             return Convert.ToBase64String(signature);
         }
         catch (Exception ex)
@@ -89,12 +89,12 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
         //   algorithm     AlgorithmIdentifier { Ed25519 }
         //   privateKey    OCTET STRING (containing another OCTET STRING with 32-byte key)
         // }
-        
+
         try
         {
             // Simple parsing - find the 32-byte Ed25519 private key
             // Ed25519 private keys are exactly 32 bytes and typically located near the end
-            
+
             // Look for the pattern: 04 20 (OCTET STRING of length 32) followed by 32 bytes
             for (int i = 0; i < pkcs8Bytes.Length - 34; i++)
             {
@@ -106,7 +106,7 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
                     return privateKey;
                 }
             }
-            
+
             // Fallback: try the last 32 bytes (common location)
             if (pkcs8Bytes.Length >= 32)
             {
@@ -114,7 +114,7 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
                 Array.Copy(pkcs8Bytes, pkcs8Bytes.Length - 32, privateKey, 0, 32);
                 return privateKey;
             }
-            
+
             throw new InvalidOperationException("Could not extract Ed25519 private key from PKCS#8 format");
         }
         catch (Exception ex)

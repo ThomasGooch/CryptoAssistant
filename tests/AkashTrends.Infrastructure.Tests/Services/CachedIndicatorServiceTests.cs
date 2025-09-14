@@ -51,7 +51,7 @@ public class CachedIndicatorServiceTests
 
         var indicator = Substitute.For<IIndicator>();
         var expectedResult = new IndicatorResult(52000m, startTime, endTime);
-        
+
         _exchangeService.GetHistoricalPricesAsync(symbol, startTime, endTime)
             .Returns(Task.FromResult<IReadOnlyList<CryptoPrice>>(prices));
 

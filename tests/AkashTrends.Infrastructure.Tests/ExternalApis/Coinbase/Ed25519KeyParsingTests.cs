@@ -66,11 +66,11 @@ public class Ed25519KeyParsingTests
         // Arrange - create PKCS#8 with standard 04 20 pattern
         var mockPkcs8Bytes = new byte[80];
         var expectedKeyBytes = new byte[32];
-        
+
         // Set up the OCTET STRING pattern at position 20
         mockPkcs8Bytes[20] = 0x04; // OCTET STRING tag
         mockPkcs8Bytes[21] = 0x20; // Length: 32 bytes
-        
+
         // Fill with recognizable pattern
         for (int i = 0; i < 32; i++)
         {
@@ -95,7 +95,7 @@ public class Ed25519KeyParsingTests
         var mockPkcs8Bytes = new byte[position + 34]; // Ensure enough space
         mockPkcs8Bytes[position] = 0x04; // OCTET STRING tag
         mockPkcs8Bytes[position + 1] = 0x20; // Length: 32 bytes
-        
+
         var expectedKeyBytes = new byte[32];
         for (int i = 0; i < 32; i++)
         {
@@ -164,18 +164,18 @@ public class Ed25519KeyParsingTests
     private static byte[] CreateValidPkcs8Ed25519Structure()
     {
         var mockPkcs8 = new byte[70];
-        
+
         // Add the OCTET STRING pattern at a realistic position
         var keyPosition = 16;
         mockPkcs8[keyPosition] = 0x04;      // OCTET STRING tag
         mockPkcs8[keyPosition + 1] = 0x20;  // Length: 32 bytes
-        
+
         // Fill the 32-byte Ed25519 private key with test data
         for (int i = 0; i < 32; i++)
         {
             mockPkcs8[keyPosition + 2 + i] = (byte)(i + 50); // Test pattern
         }
-        
+
         return mockPkcs8;
     }
 
@@ -183,11 +183,11 @@ public class Ed25519KeyParsingTests
     {
         // Use reflection to test the private method
         var authenticatorType = typeof(CoinbaseAuthenticator);
-        var method = authenticatorType.GetMethod("ExtractEd25519PrivateKeyFromPkcs8", 
+        var method = authenticatorType.GetMethod("ExtractEd25519PrivateKeyFromPkcs8",
             BindingFlags.NonPublic | BindingFlags.Static);
-        
+
         method.Should().NotBeNull("ExtractEd25519PrivateKeyFromPkcs8 method should exist");
-        
+
         return (byte[])method!.Invoke(null, new object[] { pkcs8Bytes })!;
     }
 }

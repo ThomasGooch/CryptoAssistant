@@ -29,7 +29,7 @@ public class CryptoControllerWithApplicationLayerTests
         _indicatorFactory = Substitute.For<IIndicatorFactory>();
         _logger = Substitute.For<ILogger<CryptoController>>();
         _queryDispatcher = Substitute.For<IQueryDispatcher>();
-        
+
         _controller = new CryptoController(
             _exchangeService,
             _indicatorFactory,
@@ -57,11 +57,11 @@ public class CryptoControllerWithApplicationLayerTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
         var response = Assert.IsType<CryptoPriceResponse>(okResult.Value);
-        
+
         Assert.Equal(symbol, response.Symbol);
         Assert.Equal(expectedResult.Price, response.Price);
         Assert.Equal(expectedResult.Timestamp, response.Timestamp);
-        
+
         // Verify the dispatcher was called with the correct parameters
         await _queryDispatcher.Received(1).Dispatch(Arg.Is<GetCurrentPriceQuery>(q => q.Symbol == symbol));
     }
@@ -72,7 +72,7 @@ public class CryptoControllerWithApplicationLayerTests
         // Arrange
         var symbol = "INVALID";
         var expectedException = new ValidationException("Invalid symbol");
-        
+
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetCurrentPriceQuery>()))
             .Do(x => { throw expectedException; });
@@ -88,7 +88,7 @@ public class CryptoControllerWithApplicationLayerTests
         // Arrange
         var symbol = "BTC";
         var expectedException = new ExchangeException("API error");
-        
+
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetCurrentPriceQuery>()))
             .Do(x => { throw expectedException; });

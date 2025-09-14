@@ -12,12 +12,12 @@ public class CalculateIndicatorQuery : IQuery<CalculateIndicatorResult>
     /// The symbol of the cryptocurrency (e.g., BTC, ETH)
     /// </summary>
     public required string Symbol { get; set; }
-    
+
     /// <summary>
     /// The type of indicator to calculate
     /// </summary>
     public IndicatorType Type { get; set; }
-    
+
     /// <summary>
     /// The period for the indicator calculation
     /// </summary>
@@ -33,22 +33,22 @@ public class CalculateIndicatorResult
     /// The symbol of the cryptocurrency
     /// </summary>
     public required string Symbol { get; set; }
-    
+
     /// <summary>
     /// The type of indicator that was calculated
     /// </summary>
     public IndicatorType Type { get; set; }
-    
+
     /// <summary>
     /// The calculated indicator value
     /// </summary>
     public decimal Value { get; set; }
-    
+
     /// <summary>
     /// The start time of the data used for calculation
     /// </summary>
     public DateTimeOffset StartTime { get; set; }
-    
+
     /// <summary>
     /// The end time of the data used for calculation
     /// </summary>

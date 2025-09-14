@@ -68,7 +68,7 @@ public class CacheServiceTests
 
         // Act - First call should use factory and cache the result
         var result1 = await _cacheService.GetOrSetAsync(key, factory, TimeSpan.FromMinutes(5));
-        
+
         // Move time forward past expiration
         _timeProvider.GetUtcNow().Returns(_baseTime.AddMinutes(6));
 

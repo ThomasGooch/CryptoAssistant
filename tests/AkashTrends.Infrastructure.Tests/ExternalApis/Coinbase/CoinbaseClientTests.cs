@@ -27,12 +27,12 @@ public class CoinbaseClientTests
         var responseMessage = new HttpResponseMessage();
         _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(responseMessage));
         _httpClient = new HttpClient(_handler);
-        
+
         _options = new CoinbaseApiOptions
         {
             BaseUrl = "https://api.exchange.coinbase.com/"
         };
-        
+
         _optionsMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
         _optionsMonitor.CurrentValue.Returns(_options);
 

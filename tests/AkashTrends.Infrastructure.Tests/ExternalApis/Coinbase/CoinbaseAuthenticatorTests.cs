@@ -115,7 +115,7 @@ VGhpcyBpcyBhIG1vY2sgRWQyNTUxOSBrZXkgaW4gUEtDUyM4IGZvcm1hdCBmb3IgdGVzdGluZyBvbmx5
     public void KeyFormatDetection_ShouldWorkCorrectly()
     {
         // Test that the authenticator can distinguish between different key formats
-        
+
         // EC Key format
         var ecOptions = new CoinbaseApiOptions
         {
@@ -153,7 +153,7 @@ VGhpcyBpcyBhIG1vY2sgRWQyNTUxOSBrZXkgZm9ybWF0IGZvciB0ZXN0aW5nIG9ubHk=
         var createRawAuth = () => new CoinbaseAuthenticator(rawMonitor);
 
         createECAuth.Should().NotThrow("EC key format should be recognized");
-        createEd25519Auth.Should().NotThrow("Ed25519 key format should be recognized");  
+        createEd25519Auth.Should().NotThrow("Ed25519 key format should be recognized");
         createRawAuth.Should().NotThrow("Raw key format should be recognized");
     }
 }

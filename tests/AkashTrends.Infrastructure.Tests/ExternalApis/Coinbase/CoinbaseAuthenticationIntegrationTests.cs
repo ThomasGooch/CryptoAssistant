@@ -18,7 +18,7 @@ public class CoinbaseAuthenticationIntegrationTests
             ApiKey = "organizations/test-org/apiKeys/test-key-id",
             ApiSecret = CreateMockEd25519Key()
         };
-        
+
         var optionsMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
         optionsMonitor.CurrentValue.Returns(options);
 
@@ -27,7 +27,7 @@ public class CoinbaseAuthenticationIntegrationTests
         act.Should().NotThrow("Ed25519 format detection should work");
     }
 
-    [Fact]  
+    [Fact]
     public void FullAuthenticationFlow_ShouldDetectECFormat()
     {
         // Arrange - Test EC format detection
@@ -36,7 +36,7 @@ public class CoinbaseAuthenticationIntegrationTests
             ApiKey = "test-ec-key",
             ApiSecret = CreateMockECKey()
         };
-        
+
         var optionsMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
         optionsMonitor.CurrentValue.Returns(options);
 
@@ -53,7 +53,7 @@ public class CoinbaseAuthenticationIntegrationTests
     {
         // Test the key extraction logic without doing actual HTTP operations
         // This tests the Program.cs logic for extracting API keys from organization format
-        
+
         var extractedKey = inputKey.Split('/').LastOrDefault() ?? inputKey;
         extractedKey.Should().Be(expectedExtracted, "key extraction logic should work correctly");
     }
@@ -67,7 +67,7 @@ public class CoinbaseAuthenticationIntegrationTests
             ApiKey = "test-key",
             ApiSecret = "aW52YWxpZC1rZXktZm9ybWF0LXRoYXQtY2Fubm90LWJlLXBhcnNlZA==" // Valid base64 but potentially invalid structure
         };
-        
+
         var optionsMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
         optionsMonitor.CurrentValue.Returns(options);
 
@@ -81,7 +81,7 @@ public class CoinbaseAuthenticationIntegrationTests
     {
         // This test verifies that the authenticator can distinguish between different key formats
         // without attempting actual cryptographic operations
-        
+
         // Test Ed25519 format detection
         var ed25519Options = new CoinbaseApiOptions
         {
@@ -94,7 +94,7 @@ public class CoinbaseAuthenticationIntegrationTests
         // Test EC format detection  
         var ecOptions = new CoinbaseApiOptions
         {
-            ApiKey = "ec-key", 
+            ApiKey = "ec-key",
             ApiSecret = CreateMockECKey()
         };
         var ecMonitor = Substitute.For<IOptionsMonitor<CoinbaseApiOptions>>();
@@ -114,7 +114,7 @@ public class CoinbaseAuthenticationIntegrationTests
         // Create a properly formatted PKCS#8 Ed25519 key for format detection only
         // This creates the minimal PKCS#8 structure that our parser can recognize
         var mockPkcs8 = new List<byte>();
-        
+
         // PKCS#8 header (minimal version for testing)
         mockPkcs8.AddRange(new byte[] { 0x30, 0x2E }); // SEQUENCE, length 46
         mockPkcs8.AddRange(new byte[] { 0x02, 0x01, 0x00 }); // INTEGER version 0
@@ -122,7 +122,7 @@ public class CoinbaseAuthenticationIntegrationTests
         mockPkcs8.AddRange(new byte[] { 0x06, 0x03, 0x2B, 0x65, 0x70 }); // OID for Ed25519
         mockPkcs8.AddRange(new byte[] { 0x04, 0x22 }); // OCTET STRING, length 34
         mockPkcs8.AddRange(new byte[] { 0x04, 0x20 }); // Inner OCTET STRING, length 32 (our parser looks for this)
-        
+
         // 32-byte Ed25519 private key (deterministic for testing)
         for (int i = 0; i < 32; i++)
         {
@@ -142,7 +142,7 @@ public class CoinbaseAuthenticationIntegrationTests
         {
             mockEcBytes[i] = (byte)(i * 5 % 256); // Deterministic test data
         }
-        
+
         var base64Key = Convert.ToBase64String(mockEcBytes);
         var formattedKey = "";
         for (int i = 0; i < base64Key.Length; i += 64)
@@ -150,7 +150,7 @@ public class CoinbaseAuthenticationIntegrationTests
             var lineLength = Math.Min(64, base64Key.Length - i);
             formattedKey += base64Key.Substring(i, lineLength) + "\n";
         }
-        
+
         return $"-----BEGIN EC PRIVATE KEY-----\n{formattedKey}-----END EC PRIVATE KEY-----";
     }
 }

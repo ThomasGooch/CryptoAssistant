@@ -26,7 +26,7 @@ public class CryptoControllerHistoricalPricesTests
         _indicatorFactory = Substitute.For<IIndicatorFactory>();
         _logger = Substitute.For<ILogger<CryptoController>>();
         _queryDispatcher = Substitute.For<IQueryDispatcher>();
-        
+
         _controller = new CryptoController(
             _exchangeService,
             _indicatorFactory,
@@ -41,7 +41,7 @@ public class CryptoControllerHistoricalPricesTests
         var symbol = "BTC";
         var startTime = DateTimeOffset.UtcNow.AddDays(-7);
         var endTime = DateTimeOffset.UtcNow;
-        
+
         var expectedResult = new GetHistoricalPricesResult
         {
             Symbol = symbol,
@@ -56,9 +56,9 @@ public class CryptoControllerHistoricalPricesTests
         };
 
         _queryDispatcher
-            .Dispatch(Arg.Is<GetHistoricalPricesQuery>(q => 
-                q.Symbol == symbol && 
-                q.StartTime == startTime && 
+            .Dispatch(Arg.Is<GetHistoricalPricesQuery>(q =>
+                q.Symbol == symbol &&
+                q.StartTime == startTime &&
                 q.EndTime == endTime))
             .Returns(Task.FromResult(expectedResult));
 
@@ -68,22 +68,22 @@ public class CryptoControllerHistoricalPricesTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
         var response = Assert.IsType<HistoricalPricesResponse>(okResult.Value);
-        
+
         Assert.Equal(symbol, response.Symbol);
         Assert.Equal(startTime, response.StartTime);
         Assert.Equal(endTime, response.EndTime);
         Assert.Equal(expectedResult.Prices.Count, response.Prices.Count);
-        
+
         for (int i = 0; i < expectedResult.Prices.Count; i++)
         {
             Assert.Equal(expectedResult.Prices[i].Price, response.Prices[i].Price);
             Assert.Equal(expectedResult.Prices[i].Timestamp, response.Prices[i].Timestamp);
         }
-        
+
         // Verify the dispatcher was called with the correct parameters
-        await _queryDispatcher.Received(1).Dispatch(Arg.Is<GetHistoricalPricesQuery>(q => 
-            q.Symbol == symbol && 
-            q.StartTime == startTime && 
+        await _queryDispatcher.Received(1).Dispatch(Arg.Is<GetHistoricalPricesQuery>(q =>
+            q.Symbol == symbol &&
+            q.StartTime == startTime &&
             q.EndTime == endTime));
     }
 
@@ -96,15 +96,15 @@ public class CryptoControllerHistoricalPricesTests
         // Arrange
         var startTime = DateTimeOffset.UtcNow.AddDays(-7);
         var endTime = DateTimeOffset.UtcNow;
-        
+
         var expectedException = new ValidationException("Symbol cannot be empty");
-        
+
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetHistoricalPricesQuery>()))
             .Do(x => { throw expectedException; });
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
             _controller.GetHistoricalPrices(invalidSymbol, startTime, endTime));
         Assert.Same(expectedException, exception);
     }
@@ -116,15 +116,15 @@ public class CryptoControllerHistoricalPricesTests
         var symbol = "BTC";
         var startTime = DateTimeOffset.UtcNow;
         var endTime = startTime.AddDays(-1); // End time before start time
-        
+
         var expectedException = new ValidationException("Start time must be before end time");
-        
+
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetHistoricalPricesQuery>()))
             .Do(x => { throw expectedException; });
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => 
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
             _controller.GetHistoricalPrices(symbol, startTime, endTime));
         Assert.Same(expectedException, exception);
     }
@@ -136,15 +136,15 @@ public class CryptoControllerHistoricalPricesTests
         var symbol = "BTC";
         var startTime = DateTimeOffset.UtcNow.AddDays(-7);
         var endTime = DateTimeOffset.UtcNow;
-        
+
         var expectedException = new ExchangeException("API error");
-        
+
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetHistoricalPricesQuery>()))
             .Do(x => { throw expectedException; });
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ExchangeException>(() => 
+        var exception = await Assert.ThrowsAsync<ExchangeException>(() =>
             _controller.GetHistoricalPrices(symbol, startTime, endTime));
         Assert.Same(expectedException, exception);
     }

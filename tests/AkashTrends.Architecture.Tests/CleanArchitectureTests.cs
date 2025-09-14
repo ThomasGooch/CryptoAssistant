@@ -130,36 +130,36 @@ public class CleanArchitectureTests
             .GetTypes();
 
         var mutableEntities = new List<string>();
-        
+
         foreach (var entity in domainEntities)
         {
             // Skip test classes
             if (entity.Name.EndsWith("Tests"))
                 continue;
-                
+
             // Check for public setters
             var propertiesWithPublicSetters = entity.GetProperties()
                 .Where(p => p.SetMethod != null && p.SetMethod.IsPublic)
                 .Select(p => $"{entity.Name}.{p.Name}")
                 .ToList();
-                
+
             if (propertiesWithPublicSetters.Any())
             {
                 mutableEntities.Add($"{entity.Name} has public setters: {string.Join(", ", propertiesWithPublicSetters)}");
             }
-            
+
             // Check for non-readonly fields
             var nonReadonlyFields = entity.GetFields()
                 .Where(f => !f.IsInitOnly && !f.IsLiteral && !f.IsPrivate)
                 .Select(f => $"{entity.Name}.{f.Name}")
                 .ToList();
-                
+
             if (nonReadonlyFields.Any())
             {
                 mutableEntities.Add($"{entity.Name} has non-readonly fields: {string.Join(", ", nonReadonlyFields)}");
             }
         }
-        
+
         Assert.Empty(mutableEntities);
     }
 
@@ -170,15 +170,15 @@ public class CleanArchitectureTests
         var serviceClasses = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => a.FullName.Contains("AkashTrends"))
             .SelectMany(a => a.GetTypes())
-            .Where(t => t.Name.EndsWith("Service") && 
-                   !t.Name.EndsWith("TestService") && 
-                   !t.IsInterface && 
+            .Where(t => t.Name.EndsWith("Service") &&
+                   !t.Name.EndsWith("TestService") &&
+                   !t.IsInterface &&
                    !t.IsAbstract)
             .ToList();
 
         // Check constructor parameters
         var nonInterfaceDependencies = new List<string>();
-        
+
         foreach (var serviceClass in serviceClasses)
         {
             var constructors = serviceClass.GetConstructors();
@@ -187,12 +187,12 @@ public class CleanArchitectureTests
                 foreach (var parameter in constructor.GetParameters())
                 {
                     // Skip logger parameters which are typically concrete types
-                    if (parameter.ParameterType.Name.Contains("Logger") || 
+                    if (parameter.ParameterType.Name.Contains("Logger") ||
                         parameter.ParameterType.Name.Contains("IOptions") ||
                         parameter.ParameterType.Name.Contains("IConfiguration") ||
                         parameter.ParameterType.Name.Contains("CancellationToken"))
                         continue;
-                        
+
                     if (!parameter.ParameterType.IsInterface)
                     {
                         nonInterfaceDependencies.Add(
@@ -201,7 +201,7 @@ public class CleanArchitectureTests
                 }
             }
         }
-        
+
         Assert.Empty(nonInterfaceDependencies);
     }
 }

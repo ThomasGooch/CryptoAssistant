@@ -52,7 +52,7 @@ public class TimeframeIndicatorTests
         var symbol = "BTC";
         var indicatorType = IndicatorType.SimpleMovingAverage;
         var period = 14;
-        
+
         var prices = Enumerable.Range(0, expectedDataPoints)
             .Select(i => CryptoPrice.Create(
                 CryptoCurrency.Create(symbol),
@@ -82,13 +82,13 @@ public class TimeframeIndicatorTests
         await _mockClientProxy.Received(1)
             .SendCoreAsync(
                 "ReceiveIndicatorUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol &&
                     (IndicatorType)args[1] == indicatorType &&
                     (decimal)args[2] == 50000m &&
                     (Timeframe)args[3] == timeframe),
                 default);
-        
+
         // Verify we're using the correct timeframe for historical data
         await _mockExchangeService.Received(1).GetHistoricalPricesAsync(
             Arg.Is(symbol),
@@ -104,7 +104,7 @@ public class TimeframeIndicatorTests
         var symbol = "BTC";
         var indicatorType = IndicatorType.SimpleMovingAverage;
         var period = 14;
-        
+
         var prices = Enumerable.Range(0, 24)
             .Select(i => CryptoPrice.Create(
                 CryptoCurrency.Create(symbol),
@@ -134,7 +134,7 @@ public class TimeframeIndicatorTests
         await _mockClientProxy.Received(1)
             .SendCoreAsync(
                 "ReceiveIndicatorUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol &&
                     (IndicatorType)args[1] == indicatorType &&
                     (decimal)args[2] == 50000m &&
@@ -149,7 +149,7 @@ public class TimeframeIndicatorTests
         var symbol = "BTC";
         var indicatorType = IndicatorType.SimpleMovingAverage;
         var period = 14;
-        
+
         var prices = Enumerable.Range(0, 24)
             .Select(i => CryptoPrice.Create(
                 CryptoCurrency.Create(symbol),
@@ -181,7 +181,7 @@ public class TimeframeIndicatorTests
         await _mockClientProxy.Received(1)
             .SendCoreAsync(
                 "ReceiveIndicatorUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol &&
                     (IndicatorType)args[1] == indicatorType &&
                     (decimal)args[2] == 50000m &&

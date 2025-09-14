@@ -83,9 +83,9 @@ public class PriceUpdateService : BackgroundService
                     "ReceivePriceUpdate",
                     symbol,
                     price.Value);
-                
+
                 _lastUpdateTimes[symbol] = now;
-                
+
                 // Trigger indicator updates when price changes
                 await _indicatorService.UpdateIndicatorsAsync();
             }

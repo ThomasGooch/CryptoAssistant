@@ -64,7 +64,7 @@ public class IndicatorFactory : IIndicatorFactory
         };
     }
 
-    public IEnumerable<IndicatorType> GetAvailableIndicators() => 
+    public IEnumerable<IndicatorType> GetAvailableIndicators() =>
         _descriptions.Keys;
 
     public IndicatorDescription GetIndicatorDescription(IndicatorType type)

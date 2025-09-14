@@ -41,7 +41,7 @@ public class ExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, "An unhandled exception occurred: {Message}. Stack trace: {StackTrace}", 
+        _logger.LogError(exception, "An unhandled exception occurred: {Message}. Stack trace: {StackTrace}",
             exception.Message,
             exception.StackTrace);
 
@@ -62,7 +62,7 @@ public class ExceptionHandlingMiddleware
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-        
+
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
     }
 
