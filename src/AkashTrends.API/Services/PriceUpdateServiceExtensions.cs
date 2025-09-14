@@ -9,7 +9,7 @@ public static class PriceUpdateServiceExtensions
     {
         services.AddSingleton<IIndicatorUpdateService, IndicatorUpdateService>();
         services.AddHostedService<PriceUpdateService>();
-        
+
         return services;
     }
 }

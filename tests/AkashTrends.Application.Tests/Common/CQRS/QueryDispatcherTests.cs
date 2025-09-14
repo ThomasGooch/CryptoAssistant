@@ -22,7 +22,7 @@ public class QueryDispatcherTests
         var query = new TestQuery();
         var expectedResult = new TestResult { Value = "Test Result" };
         var handler = Substitute.For<IQueryHandler<TestQuery, TestResult>>();
-        
+
         handler.Handle(query).Returns(Task.FromResult(expectedResult));
         _serviceProvider.GetService(typeof(IQueryHandler<TestQuery, TestResult>)).Returns(handler);
 
@@ -42,7 +42,7 @@ public class QueryDispatcherTests
         _serviceProvider.GetService(typeof(IQueryHandler<TestQuery, TestResult>)).Returns(null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _dispatcher.Dispatch<TestQuery, TestResult>(query));
     }
 
@@ -52,6 +52,6 @@ public class QueryDispatcherTests
 
     public class TestResult
     {
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
     }
 }

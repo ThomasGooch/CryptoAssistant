@@ -68,7 +68,7 @@ public class PriceUpdateServiceTests : IAsyncDisposable
         await _mockClientProxy.Received(1)
             .SendCoreAsync(
                 "ReceivePriceUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol &&
                     (decimal)args[1] == 50000m),
                 default);

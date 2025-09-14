@@ -89,7 +89,7 @@ public class PriceUpdateHubTests
         await _mockClients.Caller.Received(1)
             .SendCoreAsync(
                 "ReceivePriceUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol.ToUpperInvariant() &&
                     (decimal)args[1] == 50000m),
                 default);
@@ -164,14 +164,14 @@ public class PriceUpdateHubTests
                 Arg.Is(symbol.ToUpperInvariant()),
                 Arg.Is(indicatorType),
                 Arg.Is(period));
-        
+
         await _mockIndicatorService.Received(1)
             .UpdateIndicatorsAsync();
 
         await _mockClients.Caller.Received(1)
             .SendCoreAsync(
                 "ReceiveIndicatorUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol.ToUpperInvariant() &&
                     (IndicatorType)args[1] == indicatorType &&
                     (decimal)args[2] == 50000m),
@@ -197,7 +197,7 @@ public class PriceUpdateHubTests
                 Arg.Is(indicatorType),
                 Arg.Is(period),
                 Arg.Is(timeframe));
-        
+
         await _mockIndicatorService.Received(1)
             .UpdateIndicatorsAsync();
     }

@@ -27,7 +27,7 @@ public class CoinbaseClient : ICoinbaseApiClient
         // Add required headers
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "AkashTrends/1.0");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-        
+
         _authenticator.ConfigureHttpClient(_httpClient);
     }
 
@@ -52,12 +52,12 @@ public class CoinbaseClient : ICoinbaseApiClient
             var requestUrl = $"products/{baseSymbol}/ticker";
             _logger.LogInformation("Requesting price data from Coinbase: {0}", $"{_httpClient.BaseAddress}{requestUrl}");
             var response = await _httpClient.GetAsync(requestUrl);
-            
+
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new NotFoundException($"Invalid symbol: {symbol}");
             }
-            
+
             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
                 throw new RateLimitExceededException("Coinbase API rate limit exceeded");
@@ -67,7 +67,7 @@ public class CoinbaseClient : ICoinbaseApiClient
 
             var content = await response.Content.ReadAsStringAsync();
             _logger.LogDebug("Coinbase API Response: {0}", content);
-            
+
             try
             {
                 var data = JsonSerializer.Deserialize<CoinbaseApiResponse>(content);
@@ -99,7 +99,7 @@ public class CoinbaseClient : ICoinbaseApiClient
         // Coinbase API limits to 300 data points
         // Calculate minimum granularity in seconds that keeps us under this limit
         var minGranularityHours = Math.Ceiling(totalHours / 300);
-        
+
         // Available granularities in seconds: 60, 300, 900, 3600, 21600, 86400
         if (minGranularityHours <= 1) return 3600;     // 1 hour
         if (minGranularityHours <= 6) return 21600;    // 6 hours
@@ -141,13 +141,13 @@ public class CoinbaseClient : ICoinbaseApiClient
             };
 
             var fullUrl = $"{requestUrl}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"))}";
-            
+
             _logger.LogInformation("Requesting historical prices from Coinbase: {0}", fullUrl);
-            _logger.LogDebug("Request parameters - Start time: {0}, End time: {1}, Granularity: {2}s", 
+            _logger.LogDebug("Request parameters - Start time: {0}, End time: {1}, Granularity: {2}s",
                 startTime, endTime, granularity);
 
             var response = await _httpClient.GetAsync(fullUrl);
-            
+
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new NotFoundException($"Invalid symbol: {symbol}");
@@ -200,7 +200,8 @@ public class CoinbaseClient : ICoinbaseApiClient
                         }
                     })
                     .Where(x => x != null)
-                    .ToList()!;
+                    .Cast<CryptoPrice>()
+                    .ToList();
 
                 _logger.LogInformation("Processed {0} historical prices for {1}", result.Count, symbol);
                 return result;

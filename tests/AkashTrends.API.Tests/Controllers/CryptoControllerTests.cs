@@ -59,7 +59,7 @@ public class CryptoControllerTests
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var priceResponse = okResult.Value.Should().BeOfType<CryptoPriceResponse>().Subject;
-        
+
         priceResponse.Symbol.Should().Be(symbol);
         priceResponse.Price.Should().Be(price);
         priceResponse.Timestamp.Should().Be(timestamp);
@@ -75,7 +75,7 @@ public class CryptoControllerTests
         _queryDispatcher
             .When(x => x.Dispatch(Arg.Any<GetCurrentPriceQuery>()))
             .Do(x => { throw new ValidationException("Symbol cannot be empty"); });
-            
+
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _controller.GetPrice(invalidSymbol));
     }
@@ -131,7 +131,7 @@ public class CryptoControllerTests
             .Do(x => { throw new ValidationException("Symbol cannot be empty"); });
 
         // Act & Assert
-        await Assert.ThrowsAsync<ValidationException>(() => 
+        await Assert.ThrowsAsync<ValidationException>(() =>
             _controller.GetIndicator(symbol, IndicatorType.SimpleMovingAverage, 14));
     }
 
@@ -146,7 +146,7 @@ public class CryptoControllerTests
             .Do(x => { throw new ValidationException("Period must be greater than 0"); });
 
         // Act & Assert
-        await Assert.ThrowsAsync<ValidationException>(() => 
+        await Assert.ThrowsAsync<ValidationException>(() =>
             _controller.GetIndicator("BTC", IndicatorType.SimpleMovingAverage, period));
     }
 

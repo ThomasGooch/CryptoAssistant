@@ -42,8 +42,8 @@ public class GetHistoricalPricesQueryHandler : IQueryHandler<GetHistoricalPrices
 
         // Get historical prices from exchange service
         var prices = await _exchangeService.GetHistoricalPricesAsync(
-            query.Symbol, 
-            query.StartTime, 
+            query.Symbol,
+            query.StartTime,
             query.EndTime);
 
         // Map to result

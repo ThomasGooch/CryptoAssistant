@@ -68,7 +68,7 @@ public class CacheServiceTests
 
         // Act - First call should use factory and cache the result
         var result1 = await _cacheService.GetOrSetAsync(key, factory, TimeSpan.FromMinutes(5));
-        
+
         // Move time forward past expiration
         _timeProvider.GetUtcNow().Returns(_baseTime.AddMinutes(6));
 
@@ -103,18 +103,18 @@ public class CacheServiceTests
         var callCount = 0;
 
         // Act
-        var result1 = await _cacheService.GetOrSetAsync(key, async () =>
+        var result1 = await _cacheService.GetOrSetAsync(key, () =>
         {
             callCount++;
-            return expectedValue;
+            return Task.FromResult(expectedValue);
         }, TimeSpan.FromMinutes(5));
 
         _cacheService.Remove(key);
 
-        var result2 = await _cacheService.GetOrSetAsync(key, async () =>
+        var result2 = await _cacheService.GetOrSetAsync(key, () =>
         {
             callCount++;
-            return expectedValue;
+            return Task.FromResult(expectedValue);
         }, TimeSpan.FromMinutes(5));
 
         // Assert

@@ -86,7 +86,7 @@ public class IndicatorUpdateServiceTests : IAsyncDisposable
         await _mockClientProxy.Received(1)
             .SendCoreAsync(
                 "ReceiveIndicatorUpdate",
-                Arg.Is<object[]>(args => 
+                Arg.Is<object[]>(args =>
                     args[0].ToString() == symbol &&
                     (IndicatorType)args[1] == indicatorType &&
                     (decimal)args[2] == 50000m),

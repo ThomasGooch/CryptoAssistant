@@ -22,9 +22,9 @@ public class GetAvailableIndicatorsQueryHandlerTests
         // Arrange
         var expectedIndicators = new[]
         {
-            IndicatorType.SMA,
-            IndicatorType.EMA,
-            IndicatorType.RSI
+            IndicatorType.SimpleMovingAverage,
+            IndicatorType.ExponentialMovingAverage,
+            IndicatorType.RelativeStrengthIndex
         };
 
         _indicatorFactory.GetAvailableIndicators().Returns(expectedIndicators);

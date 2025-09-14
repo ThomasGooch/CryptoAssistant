@@ -72,7 +72,7 @@ public class IndicatorUpdateService : IIndicatorUpdateService
         if (_subscriptions.TryGetValue(symbol, out var indicators))
         {
             indicators.RemoveAll(i => i.Type == indicatorType);
-            
+
             // Remove symbol if no indicators are subscribed
             if (indicators.Count == 0)
             {
@@ -88,7 +88,7 @@ public class IndicatorUpdateService : IIndicatorUpdateService
         if (_subscriptions.TryGetValue(symbol, out var indicators))
         {
             indicators.RemoveAll(i => i.Type == indicatorType && i.Timeframe == timeframe);
-            
+
             // Remove symbol if no indicators are subscribed
             if (indicators.Count == 0)
             {
@@ -141,7 +141,7 @@ public class IndicatorUpdateService : IIndicatorUpdateService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to calculate indicator {IndicatorType} for symbol {Symbol} with timeframe {Timeframe}", 
+                    _logger.LogError(ex, "Failed to calculate indicator {IndicatorType} for symbol {Symbol} with timeframe {Timeframe}",
                         indicator.Type, symbol, indicator.Timeframe);
                 }
             }
@@ -154,7 +154,7 @@ public class IndicatorUpdateService : IIndicatorUpdateService
         // Add some buffer to ensure we have enough data (2x the period)
         int bufferMultiplier = 2;
         int minutesToSubtract = (int)timeframe * period * bufferMultiplier;
-        
+
         return endTime.AddMinutes(-minutesToSubtract);
     }
 

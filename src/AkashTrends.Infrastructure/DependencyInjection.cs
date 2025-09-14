@@ -20,7 +20,7 @@ public static class DependencyInjection
 
         services.AddHttpClient<ICoinbaseApiClient, CoinbaseClient>();
         services.AddSingleton<ICoinbaseAuthenticator, CoinbaseAuthenticator>();
-        
+
         // Register time provider
         services.AddSingleton<ITimeProvider, CryptoTimeProvider>();
 

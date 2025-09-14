@@ -58,7 +58,7 @@ export function CryptoAnalysis() {
     // Otherwise, show disconnected state
     console.log('CryptoAnalysis: Setting connectionStatus to disconnected');
     setConnectionStatus('disconnected');
-  }, [isConnected, signalRError]);
+  }, [isConnected, signalRError, connectionStatus]);
 
   // Load initial price data
   useEffect(() => {
@@ -113,7 +113,7 @@ export function CryptoAnalysis() {
 
     subscribeToPriceUpdates(symbol, priceCallback);
     subscribeToIndicatorUpdates(symbol, indicatorType, period, indicatorCallback);
-  }, [isConnected, hasInitialData, symbol, indicatorType]);
+  }, [isConnected, hasInitialData, symbol, indicatorType, period, subscribeToPriceUpdates, subscribeToIndicatorUpdates]);
 
   // Connection status is handled by the ConnectionStatus component
 

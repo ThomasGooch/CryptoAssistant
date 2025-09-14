@@ -49,7 +49,7 @@ public class CalculateIndicatorQueryHandler : IQueryHandler<CalculateIndicatorQu
         // Get historical prices for the indicator period
         var endTime = DateTimeOffset.UtcNow;
         var startTime = endTime.AddDays(-query.Period);
-        
+
         var prices = await _exchangeService.GetHistoricalPricesAsync(
             query.Symbol,
             startTime,

@@ -32,7 +32,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var expectedMessage = "Validation failed";
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw new ValidationException(expectedMessage));
@@ -42,12 +42,12 @@ public class ExceptionHandlingMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.BadRequest, context.Response.StatusCode);
-        
+
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Equal("VALIDATION_ERROR", errorResponse.Code);
         Assert.Equal(expectedMessage, errorResponse.Message);
@@ -60,7 +60,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var expectedMessage = "Resource not found";
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw new NotFoundException(expectedMessage));
@@ -70,12 +70,12 @@ public class ExceptionHandlingMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.NotFound, context.Response.StatusCode);
-        
+
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Equal("NOT_FOUND", errorResponse.Code);
         Assert.Equal(expectedMessage, errorResponse.Message);
@@ -88,7 +88,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var expectedMessage = "Rate limit exceeded";
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw new RateLimitExceededException(expectedMessage));
@@ -98,12 +98,12 @@ public class ExceptionHandlingMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.TooManyRequests, context.Response.StatusCode);
-        
+
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Equal("RATE_LIMIT_EXCEEDED", errorResponse.Code);
         Assert.Equal(expectedMessage, errorResponse.Message);
@@ -116,7 +116,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var expectedMessage = "Exchange error";
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw new ExchangeException(expectedMessage));
@@ -126,12 +126,12 @@ public class ExceptionHandlingMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.BadGateway, context.Response.StatusCode);
-        
+
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Equal("EXCHANGE_ERROR", errorResponse.Code);
         Assert.Equal(expectedMessage, errorResponse.Message);
@@ -144,7 +144,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var expectedMessage = "Unhandled exception";
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw new Exception(expectedMessage));
@@ -154,12 +154,12 @@ public class ExceptionHandlingMiddlewareTests
 
         // Assert
         Assert.Equal((int)HttpStatusCode.InternalServerError, context.Response.StatusCode);
-        
+
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Equal("INTERNAL_SERVER_ERROR", errorResponse.Code);
         Assert.Equal(expectedMessage, errorResponse.Message);
@@ -173,7 +173,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var exception = new Exception("Test exception");
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw exception);
@@ -184,9 +184,9 @@ public class ExceptionHandlingMiddlewareTests
         // Assert
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.NotNull(errorResponse.Details);
     }
@@ -199,7 +199,7 @@ public class ExceptionHandlingMiddlewareTests
         var middleware = new ExceptionHandlingMiddleware(_next, _logger, _environment);
         var context = new DefaultHttpContext();
         context.Response.Body = new MemoryStream();
-        
+
         var exception = new Exception("Test exception");
         _next.When(x => x.Invoke(Arg.Any<HttpContext>()))
             .Do(x => throw exception);
@@ -210,9 +210,9 @@ public class ExceptionHandlingMiddlewareTests
         // Assert
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody, 
+        var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(responseBody,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        
+
         Assert.NotNull(errorResponse);
         Assert.Null(errorResponse.Details);
     }
