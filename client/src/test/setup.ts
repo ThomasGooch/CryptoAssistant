@@ -32,7 +32,8 @@ beforeAll(() => {
     transform: vi.fn(),
     rect: vi.fn(),
     clip: vi.fn(),
-  })) as CanvasRenderingContext2D;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  })) as any;
 });
 
 // Automatically cleanup after each test
