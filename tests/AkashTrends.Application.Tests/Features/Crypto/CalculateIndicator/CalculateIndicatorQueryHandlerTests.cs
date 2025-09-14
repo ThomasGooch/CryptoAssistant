@@ -27,7 +27,7 @@ public class CalculateIndicatorQueryHandlerTests
     {
         // Arrange
         var symbol = "BTC";
-        var type = IndicatorType.SMA;
+        var type = IndicatorType.SimpleMovingAverage;
         var period = 14;
         var endTime = DateTimeOffset.UtcNow;
         var startTime = endTime.AddDays(-period);
@@ -85,7 +85,7 @@ public class CalculateIndicatorQueryHandlerTests
         var query = new CalculateIndicatorQuery
         {
             Symbol = invalidSymbol,
-            Type = IndicatorType.SMA,
+            Type = IndicatorType.SimpleMovingAverage,
             Period = 14
         };
 
@@ -102,7 +102,7 @@ public class CalculateIndicatorQueryHandlerTests
         var query = new CalculateIndicatorQuery
         {
             Symbol = "BTC",
-            Type = IndicatorType.SMA,
+            Type = IndicatorType.SimpleMovingAverage,
             Period = invalidPeriod
         };
 
@@ -117,7 +117,7 @@ public class CalculateIndicatorQueryHandlerTests
         var query = new CalculateIndicatorQuery
         {
             Symbol = "BTC",
-            Type = IndicatorType.SMA,
+            Type = IndicatorType.SimpleMovingAverage,
             Period = 14
         };
 
@@ -140,7 +140,7 @@ public class CalculateIndicatorQueryHandlerTests
         var query = new CalculateIndicatorQuery
         {
             Symbol = "BTC",
-            Type = IndicatorType.SMA,
+            Type = IndicatorType.SimpleMovingAverage,
             Period = 14
         };
 
