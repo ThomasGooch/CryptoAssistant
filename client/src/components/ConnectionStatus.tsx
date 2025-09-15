@@ -2,10 +2,12 @@ import React from "react";
 
 interface ConnectionStatusProps {
   status: "connected" | "disconnected" | "error";
+  additionalInfo?: React.ReactNode;
 }
 
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   status,
+  additionalInfo,
 }) => {
   let statusClass = "";
   let statusText = "";
@@ -30,7 +32,12 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         data-testid="connection-status"
         className={`px-4 py-2 rounded-full ${statusClass} text-white shadow-lg transition-colors duration-200`}
       >
-        {statusText}
+        <div>{statusText}</div>
+        {additionalInfo && (
+          <div className="text-xs mt-1 opacity-90">
+            {additionalInfo}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -13,7 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
 
   const navItems = [
-    { path: "/", label: "Enhanced Analysis", icon: "📊" },
+    { path: "/", label: "Live Analysis", icon: "🔴" },
+    { path: "/enhanced", label: "Enhanced Analysis", icon: "📊" },
     { path: "/comparison", label: "Multi-Asset Comparison", icon: "📈" },
     { path: "/basic", label: "Basic Analysis", icon: "📉" },
   ];

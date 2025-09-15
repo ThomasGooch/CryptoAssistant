@@ -38,6 +38,20 @@ export interface PriceData {
 }
 
 /**
+ * Extended crypto price data with additional market information
+ */
+export interface CryptoPrice {
+  symbol: string;
+  price: number;
+  timestamp: string | Date;
+  priceChange24h?: number;
+  percentChange24h?: number;
+  volume24h?: number;
+  high24h?: number;
+  low24h?: number;
+}
+
+/**
  * Historical price data structure
  */
 export interface HistoricalPrice {

@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 
 describe("App", () => {
-  test("renders layout with crypto analysis page", () => {
+  test("renders layout with live crypto analysis page", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
@@ -13,6 +13,7 @@ describe("App", () => {
 
     // Check for main sections
     expect(screen.getByText(/Current Price/i)).toBeInTheDocument();
-    expect(screen.getByText(/Price Analysis/i)).toBeInTheDocument();
+    expect(screen.getByText(/Price History/i)).toBeInTheDocument();
+    expect(screen.getByText(/Live Updates/i)).toBeInTheDocument();
   });
 });

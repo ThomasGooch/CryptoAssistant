@@ -233,7 +233,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y } as any,
+      { type: 'mousemove', x, y } as Event & { x: number; y: number },
       'nearest',
       { intersect: false },
       false

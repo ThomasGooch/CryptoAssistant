@@ -2,30 +2,45 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Chart } from "chart.js/auto";
 import type { ChartConfiguration } from "chart.js";
 import { cryptoService } from "../../services/cryptoService";
-import type { HistoricalPrice } from "../../types/domain";
+import { useCoinbaseWebSocket } from "../../hooks/useCoinbaseWebSocket";
+import type { HistoricalPrice, CryptoPrice } from "../../types/domain";
 import { Timeframe } from "../../types/domain";
 
-interface PriceChartProps {
+interface LivePriceChartProps {
   symbol: string;
   timeframe: Timeframe;
   interactive?: boolean;
+  enableLiveUpdates?: boolean;
 }
 
-export const PriceChart: React.FC<PriceChartProps> = ({
+export const LivePriceChart: React.FC<LivePriceChartProps> = ({
   symbol,
   timeframe,
   interactive = true,
+  enableLiveUpdates = true,
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<HistoricalPrice[]>([]);
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  const [livePrice, setLivePrice] = useState<CryptoPrice | null>(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
-  const fetchData = useCallback(async () => {
+  // WebSocket integration for live price updates
+  const {
+    isConnected: wsConnected,
+    error: wsError
+  } = useCoinbaseWebSocket({
+    symbol: enableLiveUpdates ? symbol : undefined,
+    autoConnect: enableLiveUpdates,
+    onPriceUpdate: (price) => {
+      setLivePrice(price);
+    }
+  });
+
+  const fetchHistoricalData = useCallback(async () => {
     try {
-      // If symbol is empty, just set empty data and don't make the API call
       if (!symbol.trim()) {
         setLoading(false);
         setError(null);
@@ -47,12 +62,46 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     }
   }, [symbol, timeframe]);
 
+  // Update chart with live price data
+  const updateChartWithLivePrice = useCallback((price: CryptoPrice) => {
+    if (!chartInstance.current || !data.length) return;
+
+    const chart = chartInstance.current;
+    const dataset = chart.data.datasets[0];
+    
+    if (!dataset || !dataset.data) return;
+
+    // Add new data point
+    const timestamp = typeof price.timestamp === 'string' 
+      ? new Date(price.timestamp) 
+      : price.timestamp;
+    
+    chart.data.labels?.push(timestamp.toLocaleTimeString());
+    (dataset.data as number[]).push(price.price);
+
+    // Keep only last 100 data points for performance
+    const maxDataPoints = 100;
+    if (chart.data.labels && chart.data.labels.length > maxDataPoints) {
+      chart.data.labels.shift();
+      (dataset.data as number[]).shift();
+    }
+
+    chart.update('none'); // Update without animation for performance
+  }, [data.length]);
+
+  // Effect to handle live price updates
   useEffect(() => {
-    fetchData();
-    // Set up periodic refresh every 5 minutes
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    if (livePrice && enableLiveUpdates) {
+      updateChartWithLivePrice(livePrice);
+    }
+  }, [livePrice, enableLiveUpdates, updateChartWithLivePrice]);
+
+  useEffect(() => {
+    fetchHistoricalData();
+    // Set up periodic refresh every 5 minutes for historical data
+    const interval = setInterval(fetchHistoricalData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchHistoricalData]);
 
   useEffect(() => {
     if (!chartRef.current || loading) return;
@@ -103,18 +152,26 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           {
             label: `${symbol} Price`,
             data: data.map((d) => d.price),
-            borderColor: "rgb(75, 192, 192)",
+            borderColor: enableLiveUpdates && wsConnected 
+              ? "rgb(34, 197, 94)" // Green when live
+              : "rgb(75, 192, 192)", // Blue when historical only
+            backgroundColor: enableLiveUpdates && wsConnected
+              ? "rgba(34, 197, 94, 0.1)"
+              : "rgba(75, 192, 192, 0.1)",
             tension: 0.1,
+            pointRadius: 0,
+            pointHoverRadius: 4,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false, // Disable animation for live updates
         plugins: {
           title: {
             display: true,
-            text: `${symbol} Price History`,
+            text: `${symbol} Price History ${enableLiveUpdates ? '(Live)' : ''}`,
           },
           tooltip: {
             mode: "index",
@@ -122,10 +179,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             enabled: interactive,
             callbacks: {
               title: (context) => {
-                return new Date(data[context[0].dataIndex].timestamp).toLocaleString();
+                const index = context[0].dataIndex;
+                if (index < data.length) {
+                  return new Date(data[index].timestamp).toLocaleString();
+                }
+                return "Live Update";
               },
               label: (context) => {
-                const price = data[context.dataIndex].price;
+                const price = context.parsed.y;
                 return `Price: $${price.toFixed(2)}`;
               },
             },
@@ -156,7 +217,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         chartInstance.current = null;
       }
     };
-  }, [data, loading, error, symbol, interactive]);
+  }, [data, loading, error, symbol, interactive, enableLiveUpdates, wsConnected]);
 
   // Interactive mouse move handler
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
@@ -185,40 +246,32 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   if (loading) {
     return (
       <div className="h-64 w-full relative">
-        {loading && (
-          <div
-            data-testid="price-chart-loading"
-            className="absolute inset-0 flex items-center justify-center text-blue-500"
+        <div
+          data-testid="live-price-chart-loading"
+          className="absolute inset-0 flex items-center justify-center text-blue-500"
+        >
+          <svg
+            className="animate-spin h-10 w-10"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="animate-spin h-10 w-10"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-          </div>
-        )}
-        {/* Only show error message if there's an error and symbol is not empty */}
-        {error && symbol.trim() && (
-          <div className="absolute inset-0 flex items-center justify-center text-red-500">
-            <p>Error: {error.message}</p>
-          </div>
-        )}
-        <canvas ref={chartRef} className={loading ? "hidden" : ""}></canvas>
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+        <canvas ref={chartRef} className="hidden"></canvas>
       </div>
     );
   }
@@ -226,25 +279,63 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   // Only show error if there's an error AND the symbol is not empty
   if (error && symbol.trim()) {
     return (
-      <div data-testid="price-chart" className="relative h-96">
+      <div data-testid="live-price-chart" className="relative h-96">
         <div
-          data-testid="price-chart-error"
+          data-testid="live-price-chart-error"
           className="absolute inset-0 flex items-center justify-center text-red-500"
         >
           {error.message}
+          {wsError && (
+            <div className="mt-2 text-sm text-orange-500">
+              WebSocket: {wsError}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div data-testid="price-chart" className="relative h-96">
+    <div data-testid="live-price-chart" className="relative h-96">
+      {/* Connection Status Indicator */}
+      {enableLiveUpdates && (
+        <div className="absolute top-2 left-2 z-10">
+          <div className={`px-2 py-1 text-xs rounded flex items-center space-x-1 ${
+            wsConnected 
+              ? 'bg-green-800 text-green-200' 
+              : 'bg-red-800 text-red-200'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              wsConnected ? 'bg-green-400' : 'bg-red-400'
+            }`}></div>
+            <span>{wsConnected ? 'LIVE' : 'OFFLINE'}</span>
+          </div>
+        </div>
+      )}
+
       {/* Interactive Controls */}
       {interactive && (
         <div className="absolute top-2 right-2 z-10">
           <div className="px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-75">
             Hover for details
           </div>
+        </div>
+      )}
+
+      {/* Live Price Display */}
+      {enableLiveUpdates && livePrice && (
+        <div className="absolute top-12 left-2 z-10 bg-gray-800 text-white p-2 rounded shadow-lg text-sm">
+          <div className="font-bold text-green-400">
+            ${livePrice.price.toFixed(2)}
+          </div>
+          {livePrice.percentChange24h !== undefined && (
+            <div className={`text-xs ${
+              livePrice.percentChange24h >= 0 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {livePrice.percentChange24h >= 0 ? '+' : ''}
+              {livePrice.percentChange24h.toFixed(2)}%
+            </div>
+          )}
         </div>
       )}
 
@@ -256,14 +347,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           {hoveredPoint > 0 && (
             <div className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? 'text-green-400' : 'text-red-400'}`}>
               {data[hoveredPoint].price > data[hoveredPoint - 1].price ? '▲' : '▼'} 
-              {' '}${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
+              ${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
             </div>
           )}
         </div>
       )}
 
       <canvas 
-        data-testid="price-chart-canvas" 
+        data-testid="live-price-chart-canvas" 
         ref={chartRef}
         onMouseMove={interactive ? handleMouseMove : undefined}
         className={interactive ? "cursor-crosshair" : ""}
