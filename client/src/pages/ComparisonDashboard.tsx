@@ -17,7 +17,11 @@ interface AssetData {
 
 export function ComparisonDashboard() {
   // Multi-asset state
-  const [selectedSymbols, setSelectedSymbols] = useState<string[]>(["BTC", "ETH", "ADA"]);
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([
+    "BTC",
+    "ETH",
+    "ADA",
+  ]);
   const [assetData, setAssetData] = useState<Map<string, AssetData>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,7 +62,7 @@ export function ComparisonDashboard() {
         });
 
         const results = await Promise.all(pricePromises);
-        
+
         results.forEach((data) => {
           if (data) {
             newAssetData.set(data.symbol, data);
@@ -81,17 +85,23 @@ export function ComparisonDashboard() {
   };
 
   const handleRemoveSymbol = (symbolToRemove: string) => {
-    setSelectedSymbols(prev => prev.filter(symbol => symbol !== symbolToRemove));
+    setSelectedSymbols((prev) =>
+      prev.filter((symbol) => symbol !== symbolToRemove),
+    );
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Multi-Asset Comparison Dashboard</h1>
-        
+        <h1 className="text-3xl font-bold mb-4">
+          Multi-Asset Comparison Dashboard
+        </h1>
+
         {/* Symbol Selection */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Select Assets to Compare</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Select Assets to Compare
+          </h2>
           <MultiSymbolSelector
             selectedSymbols={selectedSymbols}
             onSymbolsChange={handleSymbolsChange}
@@ -110,7 +120,9 @@ export function ComparisonDashboard() {
               </label>
               <select
                 value={globalChartType}
-                onChange={(e) => setGlobalChartType(e.target.value as ChartType)}
+                onChange={(e) =>
+                  setGlobalChartType(e.target.value as ChartType)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 <option value={ChartType.Line}>Line Chart</option>
@@ -125,7 +137,9 @@ export function ComparisonDashboard() {
               </label>
               <select
                 value={globalTimeframe}
-                onChange={(e) => setGlobalTimeframe(Number(e.target.value) as Timeframe)}
+                onChange={(e) =>
+                  setGlobalTimeframe(Number(e.target.value) as Timeframe)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 <option value={Timeframe.Minute}>1 Minute</option>
@@ -145,7 +159,9 @@ export function ComparisonDashboard() {
               </label>
               <select
                 value={layoutType}
-                onChange={(e) => setLayoutType(e.target.value as "grid" | "list")}
+                onChange={(e) =>
+                  setLayoutType(e.target.value as "grid" | "list")
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 <option value="grid">Grid Layout</option>
@@ -185,17 +201,14 @@ export function ComparisonDashboard() {
         {/* Portfolio Summary */}
         {selectedSymbols.length > 0 && (
           <div className="mb-6">
-            <PortfolioSummary 
-              assetData={assetData} 
-              isLoading={isLoading} 
-            />
+            <PortfolioSummary assetData={assetData} isLoading={isLoading} />
           </div>
         )}
 
         {/* Correlation Matrix */}
         {showCorrelation && selectedSymbols.length > 1 && (
           <div className="mb-6">
-            <CorrelationMatrix 
+            <CorrelationMatrix
               symbols={selectedSymbols}
               timeframe={globalTimeframe}
             />
@@ -205,20 +218,25 @@ export function ComparisonDashboard() {
 
       {/* Charts Layout */}
       {selectedSymbols.length > 0 && (
-        <div className={`grid gap-6 ${
-          layoutType === "grid" 
-            ? selectedSymbols.length === 1 
-              ? "grid-cols-1" 
-              : selectedSymbols.length === 2 
-                ? "grid-cols-1 lg:grid-cols-2" 
-                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-            : "grid-cols-1"
-        }`}>
+        <div
+          className={`grid gap-6 ${
+            layoutType === "grid"
+              ? selectedSymbols.length === 1
+                ? "grid-cols-1"
+                : selectedSymbols.length === 2
+                  ? "grid-cols-1 lg:grid-cols-2"
+                  : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
+              : "grid-cols-1"
+          }`}
+        >
           {selectedSymbols.map((symbol) => {
             const data = assetData.get(symbol);
-            
+
             return (
-              <div key={symbol} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div
+                key={symbol}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+              >
                 {/* Asset Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -229,10 +247,14 @@ export function ComparisonDashboard() {
                           ${data.price.toFixed(2)}
                         </span>
                         {data.percentChange24h !== undefined && (
-                          <span className={`text-sm font-medium ${
-                            data.percentChange24h >= 0 ? 'text-green-500' : 'text-red-500'
-                          }`}>
-                            {data.percentChange24h >= 0 ? '+' : ''}
+                          <span
+                            className={`text-sm font-medium ${
+                              data.percentChange24h >= 0
+                                ? "text-green-500"
+                                : "text-red-500"
+                            }`}
+                          >
+                            {data.percentChange24h >= 0 ? "+" : ""}
                             {data.percentChange24h.toFixed(2)}%
                           </span>
                         )}
@@ -278,7 +300,8 @@ export function ComparisonDashboard() {
             No Assets Selected
           </h3>
           <p className="text-gray-500">
-            Select cryptocurrency symbols above to start comparing their performance.
+            Select cryptocurrency symbols above to start comparing their
+            performance.
           </p>
         </div>
       )}

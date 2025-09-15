@@ -186,7 +186,7 @@ export function CryptoAnalysis() {
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-4">Price History</h2>
-            
+
             {/* Chart Configuration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
@@ -203,10 +203,12 @@ export function CryptoAnalysis() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={ChartType.Line}>Line Chart</option>
-                  <option value={ChartType.Candlestick}>Candlestick Chart</option>
+                  <option value={ChartType.Candlestick}>
+                    Candlestick Chart
+                  </option>
                 </select>
               </div>
-              
+
               <div>
                 <label
                   htmlFor="timeframe"
@@ -217,7 +219,9 @@ export function CryptoAnalysis() {
                 <select
                   id="timeframe"
                   value={timeframe}
-                  onChange={(e) => setTimeframe(Number(e.target.value) as Timeframe)}
+                  onChange={(e) =>
+                    setTimeframe(Number(e.target.value) as Timeframe)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={Timeframe.Minute}>1 Minute</option>
@@ -229,7 +233,7 @@ export function CryptoAnalysis() {
                   <option value={Timeframe.Week}>1 Week</option>
                 </select>
               </div>
-              
+
               {chartType === ChartType.Candlestick && (
                 <div>
                   <label
@@ -251,12 +255,12 @@ export function CryptoAnalysis() {
                 </div>
               )}
             </div>
-            
+
             {/* Chart Display */}
             <div className="h-96">
               {chartType === ChartType.Candlestick ? (
-                <CandlestickChart 
-                  symbol={symbol} 
+                <CandlestickChart
+                  symbol={symbol}
                   timeframe={timeframe}
                   showVolume={showVolume}
                 />

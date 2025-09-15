@@ -13,7 +13,10 @@ interface CorrelationData {
   correlation: number;
 }
 
-export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps) {
+export function CorrelationMatrix({
+  symbols,
+  timeframe,
+}: CorrelationMatrixProps) {
   const [correlationData, setCorrelationData] = useState<CorrelationData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,30 +35,36 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
       try {
         // Fetch historical price data for all symbols
         const priceDataPromises = symbols.map(async (symbol) => {
-          const response = await cryptoService.getHistoricalPrices(symbol, timeframe);
+          const response = await cryptoService.getHistoricalPrices(
+            symbol,
+            timeframe,
+          );
           return {
             symbol,
-            prices: response.prices.map(p => p.price),
+            prices: response.prices.map((p) => p.price),
           };
         });
 
         const allPriceData = await Promise.all(priceDataPromises);
-        
+
         // Calculate correlations between each pair of symbols
         const correlations: CorrelationData[] = [];
-        
+
         for (let i = 0; i < symbols.length; i++) {
           for (let j = i; j < symbols.length; j++) {
             const symbol1 = symbols[i];
             const symbol2 = symbols[j];
-            
-            const data1 = allPriceData.find(d => d.symbol === symbol1);
-            const data2 = allPriceData.find(d => d.symbol === symbol2);
-            
+
+            const data1 = allPriceData.find((d) => d.symbol === symbol1);
+            const data2 = allPriceData.find((d) => d.symbol === symbol2);
+
             if (!data1 || !data2) continue;
-            
-            const correlation = i === j ? 1 : calculatePearsonCorrelation(data1.prices, data2.prices);
-            
+
+            const correlation =
+              i === j
+                ? 1
+                : calculatePearsonCorrelation(data1.prices, data2.prices);
+
             correlations.push({
               symbol1,
               symbol2,
@@ -66,7 +75,11 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
 
         setCorrelationData(correlations);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to calculate correlations');
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to calculate correlations",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -91,31 +104,34 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
     const sumY2 = ySlice.reduce((sum, yi) => sum + yi * yi, 0);
 
     const numerator = n * sumXY - sumX * sumY;
-    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    const denominator = Math.sqrt(
+      (n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY),
+    );
 
     return denominator === 0 ? 0 : numerator / denominator;
   };
 
   const getCorrelation = (symbol1: string, symbol2: string): number => {
     const correlation = correlationData.find(
-      c => (c.symbol1 === symbol1 && c.symbol2 === symbol2) ||
-           (c.symbol1 === symbol2 && c.symbol2 === symbol1)
+      (c) =>
+        (c.symbol1 === symbol1 && c.symbol2 === symbol2) ||
+        (c.symbol1 === symbol2 && c.symbol2 === symbol1),
     );
     return correlation?.correlation ?? 0;
   };
 
   const getCorrelationColor = (correlation: number): string => {
     const absCorr = Math.abs(correlation);
-    if (absCorr > 0.7) return correlation > 0 ? 'bg-green-500' : 'bg-red-500';
-    if (absCorr > 0.5) return correlation > 0 ? 'bg-green-400' : 'bg-red-400';
-    if (absCorr > 0.3) return correlation > 0 ? 'bg-green-300' : 'bg-red-300';
-    if (absCorr > 0.1) return correlation > 0 ? 'bg-green-200' : 'bg-red-200';
-    return 'bg-gray-200 dark:bg-gray-600';
+    if (absCorr > 0.7) return correlation > 0 ? "bg-green-500" : "bg-red-500";
+    if (absCorr > 0.5) return correlation > 0 ? "bg-green-400" : "bg-red-400";
+    if (absCorr > 0.3) return correlation > 0 ? "bg-green-300" : "bg-red-300";
+    if (absCorr > 0.1) return correlation > 0 ? "bg-green-200" : "bg-red-200";
+    return "bg-gray-200 dark:bg-gray-600";
   };
 
   const getTextColor = (correlation: number): string => {
     const absCorr = Math.abs(correlation);
-    return absCorr > 0.5 ? 'text-white' : 'text-gray-800 dark:text-gray-200';
+    return absCorr > 0.5 ? "text-white" : "text-gray-800 dark:text-gray-200";
   };
 
   if (symbols.length < 2) {
@@ -127,24 +143,44 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Correlation Matrix</h2>
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Based on {timeframe === Timeframe.Hour ? '1 Hour' : 
-                   timeframe === Timeframe.Day ? '1 Day' : 
-                   timeframe === Timeframe.Week ? '1 Week' : 'Historical'} data
+          Based on{" "}
+          {timeframe === Timeframe.Hour
+            ? "1 Hour"
+            : timeframe === Timeframe.Day
+              ? "1 Day"
+              : timeframe === Timeframe.Week
+                ? "1 Week"
+                : "Historical"}{" "}
+          data
         </div>
       </div>
 
       {isLoading ? (
         <div className="animate-pulse">
-          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${symbols.length + 1}, 1fr)` }}>
-            {[...Array((symbols.length + 1) * (symbols.length + 1))].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            ))}
+          <div
+            className="grid gap-2"
+            style={{
+              gridTemplateColumns: `repeat(${symbols.length + 1}, 1fr)`,
+            }}
+          >
+            {[...Array((symbols.length + 1) * (symbols.length + 1))].map(
+              (_, i) => (
+                <div
+                  key={i}
+                  className="h-12 bg-gray-200 dark:bg-gray-700 rounded"
+                ></div>
+              ),
+            )}
           </div>
         </div>
       ) : error ? (
         <div className="text-center py-8">
-          <div className="text-red-500 mb-2">Error calculating correlations</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{error}</div>
+          <div className="text-red-500 mb-2">
+            Error calculating correlations
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {error}
+          </div>
         </div>
       ) : (
         <>
@@ -155,7 +191,10 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
                 <tr>
                   <th className="w-16 h-12"></th>
                   {symbols.map((symbol) => (
-                    <th key={symbol} className="text-center font-medium p-2 min-w-16">
+                    <th
+                      key={symbol}
+                      className="text-center font-medium p-2 min-w-16"
+                    >
                       {symbol}
                     </th>
                   ))}
@@ -164,12 +203,14 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
               <tbody>
                 {symbols.map((symbol1) => (
                   <tr key={symbol1}>
-                    <td className="font-medium p-2 text-right pr-4">{symbol1}</td>
+                    <td className="font-medium p-2 text-right pr-4">
+                      {symbol1}
+                    </td>
                     {symbols.map((symbol2) => {
                       const correlation = getCorrelation(symbol1, symbol2);
                       return (
                         <td key={symbol2} className="p-1">
-                          <div 
+                          <div
                             className={`
                               h-12 flex items-center justify-center rounded text-sm font-medium
                               ${getCorrelationColor(correlation)} ${getTextColor(correlation)}
@@ -190,7 +231,9 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
           {/* Legend */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Correlation:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Correlation:
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
@@ -217,41 +260,59 @@ export function CorrelationMatrix({ symbols, timeframe }: CorrelationMatrixProps
           {/* Insights */}
           {correlationData.length > 0 && (
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Key Insights:</h4>
+              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                Key Insights:
+              </h4>
               <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 {(() => {
-                  const nonDiagonalCorrelations = correlationData.filter(c => c.symbol1 !== c.symbol2);
-                  const strongCorrelations = nonDiagonalCorrelations.filter(c => Math.abs(c.correlation) > 0.7);
-                  const weakCorrelations = nonDiagonalCorrelations.filter(c => Math.abs(c.correlation) < 0.3);
-                  
+                  const nonDiagonalCorrelations = correlationData.filter(
+                    (c) => c.symbol1 !== c.symbol2,
+                  );
+                  const strongCorrelations = nonDiagonalCorrelations.filter(
+                    (c) => Math.abs(c.correlation) > 0.7,
+                  );
+                  const weakCorrelations = nonDiagonalCorrelations.filter(
+                    (c) => Math.abs(c.correlation) < 0.3,
+                  );
+
                   const insights = [];
-                  
+
                   if (strongCorrelations.length > 0) {
-                    const strongest = strongCorrelations.reduce((max, c) => 
-                      Math.abs(c.correlation) > Math.abs(max.correlation) ? c : max
+                    const strongest = strongCorrelations.reduce((max, c) =>
+                      Math.abs(c.correlation) > Math.abs(max.correlation)
+                        ? c
+                        : max,
                     );
                     insights.push(
                       <li key="strong">
-                        Strongest correlation: {strongest.symbol1} and {strongest.symbol2} ({strongest.correlation.toFixed(3)})
-                      </li>
+                        Strongest correlation: {strongest.symbol1} and{" "}
+                        {strongest.symbol2} ({strongest.correlation.toFixed(3)})
+                      </li>,
                     );
                   }
-                  
+
                   if (weakCorrelations.length > 0) {
                     insights.push(
                       <li key="weak">
-                        {weakCorrelations.length} pair{weakCorrelations.length > 1 ? 's' : ''} show{weakCorrelations.length === 1 ? 's' : ''} weak correlation (good for diversification)
-                      </li>
+                        {weakCorrelations.length} pair
+                        {weakCorrelations.length > 1 ? "s" : ""} show
+                        {weakCorrelations.length === 1 ? "s" : ""} weak
+                        correlation (good for diversification)
+                      </li>,
                     );
                   }
-                  
-                  const avgCorrelation = nonDiagonalCorrelations.reduce((sum, c) => sum + Math.abs(c.correlation), 0) / nonDiagonalCorrelations.length;
+
+                  const avgCorrelation =
+                    nonDiagonalCorrelations.reduce(
+                      (sum, c) => sum + Math.abs(c.correlation),
+                      0,
+                    ) / nonDiagonalCorrelations.length;
                   insights.push(
                     <li key="avg">
                       Average correlation strength: {avgCorrelation.toFixed(3)}
-                    </li>
+                    </li>,
                   );
-                  
+
                   return insights;
                 })()}
               </ul>

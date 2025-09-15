@@ -34,9 +34,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       >
         <div>{statusText}</div>
         {additionalInfo && (
-          <div className="text-xs mt-1 opacity-90">
-            {additionalInfo}
-          </div>
+          <div className="text-xs mt-1 opacity-90">{additionalInfo}</div>
         )}
       </div>
     </div>

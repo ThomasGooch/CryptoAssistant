@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Chart } from "chart.js/auto";
-import type { ChartConfiguration, ScriptableContext, ChartDataset } from "chart.js";
+import type {
+  ChartConfiguration,
+  ScriptableContext,
+  ChartDataset,
+} from "chart.js";
 import { cryptoService } from "../../services/cryptoService";
 import type { CandlestickData } from "../../types/domain";
 import { Timeframe } from "../../types/domain";
@@ -98,7 +102,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
     // Custom candlestick rendering using bar chart with custom drawing
     const labels = data.map((d) => new Date(d.timestamp).toLocaleString());
-    
+
     // Create datasets for OHLC representation
     const ohlcData = data.map((candle, index) => {
       const isBullish = candle.close > candle.open;
@@ -110,21 +114,21 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
         low: candle.low,
         close: candle.close,
         volume: candle.volume,
-        color: isBullish ? '#00ff00' : '#ff0000', // Green for bullish, red for bearish
+        color: isBullish ? "#00ff00" : "#ff0000", // Green for bullish, red for bearish
       };
     });
 
-    const datasets: ChartDataset<'bar'>[] = [
+    const datasets: ChartDataset<"bar">[] = [
       {
         label: `${symbol} Price`,
-        data: ohlcData.map(d => d.close),
-        backgroundColor: (ctx: ScriptableContext<'bar'>) => {
+        data: ohlcData.map((d) => d.close),
+        backgroundColor: (ctx: ScriptableContext<"bar">) => {
           const dataPoint = ohlcData[ctx.dataIndex];
-          return dataPoint ? dataPoint.color : '#00ff00';
+          return dataPoint ? dataPoint.color : "#00ff00";
         },
-        borderColor: (ctx: ScriptableContext<'bar'>) => {
+        borderColor: (ctx: ScriptableContext<"bar">) => {
           const dataPoint = ohlcData[ctx.dataIndex];
-          return dataPoint ? dataPoint.color : '#00ff00';
+          return dataPoint ? dataPoint.color : "#00ff00";
         },
         borderWidth: 1,
       },
@@ -134,7 +138,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     if (showVolume) {
       datasets.push({
         label: "Volume",
-        data: data.map(d => d.volume),
+        data: data.map((d) => d.volume),
         backgroundColor: "rgba(54, 162, 235, 0.2)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
@@ -167,8 +171,8 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
               label: (context) => {
                 const dataIndex = context.dataIndex;
                 const candle = data[dataIndex];
-                if (!candle) return '';
-                
+                if (!candle) return "";
+
                 return [
                   `Open: $${candle.open.toFixed(2)}`,
                   `High: $${candle.high.toFixed(2)}`,
@@ -222,29 +226,31 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     };
   }, [data, loading, error, symbol, showVolume, interactive]);
 
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (!chartInstance.current || !interactive) return;
 
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
-    if (!chartInstance.current || !interactive) return;
-    
-    const rect = chartRef.current?.getBoundingClientRect();
-    if (!rect) return;
+      const rect = chartRef.current?.getBoundingClientRect();
+      if (!rect) return;
 
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    const elements = chartInstance.current.getElementsAtEventForMode(
-      { type: 'mousemove', x, y } as Event & { x: number; y: number },
-      'nearest',
-      { intersect: false },
-      false
-    );
-    
-    if (elements.length > 0) {
-      setHoveredPoint(elements[0].index);
-    } else {
-      setHoveredPoint(null);
-    }
-  }, [interactive]);
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const elements = chartInstance.current.getElementsAtEventForMode(
+        { type: "mousemove", x, y } as Event & { x: number; y: number },
+        "nearest",
+        { intersect: false },
+        false,
+      );
+
+      if (elements.length > 0) {
+        setHoveredPoint(elements[0].index);
+      } else {
+        setHoveredPoint(null);
+      }
+    },
+    [interactive],
+  );
 
   if (loading) {
     return (
@@ -306,24 +312,38 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
       {/* Hovered Data Display */}
       {interactive && hoveredPoint !== null && data[hoveredPoint] && (
         <div className="absolute top-12 right-2 z-10 bg-gray-800 text-white p-3 rounded shadow-lg text-sm">
-          <div className="font-bold">{new Date(data[hoveredPoint].timestamp).toLocaleString()}</div>
+          <div className="font-bold">
+            {new Date(data[hoveredPoint].timestamp).toLocaleString()}
+          </div>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div>Open: ${data[hoveredPoint].open.toFixed(2)}</div>
             <div>High: ${data[hoveredPoint].high.toFixed(2)}</div>
             <div>Low: ${data[hoveredPoint].low.toFixed(2)}</div>
             <div>Close: ${data[hoveredPoint].close.toFixed(2)}</div>
-            <div className="col-span-2">Volume: {data[hoveredPoint].volume.toLocaleString()}</div>
+            <div className="col-span-2">
+              Volume: {data[hoveredPoint].volume.toLocaleString()}
+            </div>
           </div>
-          <div className={`mt-2 font-bold ${data[hoveredPoint].close > data[hoveredPoint].open ? 'text-green-400' : 'text-red-400'}`}>
-            {data[hoveredPoint].close > data[hoveredPoint].open ? '▲' : '▼'} 
-            {' '}${Math.abs(data[hoveredPoint].close - data[hoveredPoint].open).toFixed(2)} 
-            ({((data[hoveredPoint].close - data[hoveredPoint].open) / data[hoveredPoint].open * 100).toFixed(2)}%)
+          <div
+            className={`mt-2 font-bold ${data[hoveredPoint].close > data[hoveredPoint].open ? "text-green-400" : "text-red-400"}`}
+          >
+            {data[hoveredPoint].close > data[hoveredPoint].open ? "▲" : "▼"} $
+            {Math.abs(
+              data[hoveredPoint].close - data[hoveredPoint].open,
+            ).toFixed(2)}
+            (
+            {(
+              ((data[hoveredPoint].close - data[hoveredPoint].open) /
+                data[hoveredPoint].open) *
+              100
+            ).toFixed(2)}
+            %)
           </div>
         </div>
       )}
 
-      <canvas 
-        data-testid="candlestick-chart-canvas" 
+      <canvas
+        data-testid="candlestick-chart-canvas"
         ref={chartRef}
         onMouseMove={interactive ? handleMouseMove : undefined}
         className={interactive ? "cursor-crosshair" : ""}

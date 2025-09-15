@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { coinbaseWebSocketService } from '../services/coinbaseWebSocketService';
-import type { CryptoPrice } from '../types/domain';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { coinbaseWebSocketService } from "../services/coinbaseWebSocketService";
+import type { CryptoPrice } from "../types/domain";
 
 interface UseCoinbaseWebSocketOptions {
   symbol?: string;
@@ -9,27 +9,29 @@ interface UseCoinbaseWebSocketOptions {
   onConnectionChange?: (connected: boolean) => void;
 }
 
-export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) => {
+export const useCoinbaseWebSocket = (
+  options: UseCoinbaseWebSocketOptions = {},
+) => {
   const {
     symbol,
     autoConnect = true,
     onPriceUpdate,
-    onConnectionChange
+    onConnectionChange,
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<CryptoPrice | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Use refs to avoid stale closures in callbacks
   const onPriceUpdateRef = useRef(onPriceUpdate);
   const onConnectionChangeRef = useRef(onConnectionChange);
-  
+
   // Update refs when callbacks change
   useEffect(() => {
     onPriceUpdateRef.current = onPriceUpdate;
   }, [onPriceUpdate]);
-  
+
   useEffect(() => {
     onConnectionChangeRef.current = onConnectionChange;
   }, [onConnectionChange]);
@@ -37,7 +39,7 @@ export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) 
   // Connection state callback
   const handleConnectionChange = useCallback((connected: boolean) => {
     setIsConnected(connected);
-    setError(connected ? null : 'WebSocket connection lost');
+    setError(connected ? null : "WebSocket connection lost");
     onConnectionChangeRef.current?.(connected);
   }, []);
 
@@ -54,7 +56,7 @@ export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) 
       await coinbaseWebSocketService.connect();
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect');
+      setError(err instanceof Error ? err.message : "Failed to connect");
     }
   }, []);
 
@@ -66,12 +68,18 @@ export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) 
   }, []);
 
   // Subscribe/unsubscribe functions
-  const subscribe = useCallback((symbolToSubscribe: string) => {
-    if (!symbolToSubscribe.trim()) {
-      return;
-    }
-    coinbaseWebSocketService.subscribeToTicker(symbolToSubscribe, handlePriceUpdate);
-  }, [handlePriceUpdate]);
+  const subscribe = useCallback(
+    (symbolToSubscribe: string) => {
+      if (!symbolToSubscribe.trim()) {
+        return;
+      }
+      coinbaseWebSocketService.subscribeToTicker(
+        symbolToSubscribe,
+        handlePriceUpdate,
+      );
+    },
+    [handlePriceUpdate],
+  );
 
   const unsubscribe = useCallback((symbolToUnsubscribe: string) => {
     coinbaseWebSocketService.unsubscribeFromTicker(symbolToUnsubscribe);
@@ -82,7 +90,7 @@ export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) 
   useEffect(() => {
     // Set up connection state listener
     coinbaseWebSocketService.onConnectionStateChange(handleConnectionChange);
-    
+
     if (autoConnect) {
       connect();
     }
@@ -113,12 +121,12 @@ export const useCoinbaseWebSocket = (options: UseCoinbaseWebSocketOptions = {}) 
     isConnected,
     currentPrice,
     error,
-    
+
     // Actions
     connect,
     disconnect,
     subscribe,
-    unsubscribe
+    unsubscribe,
   };
 };
 

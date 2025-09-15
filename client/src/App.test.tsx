@@ -8,7 +8,7 @@ describe("App", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Check for main sections

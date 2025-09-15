@@ -28,15 +28,12 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
   const chartInstance = useRef<Chart | null>(null);
 
   // WebSocket integration for live price updates
-  const {
-    isConnected: wsConnected,
-    error: wsError
-  } = useCoinbaseWebSocket({
+  const { isConnected: wsConnected, error: wsError } = useCoinbaseWebSocket({
     symbol: enableLiveUpdates ? symbol : undefined,
     autoConnect: enableLiveUpdates,
     onPriceUpdate: (price) => {
       setLivePrice(price);
-    }
+    },
   });
 
   const fetchHistoricalData = useCallback(async () => {
@@ -63,31 +60,35 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
   }, [symbol, timeframe]);
 
   // Update chart with live price data
-  const updateChartWithLivePrice = useCallback((price: CryptoPrice) => {
-    if (!chartInstance.current || !data.length) return;
+  const updateChartWithLivePrice = useCallback(
+    (price: CryptoPrice) => {
+      if (!chartInstance.current || !data.length) return;
 
-    const chart = chartInstance.current;
-    const dataset = chart.data.datasets[0];
-    
-    if (!dataset || !dataset.data) return;
+      const chart = chartInstance.current;
+      const dataset = chart.data.datasets[0];
 
-    // Add new data point
-    const timestamp = typeof price.timestamp === 'string' 
-      ? new Date(price.timestamp) 
-      : price.timestamp;
-    
-    chart.data.labels?.push(timestamp.toLocaleTimeString());
-    (dataset.data as number[]).push(price.price);
+      if (!dataset || !dataset.data) return;
 
-    // Keep only last 100 data points for performance
-    const maxDataPoints = 100;
-    if (chart.data.labels && chart.data.labels.length > maxDataPoints) {
-      chart.data.labels.shift();
-      (dataset.data as number[]).shift();
-    }
+      // Add new data point
+      const timestamp =
+        typeof price.timestamp === "string"
+          ? new Date(price.timestamp)
+          : price.timestamp;
 
-    chart.update('none'); // Update without animation for performance
-  }, [data.length]);
+      chart.data.labels?.push(timestamp.toLocaleTimeString());
+      (dataset.data as number[]).push(price.price);
+
+      // Keep only last 100 data points for performance
+      const maxDataPoints = 100;
+      if (chart.data.labels && chart.data.labels.length > maxDataPoints) {
+        chart.data.labels.shift();
+        (dataset.data as number[]).shift();
+      }
+
+      chart.update("none"); // Update without animation for performance
+    },
+    [data.length],
+  );
 
   // Effect to handle live price updates
   useEffect(() => {
@@ -152,12 +153,14 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
           {
             label: `${symbol} Price`,
             data: data.map((d) => d.price),
-            borderColor: enableLiveUpdates && wsConnected 
-              ? "rgb(34, 197, 94)" // Green when live
-              : "rgb(75, 192, 192)", // Blue when historical only
-            backgroundColor: enableLiveUpdates && wsConnected
-              ? "rgba(34, 197, 94, 0.1)"
-              : "rgba(75, 192, 192, 0.1)",
+            borderColor:
+              enableLiveUpdates && wsConnected
+                ? "rgb(34, 197, 94)" // Green when live
+                : "rgb(75, 192, 192)", // Blue when historical only
+            backgroundColor:
+              enableLiveUpdates && wsConnected
+                ? "rgba(34, 197, 94, 0.1)"
+                : "rgba(75, 192, 192, 0.1)",
             tension: 0.1,
             pointRadius: 0,
             pointHoverRadius: 4,
@@ -171,7 +174,7 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
         plugins: {
           title: {
             display: true,
-            text: `${symbol} Price History ${enableLiveUpdates ? '(Live)' : ''}`,
+            text: `${symbol} Price History ${enableLiveUpdates ? "(Live)" : ""}`,
           },
           tooltip: {
             mode: "index",
@@ -217,31 +220,42 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
         chartInstance.current = null;
       }
     };
-  }, [data, loading, error, symbol, interactive, enableLiveUpdates, wsConnected]);
+  }, [
+    data,
+    loading,
+    error,
+    symbol,
+    interactive,
+    enableLiveUpdates,
+    wsConnected,
+  ]);
 
   // Interactive mouse move handler
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
-    if (!chartInstance.current || !interactive) return;
-    
-    const rect = chartRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (!chartInstance.current || !interactive) return;
 
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    const elements = chartInstance.current.getElementsAtEventForMode(
-      { type: 'mousemove', x, y } as Event & { x: number; y: number },
-      'nearest',
-      { intersect: false },
-      false
-    );
-    
-    if (elements.length > 0) {
-      setHoveredPoint(elements[0].index);
-    } else {
-      setHoveredPoint(null);
-    }
-  }, [interactive]);
+      const rect = chartRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const elements = chartInstance.current.getElementsAtEventForMode(
+        { type: "mousemove", x, y } as Event & { x: number; y: number },
+        "nearest",
+        { intersect: false },
+        false,
+      );
+
+      if (elements.length > 0) {
+        setHoveredPoint(elements[0].index);
+      } else {
+        setHoveredPoint(null);
+      }
+    },
+    [interactive],
+  );
 
   if (loading) {
     return (
@@ -300,15 +314,19 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
       {/* Connection Status Indicator */}
       {enableLiveUpdates && (
         <div className="absolute top-2 left-2 z-10">
-          <div className={`px-2 py-1 text-xs rounded flex items-center space-x-1 ${
-            wsConnected 
-              ? 'bg-green-800 text-green-200' 
-              : 'bg-red-800 text-red-200'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${
-              wsConnected ? 'bg-green-400' : 'bg-red-400'
-            }`}></div>
-            <span>{wsConnected ? 'LIVE' : 'OFFLINE'}</span>
+          <div
+            className={`px-2 py-1 text-xs rounded flex items-center space-x-1 ${
+              wsConnected
+                ? "bg-green-800 text-green-200"
+                : "bg-red-800 text-red-200"
+            }`}
+          >
+            <div
+              className={`w-2 h-2 rounded-full ${
+                wsConnected ? "bg-green-400" : "bg-red-400"
+              }`}
+            ></div>
+            <span>{wsConnected ? "LIVE" : "OFFLINE"}</span>
           </div>
         </div>
       )}
@@ -329,10 +347,14 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
             ${livePrice.price.toFixed(2)}
           </div>
           {livePrice.percentChange24h !== undefined && (
-            <div className={`text-xs ${
-              livePrice.percentChange24h >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {livePrice.percentChange24h >= 0 ? '+' : ''}
+            <div
+              className={`text-xs ${
+                livePrice.percentChange24h >= 0
+                  ? "text-green-400"
+                  : "text-red-400"
+              }`}
+            >
+              {livePrice.percentChange24h >= 0 ? "+" : ""}
               {livePrice.percentChange24h.toFixed(2)}%
             </div>
           )}
@@ -342,19 +364,30 @@ export const LivePriceChart: React.FC<LivePriceChartProps> = ({
       {/* Hovered Data Display */}
       {interactive && hoveredPoint !== null && data[hoveredPoint] && (
         <div className="absolute top-12 right-2 z-10 bg-gray-800 text-white p-3 rounded shadow-lg text-sm">
-          <div className="font-bold">{new Date(data[hoveredPoint].timestamp).toLocaleString()}</div>
-          <div className="mt-2">Price: ${data[hoveredPoint].price.toFixed(2)}</div>
+          <div className="font-bold">
+            {new Date(data[hoveredPoint].timestamp).toLocaleString()}
+          </div>
+          <div className="mt-2">
+            Price: ${data[hoveredPoint].price.toFixed(2)}
+          </div>
           {hoveredPoint > 0 && (
-            <div className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? 'text-green-400' : 'text-red-400'}`}>
-              {data[hoveredPoint].price > data[hoveredPoint - 1].price ? '▲' : '▼'} 
-              ${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
+            <div
+              className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? "text-green-400" : "text-red-400"}`}
+            >
+              {data[hoveredPoint].price > data[hoveredPoint - 1].price
+                ? "▲"
+                : "▼"}
+              $
+              {Math.abs(
+                data[hoveredPoint].price - data[hoveredPoint - 1].price,
+              ).toFixed(2)}
             </div>
           )}
         </div>
       )}
 
-      <canvas 
-        data-testid="live-price-chart-canvas" 
+      <canvas
+        data-testid="live-price-chart-canvas"
         ref={chartRef}
         onMouseMove={interactive ? handleMouseMove : undefined}
         className={interactive ? "cursor-crosshair" : ""}

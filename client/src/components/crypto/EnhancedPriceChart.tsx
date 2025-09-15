@@ -3,7 +3,12 @@ import { Chart } from "chart.js/auto";
 import type { ChartConfiguration, ChartDataset } from "chart.js";
 import { cryptoService } from "../../services/cryptoService";
 import { indicatorChartService } from "../../services/indicatorChartService";
-import { Timeframe, IndicatorType, type HistoricalPrice, type IndicatorConfig } from "../../types/domain";
+import {
+  Timeframe,
+  IndicatorType,
+  type HistoricalPrice,
+  type IndicatorConfig,
+} from "../../types/domain";
 
 interface EnhancedPriceChartProps {
   symbol: string;
@@ -40,7 +45,10 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
       setLoading(true);
       setError(null);
-      const response = await cryptoService.getHistoricalPrices(symbol, timeframe);
+      const response = await cryptoService.getHistoricalPrices(
+        symbol,
+        timeframe,
+      );
       setData(response.prices);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch data"));
@@ -57,7 +65,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
     // Base datasets - price data
     const labels = data.map((d) => new Date(d.timestamp).toLocaleString());
-    const datasets: ChartDataset<'line'>[] = [
+    const datasets: ChartDataset<"line">[] = [
       {
         label: `${symbol} Price`,
         data: data.map((d) => d.price),
@@ -66,7 +74,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
         tension: 0.1,
         fill: false,
         pointRadius: 0,
-        yAxisID: 'price',
+        yAxisID: "price",
       },
     ];
 
@@ -81,9 +89,9 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
               symbol,
               timeframe,
               indicator.period,
-              indicator.color
+              indicator.color,
             );
-            datasets.push({ ...smaData, yAxisID: 'price' });
+            datasets.push({ ...smaData, yAxisID: "price" });
             break;
           }
 
@@ -92,9 +100,9 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
               symbol,
               timeframe,
               indicator.period,
-              indicator.color
+              indicator.color,
             );
-            datasets.push({ ...emaData, yAxisID: 'price' });
+            datasets.push({ ...emaData, yAxisID: "price" });
             break;
           }
 
@@ -104,7 +112,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
                 symbol,
                 timeframe,
                 indicator.period,
-                indicator.color
+                indicator.color,
               );
               datasets.push(rsiData);
             }
@@ -114,12 +122,12 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
             const bbData = await indicatorChartService.getBollingerBandsData(
               symbol,
               timeframe,
-              indicator.period
+              indicator.period,
             );
             datasets.push(
-              { ...bbData.upper, yAxisID: 'price' },
-              { ...bbData.middle, yAxisID: 'price' },
-              { ...bbData.lower, yAxisID: 'price' }
+              { ...bbData.upper, yAxisID: "price" },
+              { ...bbData.middle, yAxisID: "price" },
+              { ...bbData.lower, yAxisID: "price" },
             );
             break;
           }
@@ -131,7 +139,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
                 timeframe,
                 Number(indicator.parameters?.fastPeriod) || 12,
                 Number(indicator.parameters?.slowPeriod) || 26,
-                Number(indicator.parameters?.signalPeriod) || 9
+                Number(indicator.parameters?.signalPeriod) || 9,
               );
               datasets.push(macdData.macd, macdData.signal, macdData.histogram);
             }
@@ -171,11 +179,15 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
               },
               label: (context) => {
                 const value = context.parsed.y;
-                const datasetLabel = context.dataset.label || '';
-                
-                if (datasetLabel.includes('RSI')) {
+                const datasetLabel = context.dataset.label || "";
+
+                if (datasetLabel.includes("RSI")) {
                   return `${datasetLabel}: ${value.toFixed(2)}%`;
-                } else if (datasetLabel.includes('Price') || datasetLabel.includes('MA') || datasetLabel.includes('Bollinger')) {
+                } else if (
+                  datasetLabel.includes("Price") ||
+                  datasetLabel.includes("MA") ||
+                  datasetLabel.includes("Bollinger")
+                ) {
                   return `${datasetLabel}: $${value.toFixed(2)}`;
                 } else {
                   return `${datasetLabel}: ${value.toFixed(4)}`;
@@ -185,7 +197,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
           },
           legend: {
             display: true,
-            position: 'top',
+            position: "top",
           },
         },
         scales: {
@@ -219,10 +231,10 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
                 drawOnChartArea: false,
               },
               ticks: {
-                callback: function(value: string | number) {
-                  return value + '%';
-                }
-              }
+                callback: function (value: string | number) {
+                  return value + "%";
+                },
+              },
             },
           }),
           ...(showMACD && {
@@ -303,31 +315,44 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
     // Create chart with indicators
     createChartWithIndicators();
-  }, [data, loading, error, symbol, interactive, indicators, showRSI, showMACD, createChartWithIndicators]);
+  }, [
+    data,
+    loading,
+    error,
+    symbol,
+    interactive,
+    indicators,
+    showRSI,
+    showMACD,
+    createChartWithIndicators,
+  ]);
 
   // Interactive mouse move handler
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
-    if (!chartInstance.current || !interactive) return;
-    
-    const rect = chartRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (!chartInstance.current || !interactive) return;
 
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    const elements = chartInstance.current.getElementsAtEventForMode(
-      { type: 'mousemove', x, y } as Event & { x: number; y: number },
-      'nearest',
-      { intersect: false },
-      false
-    );
-    
-    if (elements.length > 0) {
-      setHoveredPoint(elements[0].index);
-    } else {
-      setHoveredPoint(null);
-    }
-  }, [interactive]);
+      const rect = chartRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const elements = chartInstance.current.getElementsAtEventForMode(
+        { type: "mousemove", x, y } as Event & { x: number; y: number },
+        "nearest",
+        { intersect: false },
+        false,
+      );
+
+      if (elements.length > 0) {
+        setHoveredPoint(elements[0].index);
+      } else {
+        setHoveredPoint(null);
+      }
+    },
+    [interactive],
+  );
 
   if (loading) {
     return (
@@ -389,26 +414,37 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
       {/* Hovered Data Display */}
       {interactive && hoveredPoint !== null && data[hoveredPoint] && (
         <div className="absolute top-12 right-2 z-10 bg-gray-800 text-white p-3 rounded shadow-lg text-sm max-w-xs">
-          <div className="font-bold">{new Date(data[hoveredPoint].timestamp).toLocaleString()}</div>
-          <div className="mt-2">Price: ${data[hoveredPoint].price.toFixed(2)}</div>
+          <div className="font-bold">
+            {new Date(data[hoveredPoint].timestamp).toLocaleString()}
+          </div>
+          <div className="mt-2">
+            Price: ${data[hoveredPoint].price.toFixed(2)}
+          </div>
           {hoveredPoint > 0 && (
-            <div className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? 'text-green-400' : 'text-red-400'}`}>
-              {data[hoveredPoint].price > data[hoveredPoint - 1].price ? '▲' : '▼'} 
-              {' '}${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
+            <div
+              className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? "text-green-400" : "text-red-400"}`}
+            >
+              {data[hoveredPoint].price > data[hoveredPoint - 1].price
+                ? "▲"
+                : "▼"}{" "}
+              $
+              {Math.abs(
+                data[hoveredPoint].price - data[hoveredPoint - 1].price,
+              ).toFixed(2)}
             </div>
           )}
-          
+
           {/* Show active indicators count */}
-          {indicators.filter(i => i.enabled).length > 0 && (
+          {indicators.filter((i) => i.enabled).length > 0 && (
             <div className="mt-2 text-xs text-gray-300">
-              {indicators.filter(i => i.enabled).length} indicator(s) active
+              {indicators.filter((i) => i.enabled).length} indicator(s) active
             </div>
           )}
         </div>
       )}
 
-      <canvas 
-        data-testid="enhanced-price-chart-canvas" 
+      <canvas
+        data-testid="enhanced-price-chart-canvas"
         ref={chartRef}
         onMouseMove={interactive ? handleMouseMove : undefined}
         className={interactive ? "cursor-crosshair" : ""}

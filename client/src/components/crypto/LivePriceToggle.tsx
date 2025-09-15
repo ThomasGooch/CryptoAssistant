@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface LivePriceToggleProps {
   enabled: boolean;
@@ -11,7 +11,7 @@ export const LivePriceToggle: React.FC<LivePriceToggleProps> = ({
   enabled,
   onToggle,
   isConnected = false,
-  className = ''
+  className = "",
 }) => {
   const [isToggling, setIsToggling] = useState(false);
 
@@ -30,23 +30,23 @@ export const LivePriceToggle: React.FC<LivePriceToggleProps> = ({
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
         Live Updates
       </span>
-      
+
       <button
         onClick={handleToggle}
         disabled={isToggling}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          enabled 
-            ? 'bg-blue-600' 
-            : 'bg-gray-200 dark:bg-gray-700'
-        } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        title={enabled ? 'Disable live price updates' : 'Enable live price updates'}
+          enabled ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
+        } ${isToggling ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        title={
+          enabled ? "Disable live price updates" : "Enable live price updates"
+        }
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${
-            enabled ? 'translate-x-6' : 'translate-x-1'
+            enabled ? "translate-x-6" : "translate-x-1"
           }`}
         />
-        
+
         {/* Loading indicator */}
         {isToggling && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -79,15 +79,17 @@ export const LivePriceToggle: React.FC<LivePriceToggleProps> = ({
         <div className="flex items-center space-x-1">
           <div
             className={`h-2 w-2 rounded-full ${
-              isConnected ? 'bg-green-500' : 'bg-red-500'
+              isConnected ? "bg-green-500" : "bg-red-500"
             }`}
           />
-          <span className={`text-xs ${
-            isConnected 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {isConnected ? 'Connected' : 'Disconnected'}
+          <span
+            className={`text-xs ${
+              isConnected
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {isConnected ? "Connected" : "Disconnected"}
           </span>
         </div>
       )}
@@ -112,17 +114,16 @@ export const LivePriceToggle: React.FC<LivePriceToggleProps> = ({
             />
           </svg>
         </button>
-        
+
         {/* Tooltip */}
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-sm tooltip opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-          {enabled 
-            ? 'Real-time price updates via WebSocket connection' 
-            : 'Historical data only, refreshed periodically'
-          }
+          {enabled
+            ? "Real-time price updates via WebSocket connection"
+            : "Historical data only, refreshed periodically"}
           <div className="tooltip-arrow"></div>
         </div>
       </div>
-      
+
       <style>{`
         .tooltip::after {
           content: '';
