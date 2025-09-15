@@ -9,10 +9,10 @@ namespace AkashTrends.API.Tests.Documentation;
 [Collection("WebApplication Collection")]
 public class SwaggerDocumentationTests
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public SwaggerDocumentationTests(WebApplicationFactory<Program> factory)
+    public SwaggerDocumentationTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();

@@ -9,10 +9,10 @@ namespace AkashTrends.API.Tests.Middleware;
 [Collection("WebApplication Collection")]
 public class ErrorHandlingTests
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public ErrorHandlingTests(WebApplicationFactory<Program> factory)
+    public ErrorHandlingTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();
