@@ -169,7 +169,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y },
+      { x, y } as any,
       'nearest',
       { intersect: false },
       false

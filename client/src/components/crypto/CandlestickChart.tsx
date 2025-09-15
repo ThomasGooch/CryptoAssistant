@@ -117,7 +117,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const datasets: ChartDataset<'bar'>[] = [
       {
         label: `${symbol} Price`,
-        data: ohlcData.map(d => ({ x: d.x, y: [d.low, d.open, d.close, d.high] })),
+        data: ohlcData.map(d => d.close),
         backgroundColor: (ctx: ScriptableContext<'bar'>) => {
           const dataPoint = ohlcData[ctx.dataIndex];
           return dataPoint ? dataPoint.color : '#00ff00';
@@ -134,7 +134,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     if (showVolume) {
       datasets.push({
         label: "Volume",
-        data: data.map((d, index) => ({ x: index, y: d.volume })),
+        data: data.map(d => d.volume),
         backgroundColor: "rgba(54, 162, 235, 0.2)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
@@ -233,7 +233,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y },
+      { x, y } as any,
       'nearest',
       { intersect: false },
       false

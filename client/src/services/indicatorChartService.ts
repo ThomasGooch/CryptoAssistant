@@ -147,7 +147,7 @@ class IndicatorChartService {
         data: lower,
         borderColor: 'rgba(75, 192, 192, 0.8)',
         backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        fill: '+1', // Fill between upper and lower bands
+        fill: false, // Fill between upper and lower bands
         tension: 0.4,
         pointRadius: 0,
       },

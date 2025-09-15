@@ -247,7 +247,7 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
                             min="0.5"
                             max="5"
                             step="0.1"
-                            value={indicator.parameters?.standardDeviations || 2}
+                            value={indicator.parameters?.standardDeviations?.toString() || "2"}
                             onChange={(e) => updateIndicator(index, {
                               parameters: { ...indicator.parameters, standardDeviations: parseFloat(e.target.value) || 2 }
                             })}

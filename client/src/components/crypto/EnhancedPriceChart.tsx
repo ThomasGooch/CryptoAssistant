@@ -49,58 +49,6 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
     }
   }, [symbol, timeframe]);
 
-  useEffect(() => {
-    fetchData();
-    // Set up periodic refresh every 5 minutes
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
-
-  useEffect(() => {
-    if (!chartRef.current || loading) return;
-
-    // Destroy existing chart if it exists
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-
-    const ctx = chartRef.current.getContext("2d");
-    if (!ctx) return;
-
-    // If there's an error or no symbol, show an empty chart
-    if (error || !symbol.trim()) {
-      const emptyConfig: ChartConfiguration = {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: "Price",
-              data: [],
-              borderColor: "rgb(75, 192, 192)",
-              tension: 0.1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: symbol.trim() ? "No Data Available" : "Enter Symbol",
-            },
-          },
-        },
-      };
-      chartInstance.current = new Chart(ctx, emptyConfig);
-      return;
-    }
-
-    // Create chart with indicators
-    createChartWithIndicators();
-  }, [data, loading, error, symbol, interactive, indicators, showRSI, showMACD, createChartWithIndicators]);
-
   const createChartWithIndicators = useCallback(async () => {
     if (!chartRef.current || !data.length) return;
 
@@ -181,9 +129,9 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
               const macdData = await indicatorChartService.getMACDData(
                 symbol,
                 timeframe,
-                indicator.parameters?.fastPeriod || 12,
-                indicator.parameters?.slowPeriod || 26,
-                indicator.parameters?.signalPeriod || 9
+                Number(indicator.parameters?.fastPeriod) || 12,
+                Number(indicator.parameters?.slowPeriod) || 26,
+                Number(indicator.parameters?.signalPeriod) || 9
               );
               datasets.push(macdData.macd, macdData.signal, macdData.histogram);
             }
@@ -305,6 +253,58 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
     };
   }, [data, symbol, timeframe, indicators, showRSI, showMACD, interactive]);
 
+  useEffect(() => {
+    fetchData();
+    // Set up periodic refresh every 5 minutes
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (!chartRef.current || loading) return;
+
+    // Destroy existing chart if it exists
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+    }
+
+    const ctx = chartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    // If there's an error or no symbol, show an empty chart
+    if (error || !symbol.trim()) {
+      const emptyConfig: ChartConfiguration = {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Price",
+              data: [],
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: symbol.trim() ? "No Data Available" : "Enter Symbol",
+            },
+          },
+        },
+      };
+      chartInstance.current = new Chart(ctx, emptyConfig);
+      return;
+    }
+
+    // Create chart with indicators
+    createChartWithIndicators();
+  }, [data, loading, error, symbol, interactive, indicators, showRSI, showMACD, createChartWithIndicators]);
+
   // Interactive mouse move handler
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
     if (!chartInstance.current || !interactive) return;
@@ -316,7 +316,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y },
+      { x, y } as any,
       'nearest',
       { intersect: false },
       false
