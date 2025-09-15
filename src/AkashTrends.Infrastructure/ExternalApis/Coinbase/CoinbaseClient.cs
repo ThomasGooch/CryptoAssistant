@@ -12,17 +12,20 @@ public class CoinbaseClient : ICoinbaseApiClient
     private readonly HttpClient _httpClient;
     private readonly ICoinbaseAuthenticator _authenticator;
     private readonly ILogger<CoinbaseClient> _logger;
+    private readonly IResilienceService _resilienceService;
     private bool _isConfigured = false;
 
     public CoinbaseClient(
         HttpClient httpClient,
         ICoinbaseAuthenticator authenticator,
         IOptionsMonitor<CoinbaseApiOptions> options,
-        ILogger<CoinbaseClient> logger)
+        ILogger<CoinbaseClient> logger,
+        IResilienceService resilienceService)
     {
         _httpClient = httpClient;
         _authenticator = authenticator;
         _logger = logger;
+        _resilienceService = resilienceService;
         _httpClient.BaseAddress = new Uri(options.CurrentValue.BaseUrl);
 
         // Add required headers
@@ -57,14 +60,31 @@ public class CoinbaseClient : ICoinbaseApiClient
             throw new ValidationException("Please provide the base symbol only (e.g., 'BTC' not 'BTC-USD')");
         }
 
-        try
+        var operationKey = $"coinbase_price_{symbol}";
+        var resilenceOptions = new ResilienceOptions
+        {
+            OperationKey = operationKey,
+            MaxRetryAttempts = 3,
+            BaseDelay = TimeSpan.FromSeconds(1),
+            MaxDelay = TimeSpan.FromSeconds(10),
+            CircuitBreakerThreshold = 3,
+            SamplingDuration = TimeSpan.FromMinutes(1),
+            BreakDuration = TimeSpan.FromSeconds(30),
+            MinimumThroughput = 2,
+            Timeout = TimeSpan.FromSeconds(15)
+        };
+
+        return await _resilienceService.ExecuteHttpOperationAsync(async () =>
         {
             var baseSymbol = $"{symbol}-USD";
-
             var requestUrl = $"products/{baseSymbol}/ticker";
-            _logger.LogInformation("Requesting price data from Coinbase: {0}", $"{_httpClient.BaseAddress}{requestUrl}");
+
+            _logger.LogDebug("Requesting price data from Coinbase: {RequestUrl}",
+                $"{_httpClient.BaseAddress}{requestUrl}");
+
             var response = await _httpClient.GetAsync(requestUrl);
 
+            // Handle specific HTTP status codes
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new NotFoundException($"Invalid symbol: {symbol}");
@@ -78,29 +98,25 @@ public class CoinbaseClient : ICoinbaseApiClient
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            _logger.LogDebug("Coinbase API Response: {0}", content);
+            _logger.LogDebug("Coinbase API Response received for symbol: {Symbol}", symbol);
 
             try
             {
                 var data = JsonSerializer.Deserialize<CoinbaseApiResponse>(content);
                 if (data == null)
                 {
-                    throw new ExchangeException($"Failed to deserialize response: {content}");
+                    throw new ExchangeException($"Failed to deserialize response for symbol: {symbol}");
                 }
 
                 return data.ToData();
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "Failed to parse Coinbase API response: {0}", content);
-                throw new ExchangeException($"Failed to parse Coinbase API response", ex);
+                _logger.LogError(ex, "Failed to parse Coinbase API response for symbol: {Symbol}", symbol);
+                throw new ExchangeException($"Failed to parse Coinbase API response for symbol: {symbol}", ex);
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Failed to connect to Coinbase API");
-            throw new ExchangeException("Failed to connect to Coinbase API", ex);
-        }
+
+        }, resilenceOptions);
     }
 
     private int CalculateGranularity(DateTimeOffset startTime, DateTimeOffset endTime)
@@ -132,36 +148,51 @@ public class CoinbaseClient : ICoinbaseApiClient
             throw new ValidationException("Start time must be before end time");
         }
 
-        try
+        var operationKey = $"coinbase_historical_{symbol}";
+        var resilenceOptions = new ResilienceOptions
+        {
+            OperationKey = operationKey,
+            MaxRetryAttempts = 3,
+            BaseDelay = TimeSpan.FromSeconds(2),
+            MaxDelay = TimeSpan.FromSeconds(15),
+            CircuitBreakerThreshold = 4,
+            SamplingDuration = TimeSpan.FromMinutes(2),
+            BreakDuration = TimeSpan.FromMinutes(1),
+            MinimumThroughput = 3,
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+
+        return await _resilienceService.ExecuteHttpOperationAsync(async () =>
         {
             var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
                 ? symbol
                 : $"{symbol}-USD";
 
             // Ensure we're using UTC timestamps
-            startTime = startTime.ToUniversalTime();
-            endTime = endTime.ToUniversalTime();
+            var utcStartTime = startTime.ToUniversalTime();
+            var utcEndTime = endTime.ToUniversalTime();
 
             // Calculate appropriate granularity
-            var granularity = CalculateGranularity(startTime, endTime);
+            var granularity = CalculateGranularity(utcStartTime, utcEndTime);
 
             // Coinbase API expects ISO 8601 timestamps
             var requestUrl = $"products/{baseSymbol}/candles";
             var queryParams = new Dictionary<string, string>
             {
-                ["start"] = startTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                ["end"] = endTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["start"] = utcStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["end"] = utcEndTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 ["granularity"] = granularity.ToString()
             };
 
             var fullUrl = $"{requestUrl}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"))}";
 
-            _logger.LogInformation("Requesting historical prices from Coinbase: {0}", fullUrl);
-            _logger.LogDebug("Request parameters - Start time: {0}, End time: {1}, Granularity: {2}s",
-                startTime, endTime, granularity);
+            _logger.LogDebug("Requesting historical prices from Coinbase: {RequestUrl}", fullUrl);
+            _logger.LogDebug("Request parameters - Symbol: {Symbol}, Start: {Start}, End: {End}, Granularity: {Granularity}s",
+                symbol, utcStartTime, utcEndTime, granularity);
 
             var response = await _httpClient.GetAsync(fullUrl);
 
+            // Handle specific HTTP status codes
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 throw new NotFoundException($"Invalid symbol: {symbol}");
@@ -175,24 +206,26 @@ public class CoinbaseClient : ICoinbaseApiClient
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Bad Request Error from Coinbase API: {0}", errorContent);
-                throw new ValidationException($"Invalid request parameters: {errorContent}");
+                _logger.LogWarning("Bad Request Error from Coinbase API for symbol {Symbol}: {Error}",
+                    symbol, errorContent);
+                throw new ValidationException($"Invalid request parameters for symbol {symbol}: {errorContent}");
             }
 
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            _logger.LogDebug("Coinbase API Response received");
+            _logger.LogDebug("Historical price data received for symbol: {Symbol}", symbol);
 
             try
             {
                 // Coinbase API returns array directly, not wrapped in a response object
                 var candleData = JsonSerializer.Deserialize<decimal[][]>(content);
-                _logger.LogInformation("Deserialized historical price data. Count: {0}", candleData?.Length ?? 0);
+                _logger.LogDebug("Deserialized {Count} candles for symbol: {Symbol}",
+                    candleData?.Length ?? 0, symbol);
 
                 if (candleData == null || !candleData.Any())
                 {
-                    _logger.LogWarning("No historical price data returned for {0}", symbol);
+                    _logger.LogInformation("No historical price data returned for symbol: {Symbol}", symbol);
                     return new List<CryptoPrice>();
                 }
 
@@ -208,28 +241,27 @@ public class CoinbaseClient : ICoinbaseApiClient
                                 priceData.Close,
                                 DateTimeOffset.Parse(priceData.Time));
                         }
-                        catch (ArgumentException)
+                        catch (ArgumentException ex)
                         {
+                            _logger.LogWarning(ex, "Failed to parse candle data for symbol: {Symbol}", symbol);
                             return null;
                         }
                     })
                     .Where(x => x != null)
                     .Cast<CryptoPrice>()
+                    .OrderBy(p => p.Timestamp)
                     .ToList();
 
-                _logger.LogInformation("Processed {0} historical prices for {1}", result.Count, symbol);
+                _logger.LogInformation("Successfully processed {Count} historical prices for symbol: {Symbol}",
+                    result.Count, symbol);
                 return result;
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "JSON parsing error for historical price data");
-                throw new ExchangeException("Failed to parse historical price data", ex);
+                _logger.LogError(ex, "JSON parsing error for historical price data for symbol: {Symbol}", symbol);
+                throw new ExchangeException($"Failed to parse historical price data for symbol: {symbol}", ex);
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "HTTP request error while fetching historical prices");
-            throw new ExchangeException("Failed to connect to Coinbase API", ex);
-        }
+
+        }, resilenceOptions);
     }
 }

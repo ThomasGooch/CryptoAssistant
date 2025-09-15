@@ -1,5 +1,6 @@
 using AkashTrends.Core.Domain;
 using AkashTrends.Core.Exceptions;
+using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Tests.TestHelpers;
 using FluentAssertions;
@@ -20,6 +21,7 @@ public class CoinbaseClientTests
     private readonly IOptionsMonitor<CoinbaseApiOptions> _optionsMonitor;
     private readonly ICoinbaseAuthenticator _authenticator;
     private readonly ILogger<CoinbaseClient> _logger;
+    private readonly IResilienceService _resilienceService;
     private CoinbaseClient _client;
 
     public CoinbaseClientTests()
@@ -38,7 +40,18 @@ public class CoinbaseClientTests
 
         _authenticator = Substitute.For<ICoinbaseAuthenticator>();
         _logger = Substitute.For<ILogger<CoinbaseClient>>();
-        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger);
+        _resilienceService = Substitute.For<IResilienceService>();
+
+        // Setup resilience service to pass through operations
+        _resilienceService
+            .ExecuteHttpOperationAsync(Arg.Any<Func<Task<CoinbasePriceData>>>(), Arg.Any<ResilienceOptions>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => callInfo.Arg<Func<Task<CoinbasePriceData>>>()());
+
+        _resilienceService
+            .ExecuteHttpOperationAsync(Arg.Any<Func<Task<IReadOnlyList<CryptoPrice>>>>(), Arg.Any<ResilienceOptions>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => callInfo.Arg<Func<Task<IReadOnlyList<CryptoPrice>>>>()());
+
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger, _resilienceService);
     }
 
     [Fact]
@@ -179,6 +192,6 @@ public class CoinbaseClientTests
         };
         _handler = new TestHttpMessageHandler((req, ct) => Task.FromResult(responseMessage));
         _httpClient = new HttpClient(_handler);
-        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger);
+        _client = new CoinbaseClient(_httpClient, _authenticator, _optionsMonitor, _logger, _resilienceService);
     }
 }
