@@ -1,7 +1,8 @@
 /**
  * API response types that match the C# models from the backend
  */
-import { IndicatorType } from './domain';
+import { IndicatorType } from "./domain";
+import type { UserPreferences } from "./domain";
 
 export interface CryptoPriceResponse {
   symbol: string;
@@ -19,4 +20,30 @@ export interface IndicatorResponse {
 
 export interface IndicatorTypesResponse {
   indicators: IndicatorType[];
+}
+
+export type UserPreferencesResponse = UserPreferences;
+
+export interface UserPreferencesRequest {
+  chart?: {
+    type: string;
+    timeFrame: string;
+    showVolume: boolean;
+    showGrid: boolean;
+    colorScheme: string;
+  };
+  indicators?: Array<{
+    type: IndicatorType;
+    period: number;
+    isVisible: boolean;
+    color: string;
+    parameters: Record<string, unknown>;
+  }>;
+  favoritePairs?: string[];
+  ui?: {
+    darkMode: boolean;
+    language: string;
+    showAdvancedFeatures: boolean;
+    refreshInterval: number;
+  };
 }

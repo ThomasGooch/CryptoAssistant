@@ -54,6 +54,9 @@ public static class DependencyInjection
             return new CachedIndicatorService(indicatorFactory, exchangeService, cacheService, timeProvider, logger);
         });
 
+        // Register user preferences service (in-memory for demo purposes)
+        services.AddSingleton<IUserPreferencesService, InMemoryUserPreferencesService>();
+
         return services;
     }
 }

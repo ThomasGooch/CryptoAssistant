@@ -33,6 +33,16 @@ public class IndicatorFactory : IIndicatorFactory
                 "Stochastic Oscillator",
                 "STOCH",
                 "Compares the current price to its price range over a period to identify overbought/oversold conditions"
+            ),
+            [IndicatorType.MACD] = new IndicatorDescription(
+                "MACD",
+                "MACD",
+                "Moving Average Convergence Divergence - shows the relationship between fast and slow exponential moving averages"
+            ),
+            [IndicatorType.WilliamsPercentR] = new IndicatorDescription(
+                "Williams %R",
+                "%R",
+                "A momentum oscillator that measures overbought and oversold levels on a scale of -100 to 0"
             )
         };
 
@@ -42,7 +52,9 @@ public class IndicatorFactory : IIndicatorFactory
             [IndicatorType.ExponentialMovingAverage] = (12, 26),
             [IndicatorType.RelativeStrengthIndex] = (9, 25),
             [IndicatorType.BollingerBands] = (10, 50),
-            [IndicatorType.StochasticOscillator] = (5, 21)
+            [IndicatorType.StochasticOscillator] = (5, 21),
+            [IndicatorType.MACD] = (26, 26), // MACD typically uses fixed periods, but we use period for slow EMA
+            [IndicatorType.WilliamsPercentR] = (10, 20)
         };
     }
 
@@ -60,6 +72,8 @@ public class IndicatorFactory : IIndicatorFactory
             IndicatorType.RelativeStrengthIndex => new RelativeStrengthIndex(period),
             IndicatorType.BollingerBands => new BollingerBands(period),
             IndicatorType.StochasticOscillator => new StochasticOscillator(period),
+            IndicatorType.MACD => new MACD(), // MACD uses default periods (12, 26, 9)
+            IndicatorType.WilliamsPercentR => new WilliamsPercentR(period),
             _ => throw new ArgumentException($"Unknown indicator type: {type}", nameof(type))
         };
     }

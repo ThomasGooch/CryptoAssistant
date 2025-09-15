@@ -1,6 +1,6 @@
-import React from 'react';
-import { IndicatorType } from '../../types/domain';
-import { indicatorService } from '../../services/indicatorService';
+import React from "react";
+import { IndicatorType } from "../../types/domain";
+import { indicatorService } from "../../services/indicatorService";
 
 interface IndicatorDisplayProps {
   symbol: string;
@@ -22,11 +22,11 @@ const IndicatorDisplay: React.FC<IndicatorDisplayProps> = ({
   period,
   startTime,
   endTime,
-  isLoading = false
+  isLoading = false,
 }) => {
   // Get the display name for the indicator
   const indicatorName = indicatorService.getIndicatorDisplayName(type);
-  
+
   // Format the value based on indicator type
   const formatValue = () => {
     switch (type) {
@@ -38,7 +38,7 @@ const IndicatorDisplay: React.FC<IndicatorDisplayProps> = ({
         return value.toFixed(2);
     }
   };
-  
+
   // Determine if the value is positive or negative (for styling)
   const isPositive = () => {
     switch (type) {
@@ -50,12 +50,12 @@ const IndicatorDisplay: React.FC<IndicatorDisplayProps> = ({
         return true; // Default to positive for other indicators
     }
   };
-  
+
   // Get value CSS class based on indicator type and value
   const getValueClass = () => {
-    return isPositive() 
-      ? 'indicator-value-positive' 
-      : 'indicator-value-negative';
+    return isPositive()
+      ? "indicator-value-positive"
+      : "indicator-value-negative";
   };
 
   return (
@@ -83,7 +83,8 @@ const IndicatorDisplay: React.FC<IndicatorDisplayProps> = ({
           </div>
           {startTime && endTime && (
             <div className="mt-1 text-xs text-gray-500">
-              {new Date(startTime).toLocaleDateString()} - {new Date(endTime).toLocaleDateString()}
+              {new Date(startTime).toLocaleDateString()} -{" "}
+              {new Date(endTime).toLocaleDateString()}
             </div>
           )}
         </>

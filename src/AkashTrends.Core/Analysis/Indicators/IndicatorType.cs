@@ -6,5 +6,7 @@ public enum IndicatorType
     ExponentialMovingAverage,
     RelativeStrengthIndex,
     BollingerBands,
-    StochasticOscillator
+    StochasticOscillator,
+    MACD,
+    WilliamsPercentR
 }

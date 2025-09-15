@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface PriceDisplayProps {
   symbol: string;
@@ -10,22 +10,22 @@ interface PriceDisplayProps {
 /**
  * Component for displaying cryptocurrency price
  */
-const PriceDisplay: React.FC<PriceDisplayProps> = ({ 
-  symbol, 
-  price, 
-  timestamp, 
-  isLoading = false 
+const PriceDisplay: React.FC<PriceDisplayProps> = ({
+  symbol,
+  price,
+  timestamp,
+  isLoading = false,
 }) => {
   // Format price with commas and 2 decimal places
-  const formattedPrice = new Intl.NumberFormat('en-US', {
+  const formattedPrice = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(price);
 
   // Format timestamp if provided
-  const formattedTime = timestamp 
-    ? new Date(timestamp).toLocaleTimeString() 
-    : '';
+  const formattedTime = timestamp
+    ? new Date(timestamp).toLocaleTimeString()
+    : "";
 
   // Show empty state if no symbol
   if (!symbol.trim()) {

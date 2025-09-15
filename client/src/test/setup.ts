@@ -1,6 +1,6 @@
-import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, vi } from 'vitest';
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach, beforeAll, vi } from "vitest";
 
 // Setup canvas for Chart.js testing
 beforeAll(() => {
@@ -9,7 +9,7 @@ beforeAll(() => {
     fillRect: vi.fn(),
     clearRect: vi.fn(),
     getImageData: vi.fn(() => ({
-      data: new Array(4)
+      data: new Array(4),
     })),
     putImageData: vi.fn(),
     createImageData: vi.fn(() => []),
@@ -32,7 +32,7 @@ beforeAll(() => {
     transform: vi.fn(),
     rect: vi.fn(),
     clip: vi.fn(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any;
 });
 

@@ -1,12 +1,12 @@
-import type { CryptoPriceResponse } from '../types/api';
-import type { HistoricalPriceResponse } from '../types/domain';
-import { Timeframe } from '../types/domain';
+import type { CryptoPriceResponse } from "../types/api";
+import type { HistoricalPriceResponse } from "../types/domain";
+import { Timeframe } from "../types/domain";
 
 /**
  * Service for interacting with the crypto API endpoints
  */
 class CryptoService {
-  private baseUrl = '/api/Crypto';
+  private baseUrl = "/api/Crypto";
 
   /**
    * Get the current price for a cryptocurrency
@@ -21,7 +21,7 @@ class CryptoService {
       }
       return await response.json();
     } catch (error) {
-      console.error('Error fetching price:', error);
+      console.error("Error fetching price:", error);
       throw error;
     }
   }
@@ -32,27 +32,34 @@ class CryptoService {
    * @param timeframe The timeframe for historical data
    * @returns Promise with the historical price response
    */
-  public async getHistoricalPrices(symbol: string, timeframe: Timeframe): Promise<HistoricalPriceResponse> {
+  public async getHistoricalPrices(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<HistoricalPriceResponse> {
     try {
       // Calculate start and end times based on timeframe
       const endTime = new Date();
       const startTime = this.calculateStartTime(endTime, timeframe);
-      
+
       // Format dates as ISO strings for the API
       const startTimeStr = startTime.toISOString();
       const endTimeStr = endTime.toISOString();
-      
-      const response = await fetch(`${this.baseUrl}/historical/${symbol}?startTime=${startTimeStr}&endTime=${endTimeStr}`);
+
+      const response = await fetch(
+        `${this.baseUrl}/historical/${symbol}?startTime=${startTimeStr}&endTime=${endTimeStr}`,
+      );
       if (!response.ok) {
-        throw new Error(`Failed to fetch historical prices: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch historical prices: ${response.statusText}`,
+        );
       }
       return await response.json();
     } catch (error) {
-      console.error('Error fetching historical prices:', error);
+      console.error("Error fetching historical prices:", error);
       throw error;
     }
   }
-  
+
   /**
    * Calculate start time based on timeframe and end time
    * @param endTime The end time
@@ -61,7 +68,7 @@ class CryptoService {
    */
   private calculateStartTime(endTime: Date, timeframe: Timeframe): Date {
     const startTime = new Date(endTime);
-    
+
     switch (timeframe) {
       case Timeframe.Minute:
         // Last hour
@@ -95,7 +102,7 @@ class CryptoService {
         // Default to last 24 hours
         startTime.setHours(startTime.getHours() - 24);
     }
-    
+
     return startTime;
   }
 
@@ -111,7 +118,7 @@ class CryptoService {
       }
       return await response.json();
     } catch (error) {
-      console.error('Auth test error:', error);
+      console.error("Auth test error:", error);
       throw error;
     }
   }
