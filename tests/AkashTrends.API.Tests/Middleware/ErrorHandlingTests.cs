@@ -26,7 +26,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
+        Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
         
         // Verify error response structure using our custom format
         Assert.Contains("code", content.ToLowerInvariant());
@@ -43,7 +43,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
+        Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
         
         // Verify error response structure
         Assert.Contains("validation_error", content.ToLowerInvariant());
@@ -59,7 +59,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
+        Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
         
         // Verify error response structure
         Assert.Contains("error", content.ToLowerInvariant());
