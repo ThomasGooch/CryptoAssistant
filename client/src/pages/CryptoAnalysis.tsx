@@ -207,7 +207,7 @@ export function CryptoAnalysis() {
               >
                 {availableIndicators.map((type) => (
                   <option key={type} value={type}>
-                    {IndicatorType[type]}
+                    {indicatorService.getIndicatorDisplayName(type)}
                   </option>
                 ))}
               </select>

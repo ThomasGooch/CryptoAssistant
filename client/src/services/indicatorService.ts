@@ -71,6 +71,10 @@ class IndicatorService {
         return "Bollinger Bands";
       case IndicatorType.StochasticOscillator:
         return "Stochastic Oscillator";
+      case IndicatorType.MACD:
+        return "MACD";
+      case IndicatorType.WilliamsPercentR:
+        return "Williams %R";
       default:
         return "Unknown Indicator";
     }

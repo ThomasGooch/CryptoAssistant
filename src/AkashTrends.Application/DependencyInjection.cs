@@ -1,4 +1,8 @@
 using AkashTrends.Application.Common.CQRS;
+using AkashTrends.Application.Features.Alerts.CreateAlert;
+using AkashTrends.Application.Features.Alerts.DeleteAlert;
+using AkashTrends.Application.Features.Alerts.GetUserAlerts;
+using AkashTrends.Application.Features.Alerts.UpdateAlert;
 using AkashTrends.Application.Features.Crypto.CalculateIndicator;
 using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
@@ -33,6 +37,11 @@ public static class DependencyInjection
         services.AddTransient<IQueryHandler<GetUserPreferencesQuery, GetUserPreferencesResult>, GetUserPreferencesQueryHandler>();
         services.AddTransient<IQueryHandler<SaveUserPreferencesCommand, SaveUserPreferencesResult>, SaveUserPreferencesCommandHandler>();
 
+        // Register alert handlers
+        services.AddTransient<IQueryHandler<CreateAlertCommand, CreateAlertResult>, CreateAlertCommandHandler>();
+        services.AddTransient<IQueryHandler<DeleteAlertCommand, DeleteAlertResult>, DeleteAlertCommandHandler>();
+        services.AddTransient<IQueryHandler<GetUserAlertsQuery, GetUserAlertsResult>, GetUserAlertsQueryHandler>();
+        services.AddTransient<IQueryHandler<UpdateAlertCommand, UpdateAlertResult>, UpdateAlertCommandHandler>();
 
         return services;
     }
