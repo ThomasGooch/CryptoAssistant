@@ -5,7 +5,7 @@ import { afterEach, beforeAll, vi } from "vitest";
 // Mock crypto service responses
 beforeAll(() => {
   // Mock fetch to handle relative URLs in test environment
-  global.fetch = vi.fn().mockImplementation((url) => {
+  (globalThis as any).fetch = vi.fn().mockImplementation((url) => {
     // Convert relative URLs to string for matching, don't try to parse as URL objects
     let urlString = '';
     if (url instanceof Request) {
