@@ -22,8 +22,15 @@ public class CoinbaseExchangeService : ICryptoExchangeService
             var currency = CryptoCurrency.Create(symbol);
             return CryptoPrice.Create(currency, priceData.Price, priceData.Timestamp);
         }
-        catch (ExchangeException)
+        catch (ExchangeException ex)
         {
+            // Check if this is a "not found" type error and convert to NotFoundException
+            if (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains("unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new NotFoundException($"Cryptocurrency symbol '{symbol}' not found");
+            }
             throw;
         }
         catch (Exception ex)

@@ -7,6 +7,7 @@ using AkashTrends.Infrastructure.Services;
 using AkashTrends.API.Hubs;
 using AkashTrends.API.Services;
 using AkashTrends.API.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,12 +74,42 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<AkashTrends.API.Filters.ValidationActionFilter>();
+});
+
+// Suppress default model validation responses
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ITimeProvider, CryptoTimeProvider>();
 builder.Services.AddRealTimeServices();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "AkashTrends API",
+        Version = "v1",
+        Description = "A comprehensive cryptocurrency analysis and trading platform API",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "AkashTrends",
+            Email = "support@akashtrends.com"
+        }
+    });
+
+    // Include XML comments if they exist
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
@@ -114,3 +145,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Make the implicit Program class public for testing
+public partial class Program { }
