@@ -38,11 +38,37 @@ export interface PriceData {
 }
 
 /**
+ * Extended crypto price data with additional market information
+ */
+export interface CryptoPrice {
+  symbol: string;
+  price: number;
+  timestamp: string | Date;
+  priceChange24h?: number;
+  percentChange24h?: number;
+  volume24h?: number;
+  high24h?: number;
+  low24h?: number;
+}
+
+/**
  * Historical price data structure
  */
 export interface HistoricalPrice {
   timestamp: Date;
   price: number;
+}
+
+/**
+ * OHLC candlestick data structure
+ */
+export interface CandlestickData {
+  timestamp: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
 }
 
 /**
@@ -52,6 +78,15 @@ export interface HistoricalPriceResponse {
   symbol: string;
   timeframe: Timeframe;
   prices: HistoricalPrice[];
+}
+
+/**
+ * Historical candlestick response
+ */
+export interface HistoricalCandlestickResponse {
+  symbol: string;
+  timeframe: Timeframe;
+  data: CandlestickData[];
 }
 
 /**
@@ -117,4 +152,15 @@ export interface UserPreferences {
   favoritePairs: string[];
   ui: UIPreferences;
   lastUpdated: string;
+}
+
+/**
+ * Indicator configuration for chart overlays
+ */
+export interface IndicatorConfig {
+  type: IndicatorType;
+  period: number;
+  color: string;
+  enabled: boolean;
+  parameters?: Record<string, unknown>;
 }

@@ -264,4 +264,138 @@ public class CoinbaseClient : ICoinbaseApiClient
 
         }, resilenceOptions);
     }
+
+    public async Task<IReadOnlyList<CandlestickData>> GetHistoricalCandlestickDataAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime)
+    {
+        EnsureConfigured(); // Configure authentication lazily
+
+        if (string.IsNullOrWhiteSpace(symbol))
+        {
+            throw new ValidationException("Symbol cannot be empty");
+        }
+
+        if (startTime >= endTime)
+        {
+            throw new ValidationException("Start time must be before end time");
+        }
+
+        var operationKey = $"coinbase_candlestick_{symbol}";
+        var resilenceOptions = new ResilienceOptions
+        {
+            OperationKey = operationKey,
+            MaxRetryAttempts = 3,
+            BaseDelay = TimeSpan.FromSeconds(2),
+            MaxDelay = TimeSpan.FromSeconds(15),
+            CircuitBreakerThreshold = 4,
+            SamplingDuration = TimeSpan.FromMinutes(2),
+            BreakDuration = TimeSpan.FromMinutes(1),
+            MinimumThroughput = 3,
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+
+        return await _resilienceService.ExecuteHttpOperationAsync(async () =>
+        {
+            var baseSymbol = symbol.EndsWith("-USD", StringComparison.OrdinalIgnoreCase)
+                ? symbol
+                : $"{symbol}-USD";
+
+            // Ensure we're using UTC timestamps
+            var utcStartTime = startTime.ToUniversalTime();
+            var utcEndTime = endTime.ToUniversalTime();
+
+            // Calculate appropriate granularity
+            var granularity = CalculateGranularity(utcStartTime, utcEndTime);
+
+            // Coinbase API expects ISO 8601 timestamps
+            var requestUrl = $"products/{baseSymbol}/candles";
+            var queryParams = new Dictionary<string, string>
+            {
+                ["start"] = utcStartTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["end"] = utcEndTime.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                ["granularity"] = granularity.ToString()
+            };
+
+            var fullUrl = $"{requestUrl}?{string.Join("&", queryParams.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"))}";
+
+            _logger.LogDebug("Requesting historical candlestick data from Coinbase: {RequestUrl}", fullUrl);
+            _logger.LogDebug("Request parameters - Symbol: {Symbol}, Start: {Start}, End: {End}, Granularity: {Granularity}s",
+                symbol, utcStartTime, utcEndTime, granularity);
+
+            var response = await _httpClient.GetAsync(fullUrl);
+
+            // Handle specific HTTP status codes
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new NotFoundException($"Invalid symbol: {symbol}");
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new RateLimitExceededException("Coinbase API rate limit exceeded");
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Bad Request Error from Coinbase API for symbol {Symbol}: {Error}",
+                    symbol, errorContent);
+                throw new ValidationException($"Invalid request parameters for symbol {symbol}: {errorContent}");
+            }
+
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("Historical candlestick data received for symbol: {Symbol}", symbol);
+
+            try
+            {
+                // Coinbase API returns array directly, not wrapped in a response object
+                var candleData = JsonSerializer.Deserialize<decimal[][]>(content);
+                _logger.LogDebug("Deserialized {Count} candles for symbol: {Symbol}",
+                    candleData?.Length ?? 0, symbol);
+
+                if (candleData == null || !candleData.Any())
+                {
+                    _logger.LogInformation("No historical candlestick data returned for symbol: {Symbol}", symbol);
+                    return new List<CandlestickData>();
+                }
+
+                var result = candleData
+                    .Select(candle =>
+                    {
+                        try
+                        {
+                            var priceData = HistoricalPriceData.FromCandle(candle);
+                            var timestamp = DateTimeOffset.Parse(priceData.Time);
+                            return CandlestickData.Create(
+                                timestamp,
+                                priceData.Open,
+                                priceData.High,
+                                priceData.Low,
+                                priceData.Close,
+                                priceData.Volume);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to parse candle data for symbol: {Symbol}", symbol);
+                            return null;
+                        }
+                    })
+                    .Where(x => x != null)
+                    .Cast<CandlestickData>()
+                    .OrderBy(c => c.Timestamp)
+                    .ToList();
+
+                _logger.LogInformation("Successfully processed {Count} candlestick data points for symbol: {Symbol}",
+                    result.Count, symbol);
+                return result;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON parsing error for candlestick data for symbol: {Symbol}", symbol);
+                throw new ExchangeException($"Failed to parse candlestick data for symbol: {symbol}", ex);
+            }
+
+        }, resilenceOptions);
+    }
 }

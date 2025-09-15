@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import PriceDisplay from "../components/crypto/PriceDisplay";
-import { PriceChart } from "../components/crypto/PriceChart";
+import { LivePriceChart } from "../components/crypto/LivePriceChart";
+import { LivePriceToggle } from "../components/crypto/LivePriceToggle";
 import { CandlestickChart } from "../components/crypto/CandlestickChart";
 import IndicatorDisplay from "../components/indicators/IndicatorDisplay";
 import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
 import { useSignalR } from "../hooks/useSignalR";
+import { useCoinbaseWebSocket } from "../hooks/useCoinbaseWebSocket";
 import { IndicatorType, Timeframe, ChartType } from "../types/domain";
 
-export function CryptoAnalysis() {
+export function LiveCryptoAnalysis() {
   // State for cryptocurrency data
   const [symbol, setSymbol] = useState("BTC");
   const [price, setPrice] = useState(0);
@@ -20,6 +22,7 @@ export function CryptoAnalysis() {
   const [chartType, setChartType] = useState(ChartType.Line);
   const [timeframe, setTimeframe] = useState(Timeframe.Hour);
   const [showVolume, setShowVolume] = useState(false);
+  const [enableLiveUpdates, setEnableLiveUpdates] = useState(true);
 
   // State for indicator data
   const [indicatorType, setIndicatorType] = useState(
@@ -40,7 +43,7 @@ export function CryptoAnalysis() {
     "connected" | "error" | "disconnected"
   >("disconnected");
 
-  // Get SignalR hook
+  // Get SignalR hook for backend real-time connection
   const {
     isConnected,
     error: signalRError,
@@ -48,35 +51,55 @@ export function CryptoAnalysis() {
     subscribeToIndicatorUpdates,
   } = useSignalR();
 
-  // Update connection status
-  useEffect(() => {
-    console.log("CryptoAnalysis: useEffect triggered with", {
-      isConnected,
-      signalRError,
-    });
-    console.log(
-      "CryptoAnalysis: connectionStatus before update",
-      connectionStatus,
-    );
+  // Get WebSocket hook for Coinbase direct connection
+  const {
+    isConnected: wsConnected,
+    error: wsError,
+  } = useCoinbaseWebSocket({
+    symbol: enableLiveUpdates ? symbol : undefined,
+    autoConnect: enableLiveUpdates,
+    onPriceUpdate: (livePrice) => {
+      // Update price from WebSocket
+      setPrice(livePrice.price);
+      setTimestamp(
+        typeof livePrice.timestamp === 'string' 
+          ? new Date(livePrice.timestamp).toLocaleString()
+          : livePrice.timestamp.toLocaleString()
+      );
+    }
+  });
 
-    // When connected, always show connected state
-    if (isConnected) {
-      console.log("CryptoAnalysis: Setting connectionStatus to connected");
+  // Update connection status based on both connections
+  useEffect(() => {
+    console.log("LiveCryptoAnalysis: Connection status update", {
+      isConnected,
+      wsConnected,
+      enableLiveUpdates,
+      signalRError,
+      wsError,
+    });
+
+    // If live updates are enabled and WebSocket is connected, prioritize that
+    if (enableLiveUpdates && wsConnected) {
       setConnectionStatus("connected");
       return;
     }
 
-    // When disconnected with an error, show error state
-    if (!isConnected && signalRError) {
-      console.log("CryptoAnalysis: Setting connectionStatus to error");
+    // Fall back to SignalR connection
+    if (isConnected) {
+      setConnectionStatus("connected");
+      return;
+    }
+
+    // Show error if there are connection errors
+    if (signalRError || (enableLiveUpdates && wsError)) {
       setConnectionStatus("error");
       return;
     }
 
-    // Otherwise, show disconnected state
-    console.log("CryptoAnalysis: Setting connectionStatus to disconnected");
+    // Otherwise disconnected
     setConnectionStatus("disconnected");
-  }, [isConnected, signalRError, connectionStatus]);
+  }, [isConnected, wsConnected, enableLiveUpdates, signalRError, wsError]);
 
   // Load initial price data
   useEffect(() => {
@@ -84,8 +107,13 @@ export function CryptoAnalysis() {
       try {
         setIsLoadingPrice(true);
         const response = await cryptoService.getCurrentPrice(symbol);
-        setPrice(response.price);
-        setTimestamp(response.timestamp.toLocaleString());
+        
+        // Only update if we don't have live WebSocket data
+        if (!enableLiveUpdates || !wsConnected) {
+          setPrice(response.price);
+          setTimestamp(response.timestamp.toLocaleString());
+        }
+        
         setHasInitialData(true);
       } catch (error) {
         console.error("Error loading initial price:", error);
@@ -95,7 +123,7 @@ export function CryptoAnalysis() {
     };
 
     loadInitialData();
-  }, [symbol]);
+  }, [symbol, enableLiveUpdates, wsConnected]);
 
   // Load available indicators
   useEffect(() => {
@@ -114,9 +142,9 @@ export function CryptoAnalysis() {
     loadIndicators();
   }, []);
 
-  // Subscribe to real-time updates
+  // Subscribe to SignalR real-time updates (when not using WebSocket)
   useEffect(() => {
-    if (!isConnected || !hasInitialData) return;
+    if (!isConnected || !hasInitialData || enableLiveUpdates) return;
 
     const priceCallback = (newPrice: number) => {
       setPrice(newPrice);
@@ -139,6 +167,7 @@ export function CryptoAnalysis() {
   }, [
     isConnected,
     hasInitialData,
+    enableLiveUpdates,
     symbol,
     indicatorType,
     period,
@@ -146,13 +175,10 @@ export function CryptoAnalysis() {
     subscribeToIndicatorUpdates,
   ]);
 
-  // Connection status is handled by the ConnectionStatus component
-
-  console.log("CryptoAnalysis: Render with", {
-    isConnected,
-    signalRError,
-    connectionStatus,
-  });
+  const handleLiveToggle = (enabled: boolean) => {
+    setEnableLiveUpdates(enabled);
+    console.log("Live updates toggled:", enabled);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -160,7 +186,15 @@ export function CryptoAnalysis() {
         {/* Price Section */}
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Current Price</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Current Price</h2>
+              <LivePriceToggle
+                enabled={enableLiveUpdates}
+                onToggle={handleLiveToggle}
+                isConnected={wsConnected}
+              />
+            </div>
+            
             <div className="mb-6">
               <label
                 htmlFor="symbol"
@@ -177,15 +211,38 @@ export function CryptoAnalysis() {
                 placeholder="Enter symbol (e.g., BTC)"
               />
             </div>
+            
             <PriceDisplay
               symbol={symbol}
               price={price}
               timestamp={timestamp}
               isLoading={isLoadingPrice}
             />
+            
+            {/* Live price status indicator */}
+            {enableLiveUpdates && (
+              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    wsConnected ? 'bg-green-500' : 'bg-red-500'
+                  }`} />
+                  <span className="text-sm font-medium">
+                    {wsConnected ? 'Live Data Active' : 'Connecting to live feed...'}
+                  </span>
+                </div>
+                {wsError && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    WebSocket Error: {wsError}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+          
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Price History</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Price History {enableLiveUpdates && wsConnected ? '(Live)' : ''}
+            </h2>
             
             {/* Chart Configuration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -261,7 +318,11 @@ export function CryptoAnalysis() {
                   showVolume={showVolume}
                 />
               ) : (
-                <PriceChart symbol={symbol} timeframe={timeframe} />
+                <LivePriceChart 
+                  symbol={symbol} 
+                  timeframe={timeframe}
+                  enableLiveUpdates={enableLiveUpdates}
+                />
               )}
             </div>
           </div>
@@ -321,12 +382,32 @@ export function CryptoAnalysis() {
               endTime={endTime}
               isLoading={isLoadingIndicator}
             />
+            
+            {/* Live updates note for indicators */}
+            {enableLiveUpdates && (
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  ℹ️ Indicators are calculated from historical data. 
+                  Live streaming indicator calculations are coming soon!
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Connection Status */}
-      <ConnectionStatus status={connectionStatus} />
+      <ConnectionStatus 
+        status={connectionStatus} 
+        additionalInfo={
+          enableLiveUpdates ? (
+            <div className="text-xs mt-1">
+              WebSocket: {wsConnected ? 'Connected' : 'Disconnected'}
+              {wsError && ` (${wsError})`}
+            </div>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

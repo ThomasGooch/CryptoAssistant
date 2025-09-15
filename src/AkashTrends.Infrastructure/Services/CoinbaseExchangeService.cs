@@ -64,4 +64,26 @@ public class CoinbaseExchangeService : ICryptoExchangeService
             throw new ExchangeException("Failed to get historical prices", ex);
         }
     }
+
+    public async Task<IReadOnlyList<CandlestickData>> GetHistoricalCandlestickDataAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime)
+    {
+        if (startTime >= endTime)
+        {
+            throw new ArgumentException("Start time must be before end time");
+        }
+
+        try
+        {
+            var candlestickData = await _apiClient.GetHistoricalCandlestickDataAsync(symbol, startTime, endTime);
+            return candlestickData.OrderBy(c => c.Timestamp).ToList();
+        }
+        catch (ExchangeException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExchangeException("Failed to get historical candlestick data", ex);
+        }
+    }
 }

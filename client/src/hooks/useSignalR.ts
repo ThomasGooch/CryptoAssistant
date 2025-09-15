@@ -56,7 +56,7 @@ export const useSignalR = () => {
     };
   }, []);
 
-  // Handle state changes from mockSignalR
+  // Handle state changes from SignalR service
   useEffect(() => {
     const handleStateChange = (state: {
       isConnected: boolean;

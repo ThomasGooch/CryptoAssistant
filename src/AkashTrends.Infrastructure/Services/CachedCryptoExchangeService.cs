@@ -80,6 +80,30 @@ public class CachedCryptoExchangeService : ICryptoExchangeService
             options);
     }
 
+    public async Task<IReadOnlyList<CandlestickData>> GetHistoricalCandlestickDataAsync(
+        string symbol,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime)
+    {
+        if (startTime >= endTime)
+        {
+            throw new ArgumentException("Start time must be before end time");
+        }
+
+        var cacheKey = $"candlestick_data_{symbol}_{startTime:yyyyMMddHHmm}_{endTime:yyyyMMddHHmm}";
+        var options = CreateHistoricalCacheOptions(symbol, startTime, endTime);
+
+        return await _cacheService.GetOrSetAsync(
+            cacheKey,
+            async () =>
+            {
+                _logger.LogDebug("Fetching historical candlestick data for {Symbol} from {Start} to {End}",
+                    symbol, startTime, endTime);
+                return await _exchangeService.GetHistoricalCandlestickDataAsync(symbol, startTime, endTime);
+            },
+            options);
+    }
+
     /// <summary>
     /// Creates appropriate cache options based on the age and duration of historical data
     /// </summary>

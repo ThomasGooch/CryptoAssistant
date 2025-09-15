@@ -17,6 +17,13 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
 
     public void ConfigureHttpClient(HttpClient client)
     {
+        // Skip authentication for public endpoints if credentials are not provided
+        if (string.IsNullOrEmpty(_options.ApiKey) || string.IsNullOrEmpty(_options.ApiSecret))
+        {
+            // Public endpoints don't require authentication
+            return;
+        }
+
         ValidateCredentials(); // Validate only when actually needed
 
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();

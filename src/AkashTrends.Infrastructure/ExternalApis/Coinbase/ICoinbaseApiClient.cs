@@ -19,4 +19,13 @@ public interface ICoinbaseApiClient
     /// <param name="endTime">End time for historical data</param>
     /// <returns>List of historical prices</returns>
     Task<IReadOnlyList<CryptoPrice>> GetHistoricalPricesAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime);
+
+    /// <summary>
+    /// Gets historical candlestick data for a cryptocurrency
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol</param>
+    /// <param name="startTime">Start time for historical data</param>
+    /// <param name="endTime">End time for historical data</param>
+    /// <returns>List of historical candlestick data</returns>
+    Task<IReadOnlyList<CandlestickData>> GetHistoricalCandlestickDataAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime);
 }
