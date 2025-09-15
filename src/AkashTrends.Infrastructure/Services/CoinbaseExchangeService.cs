@@ -22,8 +22,19 @@ public class CoinbaseExchangeService : ICryptoExchangeService
             var currency = CryptoCurrency.Create(symbol);
             return CryptoPrice.Create(currency, priceData.Price, priceData.Timestamp);
         }
+        catch (NotFoundException)
+        {
+            // Let NotFoundException pass through unchanged
+            throw;
+        }
+        catch (ValidationException)
+        {
+            // Let ValidationException pass through unchanged
+            throw;
+        }
         catch (ExchangeException)
         {
+            // Let ExchangeException pass through unchanged
             throw;
         }
         catch (Exception ex)

@@ -11,11 +11,14 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
     public CoinbaseAuthenticator(IOptionsMonitor<CoinbaseApiOptions> options)
     {
         _options = options.CurrentValue;
-        ValidateCredentials();
+        // Only validate credentials if we're not in a testing/CI environment
+        // We'll validate on first use instead of at startup
     }
 
     public void ConfigureHttpClient(HttpClient client)
     {
+        ValidateCredentials(); // Validate only when actually needed
+
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
 
         client.DefaultRequestHeaders.Add("CB-ACCESS-KEY", _options.ApiKey);
@@ -25,6 +28,8 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
 
     public string GenerateSignature(string timestamp, string method, string path)
     {
+        ValidateCredentials(); // Validate only when actually needed
+
         var message = $"{timestamp}{method}{path}";
 
         try

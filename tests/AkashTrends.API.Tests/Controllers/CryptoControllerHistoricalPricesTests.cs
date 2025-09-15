@@ -11,7 +11,7 @@ using NSubstitute;
 using Xunit;
 
 namespace AkashTrends.API.Tests.Controllers;
-
+// Tests for the CryptoController's GetHistoricalPrices endpoint
 public class CryptoControllerHistoricalPricesTests
 {
     private readonly ICryptoExchangeService _exchangeService;

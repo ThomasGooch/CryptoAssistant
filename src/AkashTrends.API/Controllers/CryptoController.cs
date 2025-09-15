@@ -9,11 +9,16 @@ using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace AkashTrends.API.Controllers;
 
+/// <summary>
+/// Cryptocurrency data and analysis endpoints
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 public class CryptoController : ControllerBase
 {
     private readonly ICryptoExchangeService _exchangeService;
@@ -33,8 +38,19 @@ public class CryptoController : ControllerBase
         _queryDispatcher = queryDispatcher;
     }
 
+    /// <summary>
+    /// Get current price for a cryptocurrency symbol
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol (e.g., BTC-USD)</param>
+    /// <returns>Current price information</returns>
+    /// <response code="200">Returns the current price data</response>
+    /// <response code="400">Invalid symbol provided</response>
+    /// <response code="404">Symbol not found</response>
     [HttpGet("price/{symbol}")]
-    public async Task<ActionResult<CryptoPriceResponse>> GetPrice(string symbol)
+    [ProducesResponseType(typeof(CryptoPriceResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<CryptoPriceResponse>> GetPrice([Required] string symbol)
     {
         _logger.LogInformation($"Getting current price for {symbol}");
 
@@ -52,11 +68,24 @@ public class CryptoController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Calculate technical indicator for a cryptocurrency symbol
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol (e.g., BTC-USD)</param>
+    /// <param name="type">The type of technical indicator to calculate</param>
+    /// <param name="period">The period for the indicator calculation</param>
+    /// <returns>Calculated indicator result</returns>
+    /// <response code="200">Returns the calculated indicator data</response>
+    /// <response code="400">Invalid parameters provided</response>
+    /// <response code="404">Symbol not found</response>
     [HttpGet("indicator/{symbol}")]
+    [ProducesResponseType(typeof(IndicatorResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<IndicatorResponse>> GetIndicator(
-        string symbol,
-        [FromQuery] IndicatorType type,
-        [FromQuery] int period)
+        [Required] string symbol,
+        [FromQuery, Required] IndicatorType type,
+        [FromQuery, Required, Range(1, 200)] int period)
     {
         _logger.LogInformation($"Calculating {type} for {symbol} with period {period}");
 
@@ -82,11 +111,24 @@ public class CryptoController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Get historical prices for a cryptocurrency symbol
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol (e.g., BTC-USD)</param>
+    /// <param name="startTime">Start time for historical data</param>
+    /// <param name="endTime">End time for historical data</param>
+    /// <returns>Historical price data</returns>
+    /// <response code="200">Returns the historical price data</response>
+    /// <response code="400">Invalid date range or symbol provided</response>
+    /// <response code="404">Symbol not found</response>
     [HttpGet("historical/{symbol}")]
+    [ProducesResponseType(typeof(HistoricalPricesResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
     public async Task<ActionResult<HistoricalPricesResponse>> GetHistoricalPrices(
-        string symbol,
-        [FromQuery] DateTimeOffset startTime,
-        [FromQuery] DateTimeOffset endTime)
+        [Required] string symbol,
+        [FromQuery, Required] DateTimeOffset startTime,
+        [FromQuery, Required] DateTimeOffset endTime)
     {
         _logger.LogInformation($"Getting historical prices for {symbol} from {startTime} to {endTime}");
 
@@ -118,7 +160,13 @@ public class CryptoController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Get all available technical indicators
+    /// </summary>
+    /// <returns>List of available indicator types</returns>
+    /// <response code="200">Returns the list of available indicators</response>
     [HttpGet("indicators")]
+    [ProducesResponseType(typeof(IndicatorTypesResponse), 200)]
     public async Task<ActionResult<IndicatorTypesResponse>> GetAvailableIndicators()
     {
         _logger.LogInformation($"Getting available indicators");

@@ -48,20 +48,20 @@ public class CoinbaseExchangeServiceTests
     }
 
     [Fact]
-    public async Task Should_ThrowExchangeException_When_GetCurrentPriceWithInvalidSymbol()
+    public async Task Should_ThrowNotFoundException_When_GetCurrentPriceWithInvalidSymbol()
     {
         // Arrange
         var symbol = "INVALID";
-        var errorMessage = "Invalid symbol";
+        var errorMessage = "Invalid symbol: INVALID";
 
         _apiClient.GetPriceAsync(symbol)
-            .Returns(Task.FromException<CoinbasePriceData>(new ExchangeException(errorMessage)));
+            .Returns(Task.FromException<CoinbasePriceData>(new NotFoundException(errorMessage)));
 
         // Act
         var act = () => _service.GetCurrentPriceAsync(symbol);
 
         // Assert
-        await act.Should().ThrowAsync<ExchangeException>()
+        await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage(errorMessage);
     }
 
