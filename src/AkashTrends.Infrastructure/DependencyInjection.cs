@@ -57,6 +57,10 @@ public static class DependencyInjection
         // Register user preferences service (in-memory for demo purposes)
         services.AddSingleton<IUserPreferencesService, InMemoryUserPreferencesService>();
 
+        // Register alert services
+        services.AddSingleton<IAlertService, InMemoryAlertService>();
+        services.AddSingleton<IAlertMonitoringService, AlertMonitoringService>();
+
         return services;
     }
 }

@@ -12,6 +12,7 @@ public class PriceUpdateService : BackgroundService
     private readonly ICryptoExchangeService _exchangeService;
     private readonly ITimeProvider _timeProvider;
     private readonly IIndicatorUpdateService _indicatorService;
+    private readonly IAlertMonitoringService _alertMonitoringService;
     private readonly ILogger<PriceUpdateService> _logger;
     private readonly HashSet<string> _subscribedSymbols;
     private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(30);
@@ -23,12 +24,14 @@ public class PriceUpdateService : BackgroundService
         ICryptoExchangeService exchangeService,
         ITimeProvider timeProvider,
         IIndicatorUpdateService indicatorService,
+        IAlertMonitoringService alertMonitoringService,
         ILogger<PriceUpdateService> logger)
     {
         _hubContext = hubContext;
         _exchangeService = exchangeService;
         _timeProvider = timeProvider;
         _indicatorService = indicatorService;
+        _alertMonitoringService = alertMonitoringService;
         _logger = logger;
         _subscribedSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
@@ -85,6 +88,9 @@ public class PriceUpdateService : BackgroundService
                     price.Value);
 
                 _lastUpdateTimes[symbol] = now;
+
+                // Check alerts for this price update
+                await _alertMonitoringService.CheckAlertsForPriceUpdateAsync(symbol, price.Value);
 
                 // Trigger indicator updates when price changes
                 await _indicatorService.UpdateIndicatorsAsync();

@@ -30,7 +30,7 @@ public class UserPreferencesTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void Create_WithInvalidUserId_ShouldThrowArgumentException(string userId)
+    public void Create_WithInvalidUserId_ShouldThrowArgumentException(string? userId)
     {
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(() => UserPreferences.Create(userId));

@@ -84,13 +84,13 @@ public class MACDTests
         var macd = new MACD();
         var prices = new List<CryptoPrice>();
         var baseTime = DateTimeOffset.Now;
-        
+
         // Generate enough data points but in wrong order
         for (int i = 0; i < 40; i++)
         {
             prices.Add(CryptoPrice.Create(_btc, 100m + i, baseTime.AddMinutes(i)));
         }
-        
+
         // Now make them out of order by swapping two elements
         var temp = prices[10];
         prices[10] = prices[20];

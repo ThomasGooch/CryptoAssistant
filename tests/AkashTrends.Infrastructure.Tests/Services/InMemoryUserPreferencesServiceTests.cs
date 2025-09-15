@@ -52,7 +52,7 @@ public class InMemoryUserPreferencesServiceTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public async Task GetUserPreferencesAsync_WithInvalidUserId_ShouldThrowArgumentException(string userId)
+    public async Task GetUserPreferencesAsync_WithInvalidUserId_ShouldThrowArgumentException(string? userId)
     {
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.GetUserPreferencesAsync(userId));
@@ -138,7 +138,7 @@ public class InMemoryUserPreferencesServiceTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public async Task DeleteUserPreferencesAsync_WithInvalidUserId_ShouldThrowArgumentException(string userId)
+    public async Task DeleteUserPreferencesAsync_WithInvalidUserId_ShouldThrowArgumentException(string? userId)
     {
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.DeleteUserPreferencesAsync(userId));
@@ -177,7 +177,7 @@ public class InMemoryUserPreferencesServiceTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public async Task UserPreferencesExistAsync_WithInvalidUserId_ShouldThrowArgumentException(string userId)
+    public async Task UserPreferencesExistAsync_WithInvalidUserId_ShouldThrowArgumentException(string? userId)
     {
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() => _service.UserPreferencesExistAsync(userId));

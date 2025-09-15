@@ -15,6 +15,7 @@ public class PriceUpdateServiceTests : IAsyncDisposable
     private readonly ICryptoExchangeService _mockExchangeService;
     private readonly ITimeProvider _mockTimeProvider;
     private readonly IIndicatorUpdateService _mockIndicatorService;
+    private readonly IAlertMonitoringService _mockAlertMonitoringService;
     private readonly IClientProxy _mockClientProxy;
     private readonly ILogger<PriceUpdateService> _mockLogger;
     private readonly PriceUpdateService _service;
@@ -27,6 +28,7 @@ public class PriceUpdateServiceTests : IAsyncDisposable
         _mockExchangeService = Substitute.For<ICryptoExchangeService>();
         _mockTimeProvider = Substitute.For<ITimeProvider>();
         _mockIndicatorService = Substitute.For<IIndicatorUpdateService>();
+        _mockAlertMonitoringService = Substitute.For<IAlertMonitoringService>();
         _mockClientProxy = Substitute.For<IClientProxy>();
         _mockLogger = Substitute.For<ILogger<PriceUpdateService>>();
 
@@ -37,6 +39,7 @@ public class PriceUpdateServiceTests : IAsyncDisposable
             _mockExchangeService,
             _mockTimeProvider,
             _mockIndicatorService,
+            _mockAlertMonitoringService,
             _mockLogger);
     }
 
