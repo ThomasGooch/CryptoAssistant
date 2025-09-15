@@ -12,6 +12,7 @@ public class CoinbaseClient : ICoinbaseApiClient
     private readonly HttpClient _httpClient;
     private readonly ICoinbaseAuthenticator _authenticator;
     private readonly ILogger<CoinbaseClient> _logger;
+    private bool _isConfigured = false;
 
     public CoinbaseClient(
         HttpClient httpClient,
@@ -28,11 +29,22 @@ public class CoinbaseClient : ICoinbaseApiClient
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "AkashTrends/1.0");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
-        _authenticator.ConfigureHttpClient(_httpClient);
+        // Don't configure authenticator here - do it lazily when first needed
+    }
+
+    private void EnsureConfigured()
+    {
+        if (!_isConfigured)
+        {
+            _authenticator.ConfigureHttpClient(_httpClient);
+            _isConfigured = true;
+        }
     }
 
     public async Task<CoinbasePriceData> GetPriceAsync(string symbol)
     {
+        EnsureConfigured(); // Configure authentication lazily
+        
         if (string.IsNullOrWhiteSpace(symbol))
         {
             throw new ValidationException("Symbol cannot be empty");
@@ -108,6 +120,8 @@ public class CoinbaseClient : ICoinbaseApiClient
 
     public async Task<IReadOnlyList<CryptoPrice>> GetHistoricalPricesAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime)
     {
+        EnsureConfigured(); // Configure authentication lazily
+        
         if (string.IsNullOrWhiteSpace(symbol))
         {
             throw new ValidationException("Symbol cannot be empty");
