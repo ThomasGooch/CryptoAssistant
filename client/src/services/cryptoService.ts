@@ -1,5 +1,5 @@
-import type { CryptoPriceResponse } from "../types/api";
-import type { HistoricalPriceResponse } from "../types/domain";
+import type { CryptoPriceResponse, HistoricalCandlestickResponse } from "../types/api";
+import type { HistoricalPriceResponse, HistoricalCandlestickResponse as DomainHistoricalCandlestickResponse } from "../types/domain";
 import { Timeframe } from "../types/domain";
 
 /**
@@ -46,7 +46,7 @@ class CryptoService {
       const endTimeStr = endTime.toISOString();
 
       const response = await fetch(
-        `${this.baseUrl}/historical/${symbol}?startTime=${startTimeStr}&endTime=${endTimeStr}`,
+        `${this.baseUrl}/historical/${symbol}?startTime=${encodeURIComponent(startTimeStr)}&endTime=${encodeURIComponent(endTimeStr)}`,
       );
       if (!response.ok) {
         throw new Error(
@@ -107,21 +107,54 @@ class CryptoService {
   }
 
   /**
-   * Test the authentication with the Coinbase API
-   * @returns Promise with the authentication test response
+   * Get historical candlestick data for a cryptocurrency
+   * @param symbol The cryptocurrency symbol (e.g., BTC)
+   * @param timeframe The timeframe for historical data
+   * @returns Promise with the historical candlestick response
    */
-  public async testAuth(): Promise<{ success: boolean; message?: string }> {
+  public async getHistoricalCandlestickData(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<DomainHistoricalCandlestickResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/test-auth`);
+      // Calculate start and end times based on timeframe
+      const endTime = new Date();
+      const startTime = this.calculateStartTime(endTime, timeframe);
+
+      // Format dates as ISO strings for the API
+      const startTimeStr = startTime.toISOString();
+      const endTimeStr = endTime.toISOString();
+
+      const response = await fetch(
+        `${this.baseUrl}/candlestick/${symbol}?startTime=${encodeURIComponent(startTimeStr)}&endTime=${encodeURIComponent(endTimeStr)}`,
+      );
       if (!response.ok) {
-        throw new Error(`Auth test failed: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch candlestick data: ${response.statusText}`,
+        );
       }
-      return await response.json();
+
+      const apiResponse: HistoricalCandlestickResponse = await response.json();
+      
+      // Transform API response to domain model
+      return {
+        symbol: apiResponse.symbol,
+        timeframe,
+        data: apiResponse.data.map(item => ({
+          timestamp: new Date(item.timestamp),
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
+          volume: item.volume,
+        })),
+      };
     } catch (error) {
-      console.error("Auth test error:", error);
+      console.error("Error fetching candlestick data:", error);
       throw error;
     }
   }
+
 }
 
 // Create a singleton instance

@@ -8,15 +8,18 @@ import { Timeframe } from "../../types/domain";
 interface PriceChartProps {
   symbol: string;
   timeframe: Timeframe;
+  interactive?: boolean;
 }
 
 export const PriceChart: React.FC<PriceChartProps> = ({
   symbol,
   timeframe,
+  interactive = true,
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<HistoricalPrice[]>([]);
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
@@ -116,6 +119,16 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           tooltip: {
             mode: "index",
             intersect: false,
+            enabled: interactive,
+            callbacks: {
+              title: (context) => {
+                return new Date(data[context[0].dataIndex].timestamp).toLocaleString();
+              },
+              label: (context) => {
+                const price = data[context.dataIndex].price;
+                return `Price: $${price.toFixed(2)}`;
+              },
+            },
           },
         },
         scales: {
@@ -143,7 +156,31 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         chartInstance.current = null;
       }
     };
-  }, [data, loading, error, symbol]);
+  }, [data, loading, error, symbol, interactive]);
+
+  // Interactive mouse move handler
+  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+    if (!chartInstance.current || !interactive) return;
+    
+    const rect = chartRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    const elements = chartInstance.current.getElementsAtEventForMode(
+      { x, y } as any,
+      'nearest',
+      { intersect: false },
+      false
+    );
+    
+    if (elements.length > 0) {
+      setHoveredPoint(elements[0].index);
+    } else {
+      setHoveredPoint(null);
+    }
+  }, [interactive]);
 
   if (loading) {
     return (
@@ -202,7 +239,35 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   return (
     <div data-testid="price-chart" className="relative h-96">
-      <canvas data-testid="price-chart-canvas" ref={chartRef}></canvas>
+      {/* Interactive Controls */}
+      {interactive && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-75">
+            Hover for details
+          </div>
+        </div>
+      )}
+
+      {/* Hovered Data Display */}
+      {interactive && hoveredPoint !== null && data[hoveredPoint] && (
+        <div className="absolute top-12 right-2 z-10 bg-gray-800 text-white p-3 rounded shadow-lg text-sm">
+          <div className="font-bold">{new Date(data[hoveredPoint].timestamp).toLocaleString()}</div>
+          <div className="mt-2">Price: ${data[hoveredPoint].price.toFixed(2)}</div>
+          {hoveredPoint > 0 && (
+            <div className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? 'text-green-400' : 'text-red-400'}`}>
+              {data[hoveredPoint].price > data[hoveredPoint - 1].price ? '▲' : '▼'} 
+              {' '}${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
+            </div>
+          )}
+        </div>
+      )}
+
+      <canvas 
+        data-testid="price-chart-canvas" 
+        ref={chartRef}
+        onMouseMove={interactive ? handleMouseMove : undefined}
+        className={interactive ? "cursor-crosshair" : ""}
+      ></canvas>
     </div>
   );
 };

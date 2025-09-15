@@ -46,12 +46,33 @@ export interface HistoricalPrice {
 }
 
 /**
+ * OHLC candlestick data structure
+ */
+export interface CandlestickData {
+  timestamp: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+/**
  * Historical price response
  */
 export interface HistoricalPriceResponse {
   symbol: string;
   timeframe: Timeframe;
   prices: HistoricalPrice[];
+}
+
+/**
+ * Historical candlestick response
+ */
+export interface HistoricalCandlestickResponse {
+  symbol: string;
+  timeframe: Timeframe;
+  data: CandlestickData[];
 }
 
 /**
@@ -117,4 +138,15 @@ export interface UserPreferences {
   favoritePairs: string[];
   ui: UIPreferences;
   lastUpdated: string;
+}
+
+/**
+ * Indicator configuration for chart overlays
+ */
+export interface IndicatorConfig {
+  type: IndicatorType;
+  period: number;
+  color: string;
+  enabled: boolean;
+  parameters?: Record<string, any>;
 }

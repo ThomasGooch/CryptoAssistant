@@ -4,6 +4,7 @@ using AkashTrends.Application.Features.Crypto.CalculateIndicator;
 using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
 using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
+using AkashTrends.Application.Features.Crypto.GetHistoricalCandlestickData;
 using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
@@ -183,5 +184,57 @@ public class CryptoController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Get historical candlestick data for a cryptocurrency symbol
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol (e.g., BTC-USD)</param>
+    /// <param name="startTime">Start time for historical data</param>
+    /// <param name="endTime">End time for historical data</param>
+    /// <returns>Historical candlestick data</returns>
+    /// <response code="200">Returns the historical candlestick data</response>
+    /// <response code="400">Invalid date range or symbol provided</response>
+    /// <response code="404">Symbol not found</response>
+    [HttpGet("candlestick/{symbol}")]
+    [ProducesResponseType(typeof(HistoricalCandlestickResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<HistoricalCandlestickResponse>> GetHistoricalCandlestickData(
+        [Required] string symbol,
+        [FromQuery, Required] DateTimeOffset startTime,
+        [FromQuery, Required] DateTimeOffset endTime)
+    {
+        _logger.LogInformation($"Getting historical candlestick data for {symbol} from {startTime} to {endTime}");
+
+        // Use the query dispatcher to handle the query
+        var query = new GetHistoricalCandlestickDataQuery
+        {
+            Symbol = symbol,
+            StartTime = startTime,
+            EndTime = endTime
+        };
+
+        var result = await _queryDispatcher.Dispatch<GetHistoricalCandlestickDataQuery, GetHistoricalCandlestickDataResult>(query);
+
+        _logger.LogInformation($"Retrieved {result.Data.Count} candlestick data points for {symbol}");
+
+        // Map to response model
+        var response = new HistoricalCandlestickResponse
+        {
+            Symbol = result.Symbol,
+            StartTime = result.StartTime,
+            EndTime = result.EndTime,
+            Data = result.Data.Select(c => new CandlestickDataResponse
+            {
+                Timestamp = c.Timestamp,
+                Open = c.Open,
+                High = c.High,
+                Low = c.Low,
+                Close = c.Close,
+                Volume = c.Volume
+            }).ToList()
+        };
+
+        return Ok(response);
+    }
 
 }

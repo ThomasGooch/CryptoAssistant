@@ -22,6 +22,21 @@ export interface IndicatorTypesResponse {
   indicators: IndicatorType[];
 }
 
+export interface CandlestickDataResponse {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface HistoricalCandlestickResponse {
+  symbol: string;
+  timeframe: string;
+  data: CandlestickDataResponse[];
+}
+
 export type UserPreferencesResponse = UserPreferences;
 
 export interface UserPreferencesRequest {
