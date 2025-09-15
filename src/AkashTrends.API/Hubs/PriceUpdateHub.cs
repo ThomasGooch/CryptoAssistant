@@ -90,6 +90,40 @@ public class PriceUpdateHub : Hub
         }
     }
 
+    public async Task SubscribeToAlerts(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+        }
+
+        try
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+        }
+        catch (Exception ex)
+        {
+            throw new HubException($"Error subscribing to alerts for user {userId}: {ex.Message}");
+        }
+    }
+
+    public async Task UnsubscribeFromAlerts(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+        }
+
+        try
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
+        }
+        catch (Exception ex)
+        {
+            throw new HubException($"Error unsubscribing from alerts for user {userId}: {ex.Message}");
+        }
+    }
+
     public async Task UnsubscribeFromSymbol(string symbol)
     {
         if (string.IsNullOrWhiteSpace(symbol))

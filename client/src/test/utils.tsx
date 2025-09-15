@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { render, act } from '@testing-library/react';
-import type { ReactElement, ReactNode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, act } from "@testing-library/react";
+import type { ReactElement, ReactNode } from "react";
+import { BrowserRouter } from "react-router-dom";
 
 type WrapperProps = {
   children: ReactNode;
@@ -13,16 +13,19 @@ type RenderOptions = {
   route?: string;
 };
 
-export async function renderWithProviders(ui: ReactElement, options: RenderOptions = {}) {
+export async function renderWithProviders(
+  ui: ReactElement,
+  options: RenderOptions = {},
+) {
   if (options.route) {
-    window.history.pushState({}, 'Test page', options.route);
+    window.history.pushState({}, "Test page", options.route);
   }
 
   const wrappedUi = (
     <BrowserRouter
       future={{
         v7_startTransition: true,
-        v7_relativeSplatPath: true
+        v7_relativeSplatPath: true,
       }}
     >
       <TestWrapper>{ui}</TestWrapper>
@@ -41,11 +44,11 @@ export async function renderWithProviders(ui: ReactElement, options: RenderOptio
           <BrowserRouter
             future={{
               v7_startTransition: true,
-              v7_relativeSplatPath: true
+              v7_relativeSplatPath: true,
             }}
           >
             <TestWrapper>{rerenderUi}</TestWrapper>
-          </BrowserRouter>
+          </BrowserRouter>,
         );
       });
     },
@@ -54,20 +57,20 @@ export async function renderWithProviders(ui: ReactElement, options: RenderOptio
 
 // Test data factories
 export const createMockPrice = (overrides = {}) => ({
-  symbol: 'BTC',
+  symbol: "BTC",
   price: 50000,
   timestamp: new Date().toISOString(),
-  ...overrides
+  ...overrides,
 });
 
 export const createMockIndicator = (overrides = {}) => ({
-  symbol: 'BTC',
-  type: 'SMA',
+  symbol: "BTC",
+  type: "SMA",
   value: 49500,
   timestamp: new Date().toISOString(),
-  ...overrides
+  ...overrides,
 });
 
 // Re-export testing library utilities
-export * from '@testing-library/react';
-export { default as userEvent } from '@testing-library/user-event';
+export * from "@testing-library/react";
+export { default as userEvent } from "@testing-library/user-event";

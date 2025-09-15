@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import signalRService from '../services/signalRService';
-import { IndicatorType, Timeframe } from '../types/domain';
+import { useEffect, useState } from "react";
+import signalRService from "../services/signalRService";
+import { IndicatorType, Timeframe } from "../types/domain";
 
 /**
  * Custom hook for managing SignalR connections
@@ -24,7 +24,7 @@ export const useSignalR = () => {
         if (mounted) {
           setIsConnected(false);
           // Only set error if it's a real error, not just disconnected
-          if (err instanceof Error && err.message !== 'Connection closed') {
+          if (err instanceof Error && err.message !== "Connection closed") {
             setError(err);
           } else {
             setError(null);
@@ -58,7 +58,10 @@ export const useSignalR = () => {
 
   // Handle state changes from mockSignalR
   useEffect(() => {
-    const handleStateChange = (state: { isConnected: boolean; error: Error | null }) => {
+    const handleStateChange = (state: {
+      isConnected: boolean;
+      error: Error | null;
+    }) => {
       setIsConnected(state.isConnected);
       setError(state.error);
     };
@@ -76,17 +79,21 @@ export const useSignalR = () => {
    * @param callback Function to call when price updates are received
    */
   const subscribeToPriceUpdates = async (
-    symbol: string, 
-    callback: (price: number) => void
+    symbol: string,
+    callback: (price: number) => void,
   ) => {
     if (!isConnected) {
-      throw new Error('SignalR not connected');
+      throw new Error("SignalR not connected");
     }
-    
+
     try {
       await signalRService.subscribeToSymbol(symbol, callback);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to subscribe to price updates'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to subscribe to price updates"),
+      );
       throw err;
     }
   };
@@ -99,11 +106,15 @@ export const useSignalR = () => {
     if (!isConnected) {
       return; // No need to throw if we're not connected
     }
-    
+
     try {
       await signalRService.unsubscribeFromSymbol(symbol);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to unsubscribe from price updates'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to unsubscribe from price updates"),
+      );
     }
   };
 
@@ -120,22 +131,26 @@ export const useSignalR = () => {
     indicatorType: IndicatorType,
     period: number,
     callback: (value: number) => void,
-    timeframe?: Timeframe
+    timeframe?: Timeframe,
   ) => {
     if (!isConnected) {
-      throw new Error('SignalR not connected');
+      throw new Error("SignalR not connected");
     }
-    
+
     try {
       await signalRService.subscribeToIndicator(
-        symbol, 
-        indicatorType, 
-        period, 
-        callback, 
-        timeframe
+        symbol,
+        indicatorType,
+        period,
+        callback,
+        timeframe,
       );
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to subscribe to indicator updates'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to subscribe to indicator updates"),
+      );
       throw err;
     }
   };
@@ -149,22 +164,30 @@ export const useSignalR = () => {
   const unsubscribeFromIndicatorUpdates = async (
     symbol: string,
     indicatorType: IndicatorType,
-    timeframe?: Timeframe
+    timeframe?: Timeframe,
   ) => {
     if (!isConnected) {
       return; // No need to throw if we're not connected
     }
-    
+
     try {
-      await signalRService.unsubscribeFromIndicator(symbol, indicatorType, timeframe);
+      await signalRService.unsubscribeFromIndicator(
+        symbol,
+        indicatorType,
+        timeframe,
+      );
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to unsubscribe from indicator updates'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to unsubscribe from indicator updates"),
+      );
     }
   };
 
   useEffect(() => {
-    console.log('useSignalR: isConnected updated to', isConnected);
-    console.log('useSignalR: error updated to', error);
+    console.log("useSignalR: isConnected updated to", isConnected);
+    console.log("useSignalR: error updated to", error);
   }, [isConnected, error]);
 
   return {
@@ -173,7 +196,7 @@ export const useSignalR = () => {
     subscribeToPriceUpdates,
     unsubscribeFromPriceUpdates,
     subscribeToIndicatorUpdates,
-    unsubscribeFromIndicatorUpdates
+    unsubscribeFromIndicatorUpdates,
   };
 };
 

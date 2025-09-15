@@ -58,7 +58,9 @@ public class IndicatorFactoryTests
             IndicatorType.ExponentialMovingAverage,
             IndicatorType.RelativeStrengthIndex,
             IndicatorType.BollingerBands,
-            IndicatorType.StochasticOscillator
+            IndicatorType.StochasticOscillator,
+            IndicatorType.MACD,
+            IndicatorType.WilliamsPercentR
         });
     }
 
@@ -80,6 +82,8 @@ public class IndicatorFactoryTests
     [InlineData(IndicatorType.RelativeStrengthIndex, 9, 25)]
     [InlineData(IndicatorType.BollingerBands, 10, 50)]
     [InlineData(IndicatorType.StochasticOscillator, 5, 21)]
+    [InlineData(IndicatorType.MACD, 26, 26)]
+    [InlineData(IndicatorType.WilliamsPercentR, 10, 20)]
     public void GetDefaultPeriodRange_ShouldReturnValidRange(IndicatorType type, int expectedMin, int expectedMax)
     {
         // Act

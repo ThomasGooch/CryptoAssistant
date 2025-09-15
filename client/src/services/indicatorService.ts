@@ -1,11 +1,11 @@
-import type { IndicatorResponse, IndicatorTypesResponse } from '../types/api';
-import { IndicatorType } from '../types/domain';
+import type { IndicatorResponse, IndicatorTypesResponse } from "../types/api";
+import { IndicatorType } from "../types/domain";
 
 /**
  * Service for interacting with the indicator API endpoints
  */
 class IndicatorService {
-  private baseUrl = '/api/Crypto';
+  private baseUrl = "/api/Crypto";
 
   /**
    * Get indicator value for a cryptocurrency
@@ -15,22 +15,22 @@ class IndicatorService {
    * @returns Promise with the indicator response
    */
   public async getIndicator(
-    symbol: string, 
-    type: IndicatorType, 
-    period: number
+    symbol: string,
+    type: IndicatorType,
+    period: number,
   ): Promise<IndicatorResponse> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/indicator/${symbol}?type=${type}&period=${period}`
+        `${this.baseUrl}/indicator/${symbol}?type=${type}&period=${period}`,
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch indicator: ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error fetching indicator:', error);
+      console.error("Error fetching indicator:", error);
       throw error;
     }
   }
@@ -42,14 +42,14 @@ class IndicatorService {
   public async getAvailableIndicators(): Promise<IndicatorTypesResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/indicators`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch indicators: ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (error) {
-      console.error('Error fetching indicators:', error);
+      console.error("Error fetching indicators:", error);
       throw error;
     }
   }
@@ -62,17 +62,17 @@ class IndicatorService {
   public getIndicatorDisplayName(type: IndicatorType): string {
     switch (type) {
       case IndicatorType.SimpleMovingAverage:
-        return 'Simple Moving Average (SMA)';
+        return "Simple Moving Average (SMA)";
       case IndicatorType.ExponentialMovingAverage:
-        return 'Exponential Moving Average (EMA)';
+        return "Exponential Moving Average (EMA)";
       case IndicatorType.RelativeStrengthIndex:
-        return 'Relative Strength Index (RSI)';
+        return "Relative Strength Index (RSI)";
       case IndicatorType.BollingerBands:
-        return 'Bollinger Bands';
+        return "Bollinger Bands";
       case IndicatorType.StochasticOscillator:
-        return 'Stochastic Oscillator';
+        return "Stochastic Oscillator";
       default:
-        return 'Unknown Indicator';
+        return "Unknown Indicator";
     }
   }
 }

@@ -1,15 +1,19 @@
-import * as signalR from '@microsoft/signalr';
-import { IndicatorType, Timeframe } from '../types/domain';
+import * as signalR from "@microsoft/signalr";
+import { IndicatorType, Timeframe } from "../types/domain";
 
 /**
  * Service for SignalR real-time connections
  */
 class SignalRService {
   private connection: signalR.HubConnection | null = null;
-  private priceUpdateCallbacks: Map<string, (price: number) => void> = new Map();
-  private indicatorUpdateCallbacks: Map<string, (value: number) => void> = new Map();
+  private priceUpdateCallbacks: Map<string, (price: number) => void> =
+    new Map();
+  private indicatorUpdateCallbacks: Map<string, (value: number) => void> =
+    new Map();
   private readonly reconnectedCallbacks: Set<() => void> = new Set();
-  private readonly stateChangeCallbacks: Set<(state: { isConnected: boolean; error: Error | null }) => void> = new Set();
+  private readonly stateChangeCallbacks: Set<
+    (state: { isConnected: boolean; error: Error | null }) => void
+  > = new Set();
 
   /**
    * Start the SignalR connection
@@ -17,47 +21,52 @@ class SignalRService {
    */
   public async startConnection(): Promise<void> {
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/crypto')
+      .withUrl("/hubs/crypto")
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
     // Add error handler
     this.connection.onclose((error) => {
-      console.error('SignalR connection closed:', error);
+      console.error("SignalR connection closed:", error);
     });
 
     this.connection.onreconnecting((error) => {
-      console.warn('SignalR reconnecting:', error);
+      console.warn("SignalR reconnecting:", error);
     });
 
     this.connection.onreconnected((connectionId) => {
-      console.log('SignalR reconnected:', connectionId);
+      console.log("SignalR reconnected:", connectionId);
       this.notifyReconnected();
     });
 
     // Register handlers for incoming messages
-    this.connection.on('ReceivePriceUpdate', (symbol: string, price: number) => {
-      const callback = this.priceUpdateCallbacks.get(symbol.toLowerCase());
-      if (callback) {
-        callback(price);
-      }
-    });
+    this.connection.on(
+      "ReceivePriceUpdate",
+      (symbol: string, price: number) => {
+        const callback = this.priceUpdateCallbacks.get(symbol.toLowerCase());
+        if (callback) {
+          callback(price);
+        }
+      },
+    );
 
-    this.connection.on('ReceiveIndicatorUpdate', 
+    this.connection.on(
+      "ReceiveIndicatorUpdate",
       (symbol: string, indicatorType: IndicatorType, value: number) => {
         const key = `${symbol.toLowerCase()}_${indicatorType}`;
         const callback = this.indicatorUpdateCallbacks.get(key);
         if (callback) {
           callback(value);
         }
-    });
+      },
+    );
 
     try {
       await this.connection.start();
-      console.log('SignalR connected');
+      console.log("SignalR connected");
     } catch (err) {
-      console.error('SignalR connection error: ', err);
+      console.error("SignalR connection error: ", err);
       throw err;
     }
   }
@@ -67,9 +76,12 @@ class SignalRService {
    * @param symbol The cryptocurrency symbol (e.g., BTC)
    * @param callback Function to call when price updates are received
    */
-  public async subscribeToSymbol(symbol: string, callback: (price: number) => void): Promise<void> {
+  public async subscribeToSymbol(
+    symbol: string,
+    callback: (price: number) => void,
+  ): Promise<void> {
     if (!this.connection) {
-      throw new Error('SignalR connection not initialized');
+      throw new Error("SignalR connection not initialized");
     }
 
     const trimmedSymbol = symbol?.trim();
@@ -84,10 +96,13 @@ class SignalRService {
 
     try {
       // Add new subscription
-      await this.connection.invoke('SubscribeToSymbol', trimmedSymbol.toUpperCase());
+      await this.connection.invoke(
+        "SubscribeToSymbol",
+        trimmedSymbol.toUpperCase(),
+      );
       this.priceUpdateCallbacks.set(trimmedSymbol.toLowerCase(), callback);
     } catch (err) {
-      console.error('Error subscribing to symbol:', err);
+      console.error("Error subscribing to symbol:", err);
       throw err;
     }
   }
@@ -104,26 +119,32 @@ class SignalRService {
     const symbols = Array.from(this.priceUpdateCallbacks.keys());
     for (const symbol of symbols) {
       try {
-        await this.connection.invoke('UnsubscribeFromSymbol', symbol.toUpperCase());
+        await this.connection.invoke(
+          "UnsubscribeFromSymbol",
+          symbol.toUpperCase(),
+        );
       } catch (err) {
-        console.warn('Error unsubscribing from symbol:', symbol, err);
+        console.warn("Error unsubscribing from symbol:", symbol, err);
       }
     }
   }
 
   public async unsubscribeFromSymbol(symbol: string): Promise<void> {
     if (!this.connection) {
-      throw new Error('SignalR connection not established');
+      throw new Error("SignalR connection not established");
     }
-    
+
     const trimmedSymbol = symbol?.trim().toLowerCase();
     if (!trimmedSymbol) return;
 
     this.priceUpdateCallbacks.delete(trimmedSymbol);
     try {
-      await this.connection.invoke('UnsubscribeFromSymbol', trimmedSymbol.toUpperCase());
+      await this.connection.invoke(
+        "UnsubscribeFromSymbol",
+        trimmedSymbol.toUpperCase(),
+      );
     } catch (err) {
-      console.warn('Error unsubscribing from symbol:', symbol, err);
+      console.warn("Error unsubscribing from symbol:", symbol, err);
     }
   }
 
@@ -136,14 +157,14 @@ class SignalRService {
    * @param timeframe Optional timeframe
    */
   public async subscribeToIndicator(
-    symbol: string, 
-    indicatorType: IndicatorType, 
+    symbol: string,
+    indicatorType: IndicatorType,
     period: number,
     callback: (value: number) => void,
-    timeframe?: Timeframe
+    timeframe?: Timeframe,
   ): Promise<void> {
     if (!this.connection) {
-      throw new Error('SignalR connection not established');
+      throw new Error("SignalR connection not established");
     }
 
     const trimmedSymbol = symbol?.trim();
@@ -152,30 +173,45 @@ class SignalRService {
       this.indicatorUpdateCallbacks.clear();
       return;
     }
-    
+
     try {
       // Remove old subscription if exists
       const oldKey = Array.from(this.indicatorUpdateCallbacks.keys())[0];
       if (oldKey) {
-        const [oldSymbol, oldType] = oldKey.split('_');
+        const [oldSymbol, oldType] = oldKey.split("_");
         try {
-          await this.connection.invoke('UnsubscribeFromIndicator', oldSymbol.toUpperCase(), Number(oldType));
+          await this.connection.invoke(
+            "UnsubscribeFromIndicator",
+            oldSymbol.toUpperCase(),
+            Number(oldType),
+          );
         } catch (err) {
-          console.warn('Error unsubscribing from old indicator:', err);
+          console.warn("Error unsubscribing from old indicator:", err);
         }
         this.indicatorUpdateCallbacks.delete(oldKey);
       }
 
       const key = `${trimmedSymbol.toLowerCase()}_${indicatorType}`;
       this.indicatorUpdateCallbacks.set(key, callback);
-      
+
       if (timeframe !== undefined) {
-        await this.connection.invoke('SubscribeToIndicatorWithTimeframe', trimmedSymbol.toUpperCase(), indicatorType, period, timeframe);
+        await this.connection.invoke(
+          "SubscribeToIndicatorWithTimeframe",
+          trimmedSymbol.toUpperCase(),
+          indicatorType,
+          period,
+          timeframe,
+        );
       } else {
-        await this.connection.invoke('SubscribeToIndicator', trimmedSymbol.toUpperCase(), indicatorType, period);
+        await this.connection.invoke(
+          "SubscribeToIndicator",
+          trimmedSymbol.toUpperCase(),
+          indicatorType,
+          period,
+        );
       }
     } catch (err) {
-      console.error('Error subscribing to indicator:', err);
+      console.error("Error subscribing to indicator:", err);
       this.indicatorUpdateCallbacks.clear();
       throw err;
     }
@@ -188,21 +224,30 @@ class SignalRService {
    * @param timeframe Optional timeframe
    */
   public async unsubscribeFromIndicator(
-    symbol: string, 
+    symbol: string,
     indicatorType: IndicatorType,
-    timeframe?: Timeframe
+    timeframe?: Timeframe,
   ): Promise<void> {
     if (!this.connection) {
-      throw new Error('SignalR connection not established');
+      throw new Error("SignalR connection not established");
     }
-    
+
     const key = `${symbol.toLowerCase()}_${indicatorType}`;
     this.indicatorUpdateCallbacks.delete(key);
-    
+
     if (timeframe !== undefined) {
-      await this.connection.invoke('UnsubscribeFromIndicatorWithTimeframe', symbol, indicatorType, timeframe);
+      await this.connection.invoke(
+        "UnsubscribeFromIndicatorWithTimeframe",
+        symbol,
+        indicatorType,
+        timeframe,
+      );
     } else {
-      await this.connection.invoke('UnsubscribeFromIndicator', symbol, indicatorType);
+      await this.connection.invoke(
+        "UnsubscribeFromIndicator",
+        symbol,
+        indicatorType,
+      );
     }
   }
 
@@ -229,15 +274,22 @@ class SignalRService {
     this.reconnectedCallbacks.forEach((callback) => callback());
   }
 
-  public onStateChange(callback: (state: { isConnected: boolean; error: Error | null }) => void): void {
+  public onStateChange(
+    callback: (state: { isConnected: boolean; error: Error | null }) => void,
+  ): void {
     this.stateChangeCallbacks.add(callback);
   }
 
-  public offStateChange(callback: (state: { isConnected: boolean; error: Error | null }) => void): void {
+  public offStateChange(
+    callback: (state: { isConnected: boolean; error: Error | null }) => void,
+  ): void {
     this.stateChangeCallbacks.delete(callback);
   }
 
-  private notifyStateChange(state: { isConnected: boolean; error: Error | null }): void {
+  private notifyStateChange(state: {
+    isConnected: boolean;
+    error: Error | null;
+  }): void {
     this.stateChangeCallbacks.forEach((callback) => callback(state));
   }
 

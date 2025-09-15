@@ -3,6 +3,8 @@ using AkashTrends.Application.Features.Crypto.CalculateIndicator;
 using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
 using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
+using AkashTrends.Application.Features.Preferences.GetUserPreferences;
+using AkashTrends.Application.Features.Preferences.SaveUserPreferences;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AkashTrends.Application;
@@ -26,6 +28,10 @@ public static class DependencyInjection
         services.AddTransient<IQueryHandler<GetCurrentPriceQuery, GetCurrentPriceResult>, GetCurrentPriceQueryHandler>();
         services.AddTransient<IQueryHandler<GetHistoricalPricesQuery, GetHistoricalPricesResult>, GetHistoricalPricesQueryHandler>();
         services.AddTransient<IQueryHandler<CalculateIndicatorQuery, CalculateIndicatorResult>, CalculateIndicatorQueryHandler>();
+
+        // Register preferences handlers
+        services.AddTransient<IQueryHandler<GetUserPreferencesQuery, GetUserPreferencesResult>, GetUserPreferencesQueryHandler>();
+        services.AddTransient<IQueryHandler<SaveUserPreferencesCommand, SaveUserPreferencesResult>, SaveUserPreferencesCommandHandler>();
 
 
         return services;

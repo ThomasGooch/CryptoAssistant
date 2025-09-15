@@ -10,7 +10,9 @@ export enum IndicatorType {
   ExponentialMovingAverage = 1,
   RelativeStrengthIndex = 2,
   BollingerBands = 3,
-  StochasticOscillator = 4
+  StochasticOscillator = 4,
+  MACD = 5,
+  WilliamsPercentR = 6,
 }
 
 /**
@@ -23,7 +25,7 @@ export enum Timeframe {
   Hour = 3,
   FourHours = 4,
   Day = 5,
-  Week = 6
+  Week = 6,
 }
 
 /**
@@ -61,4 +63,58 @@ export interface IndicatorData {
   value: number;
   startTime: Date;
   endTime: Date;
+}
+
+/**
+ * Chart type enumeration
+ */
+export enum ChartType {
+  Line = "line",
+  Candlestick = "candlestick",
+  Bar = "bar",
+  Area = "area",
+}
+
+/**
+ * Chart preferences
+ */
+export interface ChartPreferences {
+  type: ChartType;
+  timeFrame: string;
+  showVolume: boolean;
+  showGrid: boolean;
+  colorScheme: string;
+}
+
+/**
+ * Indicator preference
+ */
+export interface IndicatorPreference {
+  type: IndicatorType;
+  period: number;
+  isVisible: boolean;
+  color: string;
+  parameters: Record<string, unknown>;
+}
+
+/**
+ * UI preferences
+ */
+export interface UIPreferences {
+  darkMode: boolean;
+  language: string;
+  showAdvancedFeatures: boolean;
+  refreshInterval: number;
+}
+
+/**
+ * User preferences
+ */
+export interface UserPreferences {
+  userId: string;
+  chart: ChartPreferences;
+  indicators: IndicatorPreference[];
+  favoritePairs: string[];
+  ui: UIPreferences;
+  lastUpdated: string;
 }

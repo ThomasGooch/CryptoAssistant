@@ -127,7 +127,9 @@ public class CleanArchitectureTests
             .AreClasses()
             .And()
             .AreNotAbstract()
-            .GetTypes();
+            .GetTypes()
+            .Where(t => !t.IsEnum)
+            .ToList();
 
         var mutableEntities = new List<string>();
 
