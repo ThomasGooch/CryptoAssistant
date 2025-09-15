@@ -18,7 +18,7 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
     public void ConfigureHttpClient(HttpClient client)
     {
         ValidateCredentials(); // Validate only when actually needed
-        
+
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
 
         client.DefaultRequestHeaders.Add("CB-ACCESS-KEY", _options.ApiKey);
@@ -29,7 +29,7 @@ public class CoinbaseAuthenticator : ICoinbaseAuthenticator
     public string GenerateSignature(string timestamp, string method, string path)
     {
         ValidateCredentials(); // Validate only when actually needed
-        
+
         var message = $"{timestamp}{method}{path}";
 
         try
