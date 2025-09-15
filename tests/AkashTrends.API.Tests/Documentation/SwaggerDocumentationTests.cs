@@ -6,7 +6,8 @@ using Xunit;
 
 namespace AkashTrends.API.Tests.Documentation;
 
-public class SwaggerDocumentationTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("WebApplication Collection")]
+public class SwaggerDocumentationTests
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;

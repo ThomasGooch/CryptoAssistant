@@ -6,7 +6,8 @@ using Xunit;
 
 namespace AkashTrends.API.Tests.Middleware;
 
-public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("WebApplication Collection")]
+public class ErrorHandlingTests
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
