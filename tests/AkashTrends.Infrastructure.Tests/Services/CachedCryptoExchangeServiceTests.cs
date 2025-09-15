@@ -127,6 +127,19 @@ public class CachedCryptoExchangeServiceTests
         _exchangeService.GetCurrentPriceAsync(symbol)
             .Returns(expectedPrice);
 
+        // Setup cache service for CryptoPrice
+        _cacheService
+            .GetOrSetAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<Task<CryptoPrice>>>(),
+                Arg.Any<CacheOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var factory = callInfo.ArgAt<Func<Task<CryptoPrice>>>(1);
+                return factory();
+            });
+
         // Act - Multiple calls should use cache
         var result1 = await _cachedService.GetCurrentPriceAsync(symbol);
         var result2 = await _cachedService.GetCurrentPriceAsync(symbol);
@@ -232,6 +245,31 @@ public class CachedCryptoExchangeServiceTests
             _exchangeService.GetHistoricalPricesAsync(symbol, Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
                 .Returns(historicalPrices);
         }
+
+        // Setup cache service for both CryptoPrice and IReadOnlyList<CryptoPrice>
+        _cacheService
+            .GetOrSetAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<Task<CryptoPrice>>>(),
+                Arg.Any<CacheOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var factory = callInfo.ArgAt<Func<Task<CryptoPrice>>>(1);
+                return factory();
+            });
+
+        _cacheService
+            .GetOrSetAsync(
+                Arg.Any<string>(),
+                Arg.Any<Func<Task<IReadOnlyList<CryptoPrice>>>>(),
+                Arg.Any<CacheOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var factory = callInfo.ArgAt<Func<Task<IReadOnlyList<CryptoPrice>>>>(1);
+                return factory();
+            });
 
         // Act
         var cachedService = _cachedService as CachedCryptoExchangeService;
