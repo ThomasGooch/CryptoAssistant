@@ -17,7 +17,7 @@ public class CoinbaseAuthenticatorTests
     }
 
     [Fact]
-    public void Constructor_ShouldThrowException_WhenApiKeyIsMissing()
+    public void ConfigureHttpClient_ShouldThrowException_WhenApiKeyIsMissing()
     {
         // Arrange
         var options = new CoinbaseApiOptions
@@ -27,8 +27,11 @@ public class CoinbaseAuthenticatorTests
         };
         _optionsMonitor.CurrentValue.Returns(options);
 
+        var authenticator = new CoinbaseAuthenticator(_optionsMonitor);
+        var httpClient = new HttpClient();
+
         // Act
-        var act = () => new CoinbaseAuthenticator(_optionsMonitor);
+        var act = () => authenticator.ConfigureHttpClient(httpClient);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
@@ -36,7 +39,7 @@ public class CoinbaseAuthenticatorTests
     }
 
     [Fact]
-    public void Constructor_ShouldThrowException_WhenApiSecretIsMissing()
+    public void ConfigureHttpClient_ShouldThrowException_WhenApiSecretIsMissing()
     {
         // Arrange
         var options = new CoinbaseApiOptions
@@ -46,8 +49,53 @@ public class CoinbaseAuthenticatorTests
         };
         _optionsMonitor.CurrentValue.Returns(options);
 
+        var authenticator = new CoinbaseAuthenticator(_optionsMonitor);
+        var httpClient = new HttpClient();
+
         // Act
-        var act = () => new CoinbaseAuthenticator(_optionsMonitor);
+        var act = () => authenticator.ConfigureHttpClient(httpClient);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*ApiSecret*");
+    }
+
+    [Fact]
+    public void GenerateSignature_ShouldThrowException_WhenApiKeyIsMissing()
+    {
+        // Arrange
+        var options = new CoinbaseApiOptions
+        {
+            ApiKey = string.Empty,
+            ApiSecret = "valid-secret"
+        };
+        _optionsMonitor.CurrentValue.Returns(options);
+
+        var authenticator = new CoinbaseAuthenticator(_optionsMonitor);
+
+        // Act
+        var act = () => authenticator.GenerateSignature("123456", "GET", "/test");
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*ApiKey*");
+    }
+
+    [Fact]
+    public void GenerateSignature_ShouldThrowException_WhenApiSecretIsMissing()
+    {
+        // Arrange
+        var options = new CoinbaseApiOptions
+        {
+            ApiKey = "valid-key",
+            ApiSecret = string.Empty
+        };
+        _optionsMonitor.CurrentValue.Returns(options);
+
+        var authenticator = new CoinbaseAuthenticator(_optionsMonitor);
+
+        // Act
+        var act = () => authenticator.GenerateSignature("123456", "GET", "/test");
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
