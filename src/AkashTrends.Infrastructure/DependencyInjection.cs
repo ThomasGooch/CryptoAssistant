@@ -6,6 +6,7 @@ using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AkashTrends.Infrastructure;
 
@@ -24,6 +25,13 @@ public static class DependencyInjection
         // Register time provider
         services.AddSingleton<ITimeProvider, CryptoTimeProvider>();
 
+        // Register resilience service for retry policies and circuit breakers
+        services.AddSingleton<IResilienceService, ResilienceService>();
+
+        // Add caching services
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService, CacheService>();
+
         // Register exchange service with caching decorator
         services.AddSingleton<CoinbaseExchangeService>();
         services.AddSingleton<ICryptoExchangeService>(sp =>
@@ -31,22 +39,20 @@ public static class DependencyInjection
             var exchangeService = sp.GetRequiredService<CoinbaseExchangeService>();
             var cacheService = sp.GetRequiredService<ICacheService>();
             var timeProvider = sp.GetRequiredService<ITimeProvider>();
-            return new CachedCryptoExchangeService(exchangeService, cacheService, timeProvider);
+            var logger = sp.GetRequiredService<ILogger<CachedCryptoExchangeService>>();
+            return new CachedCryptoExchangeService(exchangeService, cacheService, timeProvider, logger);
         });
 
-        // Register indicator service with caching
+        // Register indicator service with caching and parallel processing
         services.AddSingleton<IIndicatorService>(sp =>
         {
             var indicatorFactory = sp.GetRequiredService<IIndicatorFactory>();
             var exchangeService = sp.GetRequiredService<ICryptoExchangeService>();
             var cacheService = sp.GetRequiredService<ICacheService>();
             var timeProvider = sp.GetRequiredService<ITimeProvider>();
-            return new CachedIndicatorService(indicatorFactory, exchangeService, cacheService, timeProvider);
+            var logger = sp.GetRequiredService<ILogger<CachedIndicatorService>>();
+            return new CachedIndicatorService(indicatorFactory, exchangeService, cacheService, timeProvider, logger);
         });
-
-        // Add caching services
-        services.AddMemoryCache();
-        services.AddSingleton<ICacheService, CacheService>();
 
         return services;
     }
