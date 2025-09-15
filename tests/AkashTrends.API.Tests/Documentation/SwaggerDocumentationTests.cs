@@ -38,7 +38,7 @@ public class SwaggerDocumentationTests : IClassFixture<WebApplicationFactory<Pro
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType?.ToString());
-        
+
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("openapi", content);
         Assert.Contains("AkashTrends API", content);
@@ -59,7 +59,7 @@ public class SwaggerDocumentationTests : IClassFixture<WebApplicationFactory<Pro
     [Theory]
     [InlineData("Crypto")]
     [InlineData("Get current price")]
-    [InlineData("Get historical prices")]  
+    [InlineData("Get historical prices")]
     [InlineData("Calculate technical indicator")]
     public async Task SwaggerJson_ShouldContainControllerDocumentation(string expectedContent)
     {

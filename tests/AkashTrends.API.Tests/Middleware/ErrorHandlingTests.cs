@@ -27,7 +27,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
-        
+
         // Verify error response structure using our custom format
         Assert.Contains("code", content.ToLowerInvariant());
         Assert.Contains("message", content.ToLowerInvariant());
@@ -44,7 +44,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
-        
+
         // Verify error response structure
         Assert.Contains("validation_error", content.ToLowerInvariant());
         Assert.Contains("message", content.ToLowerInvariant());
@@ -60,7 +60,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("application/json", response.Content.Headers.ContentType?.ToString());
-        
+
         // Verify error response structure
         Assert.Contains("error", content.ToLowerInvariant());
         Assert.Contains("message", content.ToLowerInvariant());
@@ -85,7 +85,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
     {
         // Arrange & Act - Invalid route
         var response = await _client.GetAsync("/api/crypto/nonexistent-endpoint");
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -95,7 +95,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
     {
         // This test ensures that internal server errors don't leak sensitive information
         // We'll test this by attempting to cause a server error and verifying the response format
-        
+
         // Arrange & Act - Try to get indicator with extreme values that might cause issues
         var response = await _client.GetAsync("/api/crypto/indicator/BTC-USD?type=999&period=999999");
         var content = await response.Content.ReadAsStringAsync();
@@ -107,7 +107,7 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
             Assert.DoesNotContain("StackTrace", content);
             Assert.DoesNotContain("System.", content);
             Assert.DoesNotContain("Exception", content);
-            
+
             // Should contain structured error response
             Assert.Contains("error", content.ToLowerInvariant());
         }
