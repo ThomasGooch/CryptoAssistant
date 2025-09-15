@@ -44,7 +44,7 @@ public class CoinbaseClient : ICoinbaseApiClient
     public async Task<CoinbasePriceData> GetPriceAsync(string symbol)
     {
         EnsureConfigured(); // Configure authentication lazily
-        
+
         if (string.IsNullOrWhiteSpace(symbol))
         {
             throw new ValidationException("Symbol cannot be empty");
@@ -121,7 +121,7 @@ public class CoinbaseClient : ICoinbaseApiClient
     public async Task<IReadOnlyList<CryptoPrice>> GetHistoricalPricesAsync(string symbol, DateTimeOffset startTime, DateTimeOffset endTime)
     {
         EnsureConfigured(); // Configure authentication lazily
-        
+
         if (string.IsNullOrWhiteSpace(symbol))
         {
             throw new ValidationException("Symbol cannot be empty");
