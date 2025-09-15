@@ -1,6 +1,5 @@
-import { indicatorService } from "./indicatorService";
 import { cryptoService } from "./cryptoService";
-import { IndicatorType, Timeframe, type HistoricalPrice } from "../types/domain";
+import { Timeframe } from "../types/domain";
 
 export interface IndicatorChartData {
   label: string;

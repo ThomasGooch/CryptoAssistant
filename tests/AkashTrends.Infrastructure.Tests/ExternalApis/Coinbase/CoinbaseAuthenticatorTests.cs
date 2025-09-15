@@ -17,7 +17,7 @@ public class CoinbaseAuthenticatorTests
     }
 
     [Fact]
-    public void ConfigureHttpClient_ShouldThrowException_WhenApiKeyIsMissing()
+    public void ConfigureHttpClient_ShouldNotThrowException_WhenApiKeyIsMissing_ForPublicEndpoints()
     {
         // Arrange
         var options = new CoinbaseApiOptions
@@ -33,13 +33,12 @@ public class CoinbaseAuthenticatorTests
         // Act
         var act = () => authenticator.ConfigureHttpClient(httpClient);
 
-        // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*ApiKey*");
+        // Assert - Should not throw for public endpoints
+        act.Should().NotThrow();
     }
 
     [Fact]
-    public void ConfigureHttpClient_ShouldThrowException_WhenApiSecretIsMissing()
+    public void ConfigureHttpClient_ShouldNotThrow_WhenApiSecretIsMissing_ForPublicEndpoints()
     {
         // Arrange
         var options = new CoinbaseApiOptions
@@ -55,9 +54,8 @@ public class CoinbaseAuthenticatorTests
         // Act
         var act = () => authenticator.ConfigureHttpClient(httpClient);
 
-        // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*ApiSecret*");
+        // Assert - Should not throw for public endpoints
+        act.Should().NotThrow();
     }
 
     [Fact]

@@ -35,8 +35,6 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
 
   // Calculate portfolio metrics
   const totalAssets = assets.length;
-  const totalValue = assets.reduce((sum, asset) => sum + asset.price, 0);
-  const averagePrice = totalValue / totalAssets;
   
   const assetsWithChange = assets.filter(asset => asset.percentChange24h !== undefined);
   const avgPercentChange = assetsWithChange.length > 0 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Chart } from "chart.js/auto";
-import type { ChartConfiguration } from "chart.js";
+import type { ChartConfiguration, ChartDataset } from "chart.js";
 import { cryptoService } from "../../services/cryptoService";
 import { indicatorChartService } from "../../services/indicatorChartService";
 import { Timeframe, IndicatorType, type HistoricalPrice, type IndicatorConfig } from "../../types/domain";
@@ -99,7 +99,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
     // Create chart with indicators
     createChartWithIndicators();
-  }, [data, loading, error, symbol, interactive, indicators, showRSI, showMACD]);
+  }, [data, loading, error, symbol, interactive, indicators, showRSI, showMACD, createChartWithIndicators]);
 
   const createChartWithIndicators = useCallback(async () => {
     if (!chartRef.current || !data.length) return;
@@ -109,7 +109,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
     // Base datasets - price data
     const labels = data.map((d) => new Date(d.timestamp).toLocaleString());
-    const datasets: any[] = [
+    const datasets: ChartDataset<'line'>[] = [
       {
         label: `${symbol} Price`,
         data: data.map((d) => d.price),
@@ -128,7 +128,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
 
       try {
         switch (indicator.type) {
-          case IndicatorType.SimpleMovingAverage:
+          case IndicatorType.SimpleMovingAverage: {
             const smaData = await indicatorChartService.getSMAData(
               symbol,
               timeframe,
@@ -137,8 +137,9 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
             );
             datasets.push({ ...smaData, yAxisID: 'price' });
             break;
+          }
 
-          case IndicatorType.ExponentialMovingAverage:
+          case IndicatorType.ExponentialMovingAverage: {
             const emaData = await indicatorChartService.getEMAData(
               symbol,
               timeframe,
@@ -147,6 +148,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
             );
             datasets.push({ ...emaData, yAxisID: 'price' });
             break;
+          }
 
           case IndicatorType.RelativeStrengthIndex:
             if (showRSI) {
@@ -160,7 +162,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
             }
             break;
 
-          case IndicatorType.BollingerBands:
+          case IndicatorType.BollingerBands: {
             const bbData = await indicatorChartService.getBollingerBandsData(
               symbol,
               timeframe,
@@ -172,6 +174,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
               { ...bbData.lower, yAxisID: 'price' }
             );
             break;
+          }
 
           case IndicatorType.MACD:
             if (showMACD) {
@@ -268,7 +271,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
                 drawOnChartArea: false,
               },
               ticks: {
-                callback: function(value: any) {
+                callback: function(value: string | number) {
                   return value + '%';
                 }
               }
@@ -300,7 +303,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
         chartInstance.current = null;
       }
     };
-  }, [data, symbol, timeframe, indicators, showRSI, showMACD]);
+  }, [data, symbol, timeframe, indicators, showRSI, showMACD, interactive]);
 
   // Interactive mouse move handler
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
@@ -313,7 +316,7 @@ export const EnhancedPriceChart: React.FC<EnhancedPriceChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y } as any,
+      { x, y },
       'nearest',
       { intersect: false },
       false

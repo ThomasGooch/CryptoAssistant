@@ -73,7 +73,7 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
     }
   };
 
-  const getDefaultParameters = (type: IndicatorType): Record<string, any> => {
+  const getDefaultParameters = (type: IndicatorType): Record<string, unknown> => {
     switch (type) {
       case IndicatorType.MACD:
         return {

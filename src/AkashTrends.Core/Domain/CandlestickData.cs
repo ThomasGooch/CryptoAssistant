@@ -95,7 +95,7 @@ public class CandlestickData
     public override bool Equals(object? obj)
     {
         if (obj is not CandlestickData other) return false;
-        
+
         return Timestamp == other.Timestamp &&
                Open == other.Open &&
                High == other.High &&

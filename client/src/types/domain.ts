@@ -148,5 +148,5 @@ export interface IndicatorConfig {
   period: number;
   color: string;
   enabled: boolean;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }

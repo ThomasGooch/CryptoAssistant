@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Chart } from "chart.js/auto";
-import type { ChartConfiguration } from "chart.js";
+import type { ChartConfiguration, ScriptableContext, ChartDataset } from "chart.js";
 import { cryptoService } from "../../services/cryptoService";
 import type { CandlestickData } from "../../types/domain";
 import { Timeframe } from "../../types/domain";
@@ -22,7 +22,6 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<CandlestickData[]>([]);
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
@@ -115,15 +114,15 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
       };
     });
 
-    const datasets: any[] = [
+    const datasets: ChartDataset<'bar'>[] = [
       {
         label: `${symbol} Price`,
         data: ohlcData.map(d => ({ x: d.x, y: [d.low, d.open, d.close, d.high] })),
-        backgroundColor: (ctx: any) => {
+        backgroundColor: (ctx: ScriptableContext<'bar'>) => {
           const dataPoint = ohlcData[ctx.dataIndex];
           return dataPoint ? dataPoint.color : '#00ff00';
         },
-        borderColor: (ctx: any) => {
+        borderColor: (ctx: ScriptableContext<'bar'>) => {
           const dataPoint = ohlcData[ctx.dataIndex];
           return dataPoint ? dataPoint.color : '#00ff00';
         },
@@ -223,13 +222,6 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     };
   }, [data, loading, error, symbol, showVolume, interactive]);
 
-  // Interactive control functions
-  const resetView = useCallback(() => {
-    if (chartInstance.current && interactive) {
-      // Reset to original view by recreating the chart
-      setIsZoomed(false);
-    }
-  }, [interactive]);
 
   const handleMouseMove = useCallback((event: React.MouseEvent) => {
     if (!chartInstance.current || !interactive) return;
@@ -241,7 +233,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const y = event.clientY - rect.top;
     
     const elements = chartInstance.current.getElementsAtEventForMode(
-      { x, y } as any,
+      { x, y },
       'nearest',
       { intersect: false },
       false
