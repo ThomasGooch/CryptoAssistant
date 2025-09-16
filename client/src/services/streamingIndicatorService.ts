@@ -18,6 +18,20 @@ interface StreamingIndicatorState {
   avgLoss?: number;
   previousClose?: number;
   ema?: number;
+  // Bollinger Bands state
+  sma?: number;
+  standardDeviation?: number;
+  // MACD state
+  emaFast?: number;
+  emaSlow?: number;
+  macdEma?: number;
+  // Stochastic state
+  highestHigh?: number;
+  lowestLow?: number;
+  kValues?: number[];
+  // Williams %R state
+  periodHigh?: number;
+  periodLow?: number;
 }
 
 /**
@@ -198,6 +212,18 @@ class StreamingIndicatorService {
       case IndicatorType.ExponentialMovingAverage:
         // EMA will be initialized on first calculation
         break;
+      case IndicatorType.BollingerBands:
+        // Bollinger Bands will use SMA and standard deviation
+        break;
+      case IndicatorType.MACD:
+        // MACD uses EMAs (typically 12 and 26 periods)
+        break;
+      case IndicatorType.StochasticOscillator:
+        state.kValues = [];
+        break;
+      case IndicatorType.WilliamsPercentR:
+        // Williams %R uses highest high and lowest low
+        break;
     }
   }
 
@@ -216,6 +242,14 @@ class StreamingIndicatorService {
         return this.calculateEMA(state);
       case IndicatorType.RelativeStrengthIndex:
         return this.calculateRSI(state);
+      case IndicatorType.BollingerBands:
+        return this.calculateBollingerBands(state);
+      case IndicatorType.MACD:
+        return this.calculateMACD(state);
+      case IndicatorType.StochasticOscillator:
+        return this.calculateStochastic(state);
+      case IndicatorType.WilliamsPercentR:
+        return this.calculateWilliamsR(state);
       default:
         return null;
     }
@@ -293,6 +327,102 @@ class StreamingIndicatorService {
 
     const rs = state.avgGain / state.avgLoss;
     return 100 - 100 / (1 + rs);
+  }
+
+  private calculateBollingerBands(state: StreamingIndicatorState): number {
+    // For Bollinger Bands, we return the middle band (SMA)
+    // In a more complete implementation, you might return an object with upper, middle, and lower bands
+    const recentPrices = state.prices.slice(-state.period);
+    const sma =
+      recentPrices.reduce((acc, price) => acc + price, 0) / state.period;
+
+    // Calculate standard deviation
+    const variance =
+      recentPrices.reduce((acc, price) => acc + Math.pow(price - sma, 2), 0) /
+      state.period;
+    const standardDeviation = Math.sqrt(variance);
+
+    state.sma = sma;
+    state.standardDeviation = standardDeviation;
+
+    return sma; // Return middle band
+  }
+
+  private calculateMACD(state: StreamingIndicatorState): number {
+    // MACD typically uses 12-period EMA - 26-period EMA
+    // For simplicity, we'll use the period as fast EMA and period*2 as slow EMA
+    const fastPeriod = state.period;
+    const slowPeriod = state.period * 2;
+    // Note: signalPeriod would be used for MACD signal line calculation in a full implementation
+
+    if (state.prices.length < slowPeriod) return 0;
+
+    // Calculate fast EMA
+    const fastMultiplier = 2 / (fastPeriod + 1);
+    if (state.emaFast === undefined) {
+      const fastSmaValues = state.prices.slice(-fastPeriod);
+      state.emaFast =
+        fastSmaValues.reduce((acc, price) => acc + price, 0) / fastPeriod;
+    } else {
+      const latestPrice = state.prices[state.prices.length - 1];
+      state.emaFast =
+        latestPrice * fastMultiplier + state.emaFast * (1 - fastMultiplier);
+    }
+
+    // Calculate slow EMA
+    const slowMultiplier = 2 / (slowPeriod + 1);
+    if (state.emaSlow === undefined) {
+      const slowSmaValues = state.prices.slice(-slowPeriod);
+      state.emaSlow =
+        slowSmaValues.reduce((acc, price) => acc + price, 0) / slowPeriod;
+    } else {
+      const latestPrice = state.prices[state.prices.length - 1];
+      state.emaSlow =
+        latestPrice * slowMultiplier + state.emaSlow * (1 - slowMultiplier);
+    }
+
+    // MACD line = Fast EMA - Slow EMA
+    const macdLine = state.emaFast - state.emaSlow;
+
+    return macdLine;
+  }
+
+  private calculateStochastic(state: StreamingIndicatorState): number {
+    const recentPrices = state.prices.slice(-state.period);
+    const currentPrice = recentPrices[recentPrices.length - 1];
+
+    const highestHigh = Math.max(...recentPrices);
+    const lowestLow = Math.min(...recentPrices);
+
+    state.highestHigh = highestHigh;
+    state.lowestLow = lowestLow;
+
+    if (highestHigh === lowestLow) return 50; // Avoid division by zero
+
+    // %K = (Current Close - Lowest Low) / (Highest High - Lowest Low) * 100
+    const percentK =
+      ((currentPrice - lowestLow) / (highestHigh - lowestLow)) * 100;
+
+    return percentK;
+  }
+
+  private calculateWilliamsR(state: StreamingIndicatorState): number {
+    const recentPrices = state.prices.slice(-state.period);
+    const currentPrice = recentPrices[recentPrices.length - 1];
+
+    const periodHigh = Math.max(...recentPrices);
+    const periodLow = Math.min(...recentPrices);
+
+    state.periodHigh = periodHigh;
+    state.periodLow = periodLow;
+
+    if (periodHigh === periodLow) return -50; // Avoid division by zero
+
+    // Williams %R = (Highest High - Current Close) / (Highest High - Lowest Low) * -100
+    const williamsR =
+      ((periodHigh - currentPrice) / (periodHigh - periodLow)) * -100;
+
+    return williamsR;
   }
 }
 
