@@ -14,30 +14,45 @@ class SignalRService {
   private readonly stateChangeCallbacks: Set<
     (state: { isConnected: boolean; error: Error | null }) => void
   > = new Set();
+  private connectionAttempts = 0;
+  private readonly maxConnectionAttempts = 3;
+  private fallbackMode = false;
 
   /**
    * Start the SignalR connection
    * @returns Promise that resolves when connected
    */
   public async startConnection(): Promise<void> {
+    const hubUrl = import.meta.env.VITE_API_BASE_URL 
+      ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/crypto`
+      : "http://localhost:5052/hubs/crypto";
+      
+    console.log(`Connecting to SignalR hub: ${hubUrl}`);
+
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl("/hubs/crypto")
-      .withAutomaticReconnect()
+      .withUrl(hubUrl, {
+        skipNegotiation: false,
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+      })
+      .withAutomaticReconnect([0, 2000, 10000, 30000]) // Custom retry delays
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
     // Add error handler
     this.connection.onclose((error) => {
-      console.error("SignalR connection closed:", error);
+      console.error("❌ SignalR connection closed:", error);
+      this.notifyStateChange({ isConnected: false, error: error || null });
     });
 
     this.connection.onreconnecting((error) => {
-      console.warn("SignalR reconnecting:", error);
+      console.warn("🔄 SignalR reconnecting:", error);
+      this.notifyStateChange({ isConnected: false, error: error || null });
     });
 
     this.connection.onreconnected((connectionId) => {
-      console.log("SignalR reconnected:", connectionId);
+      console.log("✅ SignalR reconnected:", connectionId);
       this.notifyReconnected();
+      this.notifyStateChange({ isConnected: true, error: null });
     });
 
     // Register handlers for incoming messages
@@ -63,10 +78,40 @@ class SignalRService {
     );
 
     try {
+      console.log(`🔌 Starting SignalR connection (attempt ${this.connectionAttempts + 1}/${this.maxConnectionAttempts})...`);
+      this.connectionAttempts++;
+      
       await this.connection.start();
-      console.log("SignalR connected");
+      console.log("✅ SignalR connected successfully");
+      this.connectionAttempts = 0; // Reset on successful connection
+      this.fallbackMode = false;
+      this.notifyStateChange({ isConnected: true, error: null });
     } catch (err) {
-      console.error("SignalR connection error: ", err);
+      console.error("❌ SignalR connection error:", err);
+      
+      // Provide more specific error guidance
+      if (err instanceof Error) {
+        if (err.message.includes('negotiate')) {
+          console.error("🔍 Negotiation failed - check if backend is running on correct port");
+        } else if (err.message.includes('CORS')) {
+          console.error("🔍 CORS error - check backend CORS configuration");
+        } else if (err.message.includes('timeout')) {
+          console.error("🔍 Connection timeout - backend may be overloaded");
+        } else if (err.message.includes('AbortError')) {
+          console.error("🔍 Connection aborted - likely network or firewall issue");
+        }
+      }
+      
+      // Enable fallback mode after max attempts
+      if (this.connectionAttempts >= this.maxConnectionAttempts) {
+        console.warn("⚠️ Max SignalR connection attempts reached. Enabling fallback mode.");
+        this.fallbackMode = true;
+        this.notifyStateChange({ isConnected: false, error: err as Error });
+        // Don't throw error in fallback mode - let the app continue without real-time updates
+        return;
+      }
+      
+      this.notifyStateChange({ isConnected: false, error: err as Error });
       throw err;
     }
   }
@@ -80,6 +125,11 @@ class SignalRService {
     symbol: string,
     callback: (price: number) => void,
   ): Promise<void> {
+    if (this.fallbackMode) {
+      console.warn("📡 SignalR in fallback mode - skipping subscription");
+      return;
+    }
+    
     if (!this.connection) {
       throw new Error("SignalR connection not initialized");
     }
@@ -256,10 +306,29 @@ class SignalRService {
    */
   public async stopConnection(): Promise<void> {
     if (this.connection) {
-      await this.connection.stop();
+      try {
+        await this.connection.stop();
+        console.log("🔌 SignalR connection stopped");
+      } catch (error) {
+        console.warn("Error stopping SignalR connection:", error);
+      }
       this.priceUpdateCallbacks.clear();
       this.indicatorUpdateCallbacks.clear();
     }
+  }
+
+  /**
+   * Get current connection status
+   */
+  public get isConnected(): boolean {
+    return this.connection?.state === signalR.HubConnectionState.Connected;
+  }
+
+  /**
+   * Check if running in fallback mode (no real-time updates)
+   */
+  public get isFallbackMode(): boolean {
+    return this.fallbackMode;
   }
 
   public onreconnected(callback: () => void): void {
@@ -293,25 +362,7 @@ class SignalRService {
     this.stateChangeCallbacks.forEach((callback) => callback(state));
   }
 
-  private handleConnectionStateChange(): void {
-    if (this.connection) {
-      this.connection.onclose((error) => {
-        this.notifyStateChange({ isConnected: false, error: error || null });
-      });
-
-      this.connection.onreconnected(() => {
-        this.notifyStateChange({ isConnected: true, error: null });
-      });
-
-      this.connection.onreconnecting((error) => {
-        this.notifyStateChange({ isConnected: false, error: error || null });
-      });
-    }
-  }
-
-  constructor() {
-    this.handleConnectionStateChange();
-  }
+  // Constructor removed - state change handling is now done in startConnection()
 }
 
 // Create a singleton instance

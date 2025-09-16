@@ -5,6 +5,7 @@ import { LivePriceToggle } from "../components/crypto/LivePriceToggle";
 import { CandlestickChart } from "../components/crypto/CandlestickChart";
 import IndicatorDisplay from "../components/indicators/IndicatorDisplay";
 import { StreamingIndicatorDisplay } from "../components/indicators/StreamingIndicatorDisplay";
+import MultiTimeframeAnalysis from "../components/indicators/MultiTimeframeAnalysis";
 import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
@@ -223,7 +224,7 @@ export function LiveCryptoAnalysis() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Price Section */}
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -447,6 +448,20 @@ export function LiveCryptoAnalysis() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Multi-Timeframe Analysis Section */}
+      <div className="mb-8">
+        <MultiTimeframeAnalysis
+          symbol={symbol}
+          indicatorType={indicatorType}
+          period={period}
+          defaultTimeframes={[
+            Timeframe.FiveMinutes,
+            Timeframe.Hour,
+            Timeframe.Day,
+          ]}
+        />
       </div>
 
       {/* Connection Status */}

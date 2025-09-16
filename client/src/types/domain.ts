@@ -29,6 +29,15 @@ export enum Timeframe {
 }
 
 /**
+ * Trend direction for multi-timeframe analysis
+ */
+export enum TrendDirection {
+  Bearish = 0,
+  Neutral = 1,
+  Bullish = 2,
+}
+
+/**
  * Price data structure
  */
 export interface PriceData {
@@ -163,4 +172,39 @@ export interface IndicatorConfig {
   color: string;
   enabled: boolean;
   parameters?: Record<string, unknown>;
+}
+
+/**
+ * Multi-timeframe indicator result for a specific timeframe
+ */
+export interface TimeframeIndicatorResult {
+  value: number;
+  startTime: string;
+  endTime: string;
+}
+
+/**
+ * Timeframe alignment analysis
+ */
+export interface TimeframeAlignmentResponse {
+  alignmentScore: number;
+  trendDirection: TrendDirection;
+  indicatorValues: Record<Timeframe, number>;
+  strongestTimeframe?: Timeframe;
+  weakestTimeframe?: Timeframe;
+  confluenceStrength: number;
+  isStrongConfluence: boolean;
+}
+
+/**
+ * Multi-timeframe indicator analysis response
+ */
+export interface MultiTimeframeIndicatorResponse {
+  symbol: string;
+  indicatorType: IndicatorType;
+  period: number;
+  results: Record<Timeframe, TimeframeIndicatorResult>;
+  alignment: TimeframeAlignmentResponse;
+  startTime: string;
+  endTime: string;
 }
