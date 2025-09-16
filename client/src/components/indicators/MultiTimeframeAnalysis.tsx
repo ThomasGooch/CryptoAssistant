@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { MultiTimeframeIndicatorResponse } from "../../types/domain";
 import { IndicatorType, Timeframe } from "../../types/domain";
 import type { MultiTimeframeAnalysisRequest } from "../../services/multiTimeframeService";
-import { multiTimeframeService } from "../../services/multiTimeframeService";
+import { multiTimeframeService, createDateRange } from "../../services/multiTimeframeService";
 import { indicatorService } from "../../services/indicatorService";
 import TimeframeGrid from "./TimeframeGrid";
 import AlignmentSummary from "./AlignmentSummary";
 import TimeframeSelector from "./TimeframeSelector";
+import DateRangeSelector from "./DateRangeSelector";
 
 interface MultiTimeframeAnalysisProps {
   symbol: string;
@@ -31,17 +32,23 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeframes, setSelectedTimeframes] =
     useState<Timeframe[]>(defaultTimeframes);
+  const [selectedDateRange, setSelectedDateRange] = useState<string>("30d");
+  const [dateRangeDays, setDateRangeDays] = useState<number>(30);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      const dateRange = createDateRange(dateRangeDays);
+      
       const request: MultiTimeframeAnalysisRequest = {
         symbol,
         timeframes: selectedTimeframes,
         indicatorType,
         period,
+        startTime: dateRange.startTime,
+        endTime: dateRange.endTime,
       };
 
       const response =
@@ -57,17 +64,22 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [symbol, selectedTimeframes, indicatorType, period]);
+  }, [symbol, selectedTimeframes, indicatorType, period, dateRangeDays]);
 
   // Load data when component mounts or parameters change
   useEffect(() => {
     if (symbol && selectedTimeframes.length > 0) {
       loadData();
     }
-  }, [symbol, selectedTimeframes, indicatorType, period, loadData]);
+  }, [symbol, selectedTimeframes, indicatorType, period, dateRangeDays, loadData]);
 
   const handleTimeframeChange = (timeframes: Timeframe[]) => {
     setSelectedTimeframes(timeframes);
+  };
+
+  const handleDateRangeChange = (range: string, days: number) => {
+    setSelectedDateRange(range);
+    setDateRangeDays(days);
   };
 
   const indicatorName = indicatorService.getIndicatorDisplayName(indicatorType);
@@ -140,6 +152,15 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
           </button>
         </div>
 
+        {/* Date Range Selector */}
+        <div className="mb-4">
+          <DateRangeSelector
+            selectedRange={selectedDateRange}
+            onChange={handleDateRangeChange}
+            disabled={loading}
+          />
+        </div>
+
         {/* Timeframe Selector */}
         <TimeframeSelector
           selectedTimeframes={selectedTimeframes}
@@ -162,6 +183,10 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
       <div className="crypto-card">
         <h3 className="text-lg font-semibold mb-2">Data Range</h3>
         <div className="text-sm text-gray-600 space-y-1">
+          <div>
+            <span className="font-medium">Range:</span>{" "}
+            {dateRangeDays} days ({selectedDateRange})
+          </div>
           <div>
             <span className="font-medium">Start:</span>{" "}
             {new Date(data.startTime).toLocaleString()}
