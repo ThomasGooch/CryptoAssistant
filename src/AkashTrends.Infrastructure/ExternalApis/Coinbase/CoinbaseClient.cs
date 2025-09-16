@@ -39,7 +39,9 @@ public class CoinbaseClient : ICoinbaseApiClient
     {
         if (!_isConfigured)
         {
-            _authenticator.ConfigureHttpClient(_httpClient);
+            // Skip authentication configuration for public endpoints
+            // Coinbase public API doesn't require authentication
+            _logger.LogInformation("Using Coinbase public API endpoints (no authentication required)");
             _isConfigured = true;
         }
     }

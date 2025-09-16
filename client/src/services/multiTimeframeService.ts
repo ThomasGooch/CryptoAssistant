@@ -12,7 +12,7 @@ export interface MultiTimeframeAnalysisRequest {
 
 class MultiTimeframeService {
   private readonly baseUrl =
-    import.meta.env.VITE_API_BASE_URL || "https://localhost:5052/api";
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5052/api";
 
   /**
    * Get multi-timeframe indicator analysis

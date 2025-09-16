@@ -48,10 +48,10 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
 
   const getValueColorClass = (timeframe: Timeframe, value: number) => {
     // Highlight strongest and weakest timeframes
-    if (alignment.strongestTimeframe === timeframe) {
+    if (alignment?.strongestTimeframe === timeframe) {
       return "bg-green-50 border-green-200 text-green-800";
     }
-    if (alignment.weakestTimeframe === timeframe) {
+    if (alignment?.weakestTimeframe === timeframe) {
       return "bg-red-50 border-red-200 text-red-800";
     }
 
@@ -71,8 +71,8 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
   };
 
   const getTimeframeLabel = (timeframe: Timeframe) => {
-    const isStrongest = alignment.strongestTimeframe === timeframe;
-    const isWeakest = alignment.weakestTimeframe === timeframe;
+    const isStrongest = alignment?.strongestTimeframe === timeframe;
+    const isWeakest = alignment?.weakestTimeframe === timeframe;
 
     let label = multiTimeframeService.getTimeframeDisplayName(timeframe);
 
@@ -92,6 +92,12 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedTimeframes.map((timeframe) => {
           const result = results[timeframe];
+          
+          // Skip if result is undefined or doesn't have required properties
+          if (!result || typeof result.value !== 'number') {
+            return null;
+          }
+          
           const colorClass = getValueColorClass(timeframe, result.value);
 
           return (
@@ -107,7 +113,7 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
                   {formatValue(result.value)}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {new Date(result.endTime).toLocaleTimeString()}
+                  {result.endTime ? new Date(result.endTime).toLocaleTimeString() : 'N/A'}
                 </div>
               </div>
             </div>
