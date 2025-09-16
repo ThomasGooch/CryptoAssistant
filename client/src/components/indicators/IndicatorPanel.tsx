@@ -12,12 +12,12 @@ interface IndicatorPanelProps {
 }
 
 const DEFAULT_COLORS = [
-  "rgba(255, 99, 132, 1)",   // Red
-  "rgba(54, 162, 235, 1)",   // Blue
-  "rgba(255, 206, 86, 1)",   // Yellow
-  "rgba(75, 192, 192, 1)",   // Teal
-  "rgba(153, 102, 255, 1)",  // Purple
-  "rgba(255, 159, 64, 1)",   // Orange
+  "rgba(255, 99, 132, 1)", // Red
+  "rgba(54, 162, 235, 1)", // Blue
+  "rgba(255, 206, 86, 1)", // Yellow
+  "rgba(75, 192, 192, 1)", // Teal
+  "rgba(153, 102, 255, 1)", // Purple
+  "rgba(255, 159, 64, 1)", // Orange
 ];
 
 export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
@@ -42,7 +42,10 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
     onIndicatorsChange([...indicators, newIndicator]);
   };
 
-  const updateIndicator = (index: number, updates: Partial<IndicatorConfig>) => {
+  const updateIndicator = (
+    index: number,
+    updates: Partial<IndicatorConfig>,
+  ) => {
     const newIndicators = [...indicators];
     newIndicators[index] = { ...newIndicators[index], ...updates };
     onIndicatorsChange(newIndicators);
@@ -73,7 +76,9 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
     }
   };
 
-  const getDefaultParameters = (type: IndicatorType): Record<string, unknown> => {
+  const getDefaultParameters = (
+    type: IndicatorType,
+  ): Record<string, unknown> => {
     switch (type) {
       case IndicatorType.MACD:
         return {
@@ -160,24 +165,33 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
               <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Active Overlay Indicators:
               </h4>
-              
+
               {indicators.map((indicator, index) => (
-                <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                <div
+                  key={index}
+                  className="border border-gray-200 dark:border-gray-600 rounded-lg p-4"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <label className="flex items-center">
                         <input
                           type="checkbox"
                           checked={indicator.enabled}
-                          onChange={(e) => updateIndicator(index, { enabled: e.target.checked })}
+                          onChange={(e) =>
+                            updateIndicator(index, {
+                              enabled: e.target.checked,
+                            })
+                          }
                           className="rounded"
                         />
                         <span className="ml-2 font-medium">
-                          {indicatorService.getIndicatorDisplayName(indicator.type)}
+                          {indicatorService.getIndicatorDisplayName(
+                            indicator.type,
+                          )}
                         </span>
                       </label>
                     </div>
-                    
+
                     <button
                       onClick={() => removeIndicator(index)}
                       className="text-red-500 hover:text-red-700 transition-colors"
@@ -199,7 +213,11 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
                           min="1"
                           max="200"
                           value={indicator.period}
-                          onChange={(e) => updateIndicator(index, { period: parseInt(e.target.value) || 1 })}
+                          onChange={(e) =>
+                            updateIndicator(index, {
+                              period: parseInt(e.target.value) || 1,
+                            })
+                          }
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
@@ -212,19 +230,26 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
                         <div className="flex space-x-1">
                           <input
                             type="color"
-                            value={indicator.color.replace('rgba(', '#').replace(/,.*/, '').replace(')', '')}
+                            value={indicator.color
+                              .replace("rgba(", "#")
+                              .replace(/,.*/, "")
+                              .replace(")", "")}
                             onChange={(e) => {
                               const hex = e.target.value;
                               const r = parseInt(hex.slice(1, 3), 16);
                               const g = parseInt(hex.slice(3, 5), 16);
                               const b = parseInt(hex.slice(5, 7), 16);
-                              updateIndicator(index, { color: `rgba(${r}, ${g}, ${b}, 1)` });
+                              updateIndicator(index, {
+                                color: `rgba(${r}, ${g}, ${b}, 1)`,
+                              });
                             }}
                             className="w-8 h-6 rounded border border-gray-300"
                           />
                           <select
                             value={indicator.color}
-                            onChange={(e) => updateIndicator(index, { color: e.target.value })}
+                            onChange={(e) =>
+                              updateIndicator(index, { color: e.target.value })
+                            }
                             className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                           >
                             {DEFAULT_COLORS.map((color, i) => (
@@ -247,10 +272,19 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
                             min="0.5"
                             max="5"
                             step="0.1"
-                            value={indicator.parameters?.standardDeviations?.toString() || "2"}
-                            onChange={(e) => updateIndicator(index, {
-                              parameters: { ...indicator.parameters, standardDeviations: parseFloat(e.target.value) || 2 }
-                            })}
+                            value={
+                              indicator.parameters?.standardDeviations?.toString() ||
+                              "2"
+                            }
+                            onChange={(e) =>
+                              updateIndicator(index, {
+                                parameters: {
+                                  ...indicator.parameters,
+                                  standardDeviations:
+                                    parseFloat(e.target.value) || 2,
+                                },
+                              })
+                            }
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                           />
                         </div>
@@ -265,8 +299,9 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({
           {/* Help Text */}
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              <strong>Tip:</strong> Overlay indicators (SMA, EMA, Bollinger Bands) are displayed on the main price chart. 
-              RSI and MACD use separate Y-axes for better visualization.
+              <strong>Tip:</strong> Overlay indicators (SMA, EMA, Bollinger
+              Bands) are displayed on the main price chart. RSI and MACD use
+              separate Y-axes for better visualization.
             </p>
           </div>
         </>

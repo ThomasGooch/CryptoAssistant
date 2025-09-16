@@ -1,5 +1,11 @@
-import type { CryptoPriceResponse, HistoricalCandlestickResponse } from "../types/api";
-import type { HistoricalPriceResponse, HistoricalCandlestickResponse as DomainHistoricalCandlestickResponse } from "../types/domain";
+import type {
+  CryptoPriceResponse,
+  HistoricalCandlestickResponse,
+} from "../types/api";
+import type {
+  HistoricalPriceResponse,
+  HistoricalCandlestickResponse as DomainHistoricalCandlestickResponse,
+} from "../types/domain";
 import { Timeframe } from "../types/domain";
 
 /**
@@ -135,12 +141,12 @@ class CryptoService {
       }
 
       const apiResponse: HistoricalCandlestickResponse = await response.json();
-      
+
       // Transform API response to domain model
       return {
         symbol: apiResponse.symbol,
         timeframe,
-        data: apiResponse.data.map(item => ({
+        data: apiResponse.data.map((item) => ({
           timestamp: new Date(item.timestamp),
           open: item.open,
           high: item.high,
@@ -154,7 +160,6 @@ class CryptoService {
       throw error;
     }
   }
-
 }
 
 // Create a singleton instance

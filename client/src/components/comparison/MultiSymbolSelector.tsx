@@ -7,40 +7,60 @@ interface MultiSymbolSelectorProps {
 }
 
 const POPULAR_SYMBOLS = [
-  "BTC", "ETH", "ADA", "XRP", "DOT", "LINK", "LTC", "BCH", "BNB", "SOL",
-  "AVAX", "MATIC", "UNI", "DOGE", "SHIB", "ATOM", "XLM", "VET", "FIL", "TRX"
+  "BTC",
+  "ETH",
+  "ADA",
+  "XRP",
+  "DOT",
+  "LINK",
+  "LTC",
+  "BCH",
+  "BNB",
+  "SOL",
+  "AVAX",
+  "MATIC",
+  "UNI",
+  "DOGE",
+  "SHIB",
+  "ATOM",
+  "XLM",
+  "VET",
+  "FIL",
+  "TRX",
 ];
 
-export function MultiSymbolSelector({ 
-  selectedSymbols, 
-  onSymbolsChange, 
-  maxSymbols = 6 
+export function MultiSymbolSelector({
+  selectedSymbols,
+  onSymbolsChange,
+  maxSymbols = 6,
 }: MultiSymbolSelectorProps) {
   const [inputValue, setInputValue] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleAddSymbol = (symbol: string) => {
     const upperSymbol = symbol.toUpperCase().trim();
-    
+
     if (!upperSymbol) return;
-    
+
     if (selectedSymbols.includes(upperSymbol)) {
       // Symbol already selected, show feedback
       return;
     }
-    
+
     if (selectedSymbols.length >= maxSymbols) {
       // Max symbols reached, show feedback
       return;
     }
-    
+
     onSymbolsChange([...selectedSymbols, upperSymbol]);
     setInputValue("");
     setIsDropdownOpen(false);
   };
 
   const handleRemoveSymbol = (symbolToRemove: string) => {
-    onSymbolsChange(selectedSymbols.filter(symbol => symbol !== symbolToRemove));
+    onSymbolsChange(
+      selectedSymbols.filter((symbol) => symbol !== symbolToRemove),
+    );
   };
 
   const handleInputKeyPress = (e: React.KeyboardEvent) => {
@@ -55,8 +75,9 @@ export function MultiSymbolSelector({
   };
 
   const filteredPopularSymbols = POPULAR_SYMBOLS.filter(
-    symbol => !selectedSymbols.includes(symbol) && 
-    symbol.toLowerCase().includes(inputValue.toLowerCase())
+    (symbol) =>
+      !selectedSymbols.includes(symbol) &&
+      symbol.toLowerCase().includes(inputValue.toLowerCase()),
   );
 
   return (
@@ -78,7 +99,7 @@ export function MultiSymbolSelector({
             </button>
           </div>
         ))}
-        
+
         {selectedSymbols.length === 0 && (
           <div className="text-gray-500 text-sm italic">
             No symbols selected. Add symbols below.
@@ -104,7 +125,9 @@ export function MultiSymbolSelector({
           />
           <button
             onClick={() => handleAddSymbol(inputValue)}
-            disabled={!inputValue.trim() || selectedSymbols.length >= maxSymbols}
+            disabled={
+              !inputValue.trim() || selectedSymbols.length >= maxSymbols
+            }
             className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             Add
@@ -133,18 +156,18 @@ export function MultiSymbolSelector({
           Popular Symbols:
         </h4>
         <div className="flex flex-wrap gap-2">
-          {POPULAR_SYMBOLS.filter(symbol => !selectedSymbols.includes(symbol))
+          {POPULAR_SYMBOLS.filter((symbol) => !selectedSymbols.includes(symbol))
             .slice(0, 10)
             .map((symbol) => (
-            <button
-              key={symbol}
-              onClick={() => handlePopularSymbolClick(symbol)}
-              disabled={selectedSymbols.length >= maxSymbols}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {symbol}
-            </button>
-          ))}
+              <button
+                key={symbol}
+                onClick={() => handlePopularSymbolClick(symbol)}
+                disabled={selectedSymbols.length >= maxSymbols}
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {symbol}
+              </button>
+            ))}
         </div>
       </div>
 
@@ -152,7 +175,8 @@ export function MultiSymbolSelector({
       <div className="text-sm text-gray-600 dark:text-gray-400">
         {selectedSymbols.length >= maxSymbols && (
           <div className="text-orange-600 dark:text-orange-400">
-            Maximum {maxSymbols} symbols selected. Remove a symbol to add another.
+            Maximum {maxSymbols} symbols selected. Remove a symbol to add
+            another.
           </div>
         )}
         {selectedSymbols.length > 0 && selectedSymbols.length < maxSymbols && (

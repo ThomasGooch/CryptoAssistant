@@ -122,7 +122,9 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             enabled: interactive,
             callbacks: {
               title: (context) => {
-                return new Date(data[context[0].dataIndex].timestamp).toLocaleString();
+                return new Date(
+                  data[context[0].dataIndex].timestamp,
+                ).toLocaleString();
               },
               label: (context) => {
                 const price = data[context.dataIndex].price;
@@ -159,28 +161,31 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   }, [data, loading, error, symbol, interactive]);
 
   // Interactive mouse move handler
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
-    if (!chartInstance.current || !interactive) return;
-    
-    const rect = chartRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (!chartInstance.current || !interactive) return;
 
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    const elements = chartInstance.current.getElementsAtEventForMode(
-      { type: 'mousemove', x, y } as Event & { x: number; y: number },
-      'nearest',
-      { intersect: false },
-      false
-    );
-    
-    if (elements.length > 0) {
-      setHoveredPoint(elements[0].index);
-    } else {
-      setHoveredPoint(null);
-    }
-  }, [interactive]);
+      const rect = chartRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const elements = chartInstance.current.getElementsAtEventForMode(
+        { type: "mousemove", x, y } as Event & { x: number; y: number },
+        "nearest",
+        { intersect: false },
+        false,
+      );
+
+      if (elements.length > 0) {
+        setHoveredPoint(elements[0].index);
+      } else {
+        setHoveredPoint(null);
+      }
+    },
+    [interactive],
+  );
 
   if (loading) {
     return (
@@ -251,19 +256,30 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       {/* Hovered Data Display */}
       {interactive && hoveredPoint !== null && data[hoveredPoint] && (
         <div className="absolute top-12 right-2 z-10 bg-gray-800 text-white p-3 rounded shadow-lg text-sm">
-          <div className="font-bold">{new Date(data[hoveredPoint].timestamp).toLocaleString()}</div>
-          <div className="mt-2">Price: ${data[hoveredPoint].price.toFixed(2)}</div>
+          <div className="font-bold">
+            {new Date(data[hoveredPoint].timestamp).toLocaleString()}
+          </div>
+          <div className="mt-2">
+            Price: ${data[hoveredPoint].price.toFixed(2)}
+          </div>
           {hoveredPoint > 0 && (
-            <div className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? 'text-green-400' : 'text-red-400'}`}>
-              {data[hoveredPoint].price > data[hoveredPoint - 1].price ? '▲' : '▼'} 
-              {' '}${Math.abs(data[hoveredPoint].price - data[hoveredPoint - 1].price).toFixed(2)}
+            <div
+              className={`mt-1 font-bold ${data[hoveredPoint].price > data[hoveredPoint - 1].price ? "text-green-400" : "text-red-400"}`}
+            >
+              {data[hoveredPoint].price > data[hoveredPoint - 1].price
+                ? "▲"
+                : "▼"}{" "}
+              $
+              {Math.abs(
+                data[hoveredPoint].price - data[hoveredPoint - 1].price,
+              ).toFixed(2)}
             </div>
           )}
         </div>
       )}
 
-      <canvas 
-        data-testid="price-chart-canvas" 
+      <canvas
+        data-testid="price-chart-canvas"
         ref={chartRef}
         onMouseMove={interactive ? handleMouseMove : undefined}
         className={interactive ? "cursor-crosshair" : ""}

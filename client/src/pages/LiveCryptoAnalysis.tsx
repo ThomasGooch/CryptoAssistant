@@ -4,11 +4,14 @@ import { LivePriceChart } from "../components/crypto/LivePriceChart";
 import { LivePriceToggle } from "../components/crypto/LivePriceToggle";
 import { CandlestickChart } from "../components/crypto/CandlestickChart";
 import IndicatorDisplay from "../components/indicators/IndicatorDisplay";
+import { StreamingIndicatorDisplay } from "../components/indicators/StreamingIndicatorDisplay";
 import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
 import { useSignalR } from "../hooks/useSignalR";
 import { useCoinbaseWebSocket } from "../hooks/useCoinbaseWebSocket";
+import { useStreamingIndicators } from "../hooks/useStreamingIndicators";
+import type { IndicatorConfig } from "../types/domain";
 import { IndicatorType, Timeframe, ChartType } from "../types/domain";
 
 export function LiveCryptoAnalysis() {
@@ -37,6 +40,28 @@ export function LiveCryptoAnalysis() {
     IndicatorType[]
   >([]);
 
+  // State for streaming indicators
+  const [streamingIndicatorConfigs] = useState<IndicatorConfig[]>([
+    {
+      type: IndicatorType.SimpleMovingAverage,
+      period: 20,
+      color: "#3b82f6",
+      enabled: true,
+    },
+    {
+      type: IndicatorType.RelativeStrengthIndex,
+      period: 14,
+      color: "#8b5cf6",
+      enabled: true,
+    },
+    {
+      type: IndicatorType.ExponentialMovingAverage,
+      period: 12,
+      color: "#10b981",
+      enabled: true,
+    },
+  ]);
+
   // State for real-time updates
   const [hasInitialData, setHasInitialData] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -51,22 +76,38 @@ export function LiveCryptoAnalysis() {
     subscribeToIndicatorUpdates,
   } = useSignalR();
 
-  // Get WebSocket hook for Coinbase direct connection
+  // Get streaming indicators hook
   const {
-    isConnected: wsConnected,
-    error: wsError,
-  } = useCoinbaseWebSocket({
+    indicatorData: streamingIndicatorData,
+    isInitializing: isInitializingIndicators,
+    error: streamingIndicatorError,
+    updateWithNewPrice,
+    isInitialized: indicatorsInitialized,
+  } = useStreamingIndicators({
+    symbol: enableLiveUpdates ? symbol : undefined,
+    indicators: streamingIndicatorConfigs,
+    timeframe,
+    enableLiveUpdates,
+  });
+
+  // Get WebSocket hook for Coinbase direct connection
+  const { isConnected: wsConnected, error: wsError } = useCoinbaseWebSocket({
     symbol: enableLiveUpdates ? symbol : undefined,
     autoConnect: enableLiveUpdates,
     onPriceUpdate: (livePrice) => {
       // Update price from WebSocket
       setPrice(livePrice.price);
       setTimestamp(
-        typeof livePrice.timestamp === 'string' 
+        typeof livePrice.timestamp === "string"
           ? new Date(livePrice.timestamp).toLocaleString()
-          : livePrice.timestamp.toLocaleString()
+          : livePrice.timestamp.toLocaleString(),
       );
-    }
+
+      // Update streaming indicators with new price
+      if (enableLiveUpdates && indicatorsInitialized) {
+        updateWithNewPrice(livePrice);
+      }
+    },
   });
 
   // Update connection status based on both connections
@@ -107,13 +148,13 @@ export function LiveCryptoAnalysis() {
       try {
         setIsLoadingPrice(true);
         const response = await cryptoService.getCurrentPrice(symbol);
-        
+
         // Only update if we don't have live WebSocket data
         if (!enableLiveUpdates || !wsConnected) {
           setPrice(response.price);
           setTimestamp(response.timestamp.toLocaleString());
         }
-        
+
         setHasInitialData(true);
       } catch (error) {
         console.error("Error loading initial price:", error);
@@ -194,7 +235,7 @@ export function LiveCryptoAnalysis() {
                 isConnected={wsConnected}
               />
             </div>
-            
+
             <div className="mb-6">
               <label
                 htmlFor="symbol"
@@ -211,23 +252,27 @@ export function LiveCryptoAnalysis() {
                 placeholder="Enter symbol (e.g., BTC)"
               />
             </div>
-            
+
             <PriceDisplay
               symbol={symbol}
               price={price}
               timestamp={timestamp}
               isLoading={isLoadingPrice}
             />
-            
+
             {/* Live price status indicator */}
             {enableLiveUpdates && (
               <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    wsConnected ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      wsConnected ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  />
                   <span className="text-sm font-medium">
-                    {wsConnected ? 'Live Data Active' : 'Connecting to live feed...'}
+                    {wsConnected
+                      ? "Live Data Active"
+                      : "Connecting to live feed..."}
                   </span>
                 </div>
                 {wsError && (
@@ -238,12 +283,12 @@ export function LiveCryptoAnalysis() {
               </div>
             )}
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-4">
-              Price History {enableLiveUpdates && wsConnected ? '(Live)' : ''}
+              Price History {enableLiveUpdates && wsConnected ? "(Live)" : ""}
             </h2>
-            
+
             {/* Chart Configuration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
@@ -260,10 +305,12 @@ export function LiveCryptoAnalysis() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={ChartType.Line}>Line Chart</option>
-                  <option value={ChartType.Candlestick}>Candlestick Chart</option>
+                  <option value={ChartType.Candlestick}>
+                    Candlestick Chart
+                  </option>
                 </select>
               </div>
-              
+
               <div>
                 <label
                   htmlFor="timeframe"
@@ -274,7 +321,9 @@ export function LiveCryptoAnalysis() {
                 <select
                   id="timeframe"
                   value={timeframe}
-                  onChange={(e) => setTimeframe(Number(e.target.value) as Timeframe)}
+                  onChange={(e) =>
+                    setTimeframe(Number(e.target.value) as Timeframe)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={Timeframe.Minute}>1 Minute</option>
@@ -286,7 +335,7 @@ export function LiveCryptoAnalysis() {
                   <option value={Timeframe.Week}>1 Week</option>
                 </select>
               </div>
-              
+
               {chartType === ChartType.Candlestick && (
                 <div>
                   <label
@@ -308,18 +357,18 @@ export function LiveCryptoAnalysis() {
                 </div>
               )}
             </div>
-            
+
             {/* Chart Display */}
             <div className="h-96">
               {chartType === ChartType.Candlestick ? (
-                <CandlestickChart 
-                  symbol={symbol} 
+                <CandlestickChart
+                  symbol={symbol}
                   timeframe={timeframe}
                   showVolume={showVolume}
                 />
               ) : (
-                <LivePriceChart 
-                  symbol={symbol} 
+                <LivePriceChart
+                  symbol={symbol}
                   timeframe={timeframe}
                   enableLiveUpdates={enableLiveUpdates}
                 />
@@ -382,14 +431,18 @@ export function LiveCryptoAnalysis() {
               endTime={endTime}
               isLoading={isLoadingIndicator}
             />
-            
-            {/* Live updates note for indicators */}
+
+            {/* Streaming Indicators Display */}
             {enableLiveUpdates && (
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  ℹ️ Indicators are calculated from historical data. 
-                  Live streaming indicator calculations are coming soon!
-                </p>
+              <div className="mt-6">
+                <StreamingIndicatorDisplay
+                  symbol={symbol}
+                  indicators={streamingIndicatorData}
+                  enabledIndicators={streamingIndicatorConfigs}
+                  isInitializing={isInitializingIndicators}
+                  error={streamingIndicatorError}
+                  isLiveUpdating={wsConnected && indicatorsInitialized}
+                />
               </div>
             )}
           </div>
@@ -397,12 +450,12 @@ export function LiveCryptoAnalysis() {
       </div>
 
       {/* Connection Status */}
-      <ConnectionStatus 
-        status={connectionStatus} 
+      <ConnectionStatus
+        status={connectionStatus}
         additionalInfo={
           enableLiveUpdates ? (
             <div className="text-xs mt-1">
-              WebSocket: {wsConnected ? 'Connected' : 'Disconnected'}
+              WebSocket: {wsConnected ? "Connected" : "Disconnected"}
               {wsError && ` (${wsError})`}
             </div>
           ) : undefined

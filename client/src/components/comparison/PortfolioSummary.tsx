@@ -11,7 +11,10 @@ interface PortfolioSummaryProps {
   isLoading: boolean;
 }
 
-export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps) {
+export function PortfolioSummary({
+  assetData,
+  isLoading,
+}: PortfolioSummaryProps) {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -19,7 +22,10 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
         <div className="animate-pulse">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 dark:bg-gray-700 h-16 rounded"></div>
+              <div
+                key={i}
+                className="bg-gray-200 dark:bg-gray-700 h-16 rounded"
+              ></div>
             ))}
           </div>
         </div>
@@ -28,35 +34,53 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
   }
 
   const assets = Array.from(assetData.values());
-  
+
   if (assets.length === 0) {
     return null;
   }
 
   // Calculate portfolio metrics
   const totalAssets = assets.length;
-  
-  const assetsWithChange = assets.filter(asset => asset.percentChange24h !== undefined);
-  const avgPercentChange = assetsWithChange.length > 0 
-    ? assetsWithChange.reduce((sum, asset) => sum + (asset.percentChange24h || 0), 0) / assetsWithChange.length
-    : 0;
 
-  const gainers = assetsWithChange.filter(asset => (asset.percentChange24h || 0) > 0).length;
-  const losers = assetsWithChange.filter(asset => (asset.percentChange24h || 0) < 0).length;
+  const assetsWithChange = assets.filter(
+    (asset) => asset.percentChange24h !== undefined,
+  );
+  const avgPercentChange =
+    assetsWithChange.length > 0
+      ? assetsWithChange.reduce(
+          (sum, asset) => sum + (asset.percentChange24h || 0),
+          0,
+        ) / assetsWithChange.length
+      : 0;
+
+  const gainers = assetsWithChange.filter(
+    (asset) => (asset.percentChange24h || 0) > 0,
+  ).length;
+  const losers = assetsWithChange.filter(
+    (asset) => (asset.percentChange24h || 0) < 0,
+  ).length;
 
   // Find best and worst performers
-  const bestPerformer = assetsWithChange.reduce((best, current) => 
-    (current.percentChange24h || 0) > (best.percentChange24h || 0) ? current : best
-  , assetsWithChange[0]);
+  const bestPerformer = assetsWithChange.reduce(
+    (best, current) =>
+      (current.percentChange24h || 0) > (best.percentChange24h || 0)
+        ? current
+        : best,
+    assetsWithChange[0],
+  );
 
-  const worstPerformer = assetsWithChange.reduce((worst, current) => 
-    (current.percentChange24h || 0) < (worst.percentChange24h || 0) ? current : worst
-  , assetsWithChange[0]);
+  const worstPerformer = assetsWithChange.reduce(
+    (worst, current) =>
+      (current.percentChange24h || 0) < (worst.percentChange24h || 0)
+        ? current
+        : worst,
+    assetsWithChange[0],
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-semibold mb-4">Portfolio Summary</h2>
-      
+
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -87,12 +111,15 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
         </div>
 
         <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className={`text-2xl font-bold ${
-            avgPercentChange >= 0 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {avgPercentChange >= 0 ? '+' : ''}{avgPercentChange.toFixed(2)}%
+          <div
+            className={`text-2xl font-bold ${
+              avgPercentChange >= 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {avgPercentChange >= 0 ? "+" : ""}
+            {avgPercentChange.toFixed(2)}%
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Avg Change (24h)
@@ -170,7 +197,10 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
           </thead>
           <tbody>
             {assets.map((asset) => (
-              <tr key={asset.symbol} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <tr
+                key={asset.symbol}
+                className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              >
                 <td className="py-3">
                   <div className="font-medium">{asset.symbol}</div>
                   <div className="text-xs text-gray-500">
@@ -180,25 +210,27 @@ export function PortfolioSummary({ assetData, isLoading }: PortfolioSummaryProps
                 <td className="text-right py-3 font-medium">
                   ${asset.price.toFixed(2)}
                 </td>
-                <td className={`text-right py-3 font-medium ${
-                  (asset.priceChange24h || 0) >= 0 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : 'text-red-600 dark:text-red-400'
-                }`}>
-                  {asset.priceChange24h !== undefined 
-                    ? `${asset.priceChange24h >= 0 ? '+' : ''}$${asset.priceChange24h.toFixed(2)}`
-                    : 'N/A'
-                  }
+                <td
+                  className={`text-right py-3 font-medium ${
+                    (asset.priceChange24h || 0) >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {asset.priceChange24h !== undefined
+                    ? `${asset.priceChange24h >= 0 ? "+" : ""}$${asset.priceChange24h.toFixed(2)}`
+                    : "N/A"}
                 </td>
-                <td className={`text-right py-3 font-medium ${
-                  (asset.percentChange24h || 0) >= 0 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : 'text-red-600 dark:text-red-400'
-                }`}>
-                  {asset.percentChange24h !== undefined 
-                    ? `${asset.percentChange24h >= 0 ? '+' : ''}${asset.percentChange24h.toFixed(2)}%`
-                    : 'N/A'
-                  }
+                <td
+                  className={`text-right py-3 font-medium ${
+                    (asset.percentChange24h || 0) >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {asset.percentChange24h !== undefined
+                    ? `${asset.percentChange24h >= 0 ? "+" : ""}${asset.percentChange24h.toFixed(2)}%`
+                    : "N/A"}
                 </td>
               </tr>
             ))}

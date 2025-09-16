@@ -9,7 +9,12 @@ import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
 import { useSignalR } from "../hooks/useSignalR";
-import { IndicatorType, Timeframe, ChartType, type IndicatorConfig } from "../types/domain";
+import {
+  IndicatorType,
+  Timeframe,
+  ChartType,
+  type IndicatorConfig,
+} from "../types/domain";
 
 // Helper function to get optimal periods based on timeframe
 const getOptimalPeriods = (timeframe: Timeframe) => {
@@ -61,24 +66,30 @@ export function EnhancedCryptoAnalysis() {
         period: periods.ema,
         color: "rgba(255, 99, 132, 1)",
         enabled: true,
-      }
+      },
     ];
   });
   const [showRSI, setShowRSI] = useState(true);
   const [showMACD, setShowMACD] = useState(true);
 
   // State for legacy indicator display
-  const [indicatorType, setIndicatorType] = useState(IndicatorType.SimpleMovingAverage);
+  const [indicatorType, setIndicatorType] = useState(
+    IndicatorType.SimpleMovingAverage,
+  );
   const [indicatorValue, setIndicatorValue] = useState(0);
   const [period, setPeriod] = useState(14);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [isLoadingIndicator, setIsLoadingIndicator] = useState(true);
-  const [availableIndicators, setAvailableIndicators] = useState<IndicatorType[]>([]);
+  const [availableIndicators, setAvailableIndicators] = useState<
+    IndicatorType[]
+  >([]);
 
   // State for real-time updates
   const [hasInitialData, setHasInitialData] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"connected" | "error" | "disconnected">("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "error" | "disconnected"
+  >("disconnected");
 
   // Get SignalR hook
   const {
@@ -106,8 +117,8 @@ export function EnhancedCryptoAnalysis() {
   // Update indicator periods when timeframe changes
   useEffect(() => {
     const periods = getOptimalPeriods(timeframe);
-    setIndicators(currentIndicators => 
-      currentIndicators.map(indicator => {
+    setIndicators((currentIndicators) =>
+      currentIndicators.map((indicator) => {
         switch (indicator.type) {
           case IndicatorType.SimpleMovingAverage:
             return { ...indicator, period: periods.sma };
@@ -118,7 +129,7 @@ export function EnhancedCryptoAnalysis() {
           default:
             return indicator;
         }
-      })
+      }),
     );
   }, [timeframe]);
 
@@ -174,7 +185,12 @@ export function EnhancedCryptoAnalysis() {
     };
 
     subscribeToPriceUpdates(symbol, priceCallback);
-    subscribeToIndicatorUpdates(symbol, indicatorType, period, indicatorCallback);
+    subscribeToIndicatorUpdates(
+      symbol,
+      indicatorType,
+      period,
+      indicatorCallback,
+    );
   }, [
     isConnected,
     hasInitialData,
@@ -221,7 +237,7 @@ export function EnhancedCryptoAnalysis() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Price Analysis</h2>
-              
+
               {/* Chart Mode Toggle */}
               <div className="flex items-center space-x-2">
                 <label className="flex items-center text-sm">
@@ -235,7 +251,7 @@ export function EnhancedCryptoAnalysis() {
                 </label>
               </div>
             </div>
-            
+
             {/* Chart Configuration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
@@ -252,10 +268,12 @@ export function EnhancedCryptoAnalysis() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={ChartType.Line}>Line Chart</option>
-                  <option value={ChartType.Candlestick}>Candlestick Chart</option>
+                  <option value={ChartType.Candlestick}>
+                    Candlestick Chart
+                  </option>
                 </select>
               </div>
-              
+
               <div>
                 <label
                   htmlFor="timeframe"
@@ -266,7 +284,9 @@ export function EnhancedCryptoAnalysis() {
                 <select
                   id="timeframe"
                   value={timeframe}
-                  onChange={(e) => setTimeframe(Number(e.target.value) as Timeframe)}
+                  onChange={(e) =>
+                    setTimeframe(Number(e.target.value) as Timeframe)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                   <option value={Timeframe.Minute}>1 Minute</option>
@@ -278,7 +298,7 @@ export function EnhancedCryptoAnalysis() {
                   <option value={Timeframe.Week}>1 Week</option>
                 </select>
               </div>
-              
+
               {chartType === ChartType.Candlestick && (
                 <div>
                   <label
@@ -300,7 +320,7 @@ export function EnhancedCryptoAnalysis() {
                 </div>
               )}
             </div>
-            
+
             {/* Chart Display */}
             <div className="h-96">
               {useEnhancedChart && chartType === ChartType.Line ? (
@@ -313,8 +333,8 @@ export function EnhancedCryptoAnalysis() {
                   interactive={true}
                 />
               ) : chartType === ChartType.Candlestick ? (
-                <CandlestickChart 
-                  symbol={symbol} 
+                <CandlestickChart
+                  symbol={symbol}
                   timeframe={timeframe}
                   showVolume={showVolume}
                 />
@@ -352,7 +372,9 @@ export function EnhancedCryptoAnalysis() {
               <select
                 id="indicator"
                 value={indicatorType}
-                onChange={(e) => setIndicatorType(Number(e.target.value) as IndicatorType)}
+                onChange={(e) =>
+                  setIndicatorType(Number(e.target.value) as IndicatorType)
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
                 {availableIndicators.map((type) => (
@@ -373,7 +395,9 @@ export function EnhancedCryptoAnalysis() {
                 id="period"
                 type="number"
                 value={period}
-                onChange={(e) => setPeriod(Math.max(1, parseInt(e.target.value)))}
+                onChange={(e) =>
+                  setPeriod(Math.max(1, parseInt(e.target.value)))
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 min="1"
                 max="200"
@@ -396,11 +420,26 @@ export function EnhancedCryptoAnalysis() {
               📊 Enhanced Mode Features
             </h3>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• <strong>Overlay Indicators:</strong> SMA, EMA, Bollinger Bands on the main chart</li>
-              <li>• <strong>RSI:</strong> Separate axis (0-100 range) for oscillator visualization</li>
-              <li>• <strong>MACD:</strong> Separate axis with MACD line, signal line, and histogram</li>
-              <li>• <strong>Multiple Indicators:</strong> Add multiple overlays simultaneously</li>
-              <li>• <strong>Interactive:</strong> Hover for detailed indicator values</li>
+              <li>
+                • <strong>Overlay Indicators:</strong> SMA, EMA, Bollinger Bands
+                on the main chart
+              </li>
+              <li>
+                • <strong>RSI:</strong> Separate axis (0-100 range) for
+                oscillator visualization
+              </li>
+              <li>
+                • <strong>MACD:</strong> Separate axis with MACD line, signal
+                line, and histogram
+              </li>
+              <li>
+                • <strong>Multiple Indicators:</strong> Add multiple overlays
+                simultaneously
+              </li>
+              <li>
+                • <strong>Interactive:</strong> Hover for detailed indicator
+                values
+              </li>
             </ul>
           </div>
         </div>
