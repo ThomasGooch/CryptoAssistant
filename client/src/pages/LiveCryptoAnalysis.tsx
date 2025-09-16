@@ -10,9 +10,11 @@ import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
 import { useSignalR } from "../hooks/useSignalR";
+import { alertService } from "../services/alertService";
+import { alertManager } from "../services/alertManagerService";
 import { useCoinbaseWebSocket } from "../hooks/useCoinbaseWebSocket";
 import { useStreamingIndicators } from "../hooks/useStreamingIndicators";
-import type { IndicatorConfig } from "../types/domain";
+import type { IndicatorConfig, IndicatorAlert } from "../types/domain";
 import { IndicatorType, Timeframe, ChartType } from "../types/domain";
 
 export function LiveCryptoAnalysis() {
@@ -191,12 +193,51 @@ export function LiveCryptoAnalysis() {
     const priceCallback = (newPrice: number) => {
       setPrice(newPrice);
       setTimestamp(new Date().toLocaleString());
+
+      // Evaluate configured price alerts for this symbol via alertManager
+      try {
+        const activeAlerts = alertManager.getActiveAlertsForSymbol(symbol);
+        activeAlerts.forEach((a) => {
+          try {
+            if (alertService.evaluatePriceAlert(a, newPrice)) {
+              const notification = alertService.createNotification(a, newPrice);
+              alertService.addNotification(notification);
+            }
+          } catch (e) {
+            console.warn("Error evaluating alert:", e);
+          }
+        });
+      } catch (e) {
+        // keep UI stable if alert evaluation fails
+        console.warn("Alert evaluation failed:", e);
+      }
     };
 
     const indicatorCallback = (value: number) => {
       setIndicatorValue(value);
       setStartTime(new Date().toLocaleString());
       setEndTime(new Date().toLocaleString());
+      // Evaluate configured indicator alerts (e.g., RSI) for this symbol
+      try {
+        const activeAlerts = alertManager.getActiveAlertsForSymbol(symbol);
+        activeAlerts.forEach((a) => {
+          try {
+            const ia = a as unknown as IndicatorAlert;
+            if (ia && ia.indicatorType !== undefined) {
+              if (ia.condition === 2 || ia.condition === 3) {
+                if (alertService.evaluateIndicatorAlert(ia, value)) {
+                  const notification = alertService.createNotification(ia, value);
+                  alertService.addNotification(notification);
+                }
+              }
+            }
+          } catch (err) {
+            console.warn("Error evaluating indicator alert:", err);
+          }
+        });
+      } catch (e) {
+        console.warn("Indicator alert evaluation failed:", e);
+      }
     };
 
     subscribeToPriceUpdates(symbol, priceCallback);
