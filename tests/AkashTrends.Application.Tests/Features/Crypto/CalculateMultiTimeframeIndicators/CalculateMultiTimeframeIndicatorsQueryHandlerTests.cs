@@ -141,7 +141,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
             .Returns(new List<CandlestickData>()); // Empty data
 
         // Act & Assert
-        await _handler.Invoking(h => h.Handle(query))
+        await _handler.Invoking(async h => await h.Handle(query))
             .Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*No candlestick data available*");
     }
