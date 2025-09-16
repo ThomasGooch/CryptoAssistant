@@ -5,7 +5,10 @@ using AkashTrends.Application.Features.Crypto.GetAvailableIndicators;
 using AkashTrends.Application.Features.Crypto.GetCurrentPrice;
 using AkashTrends.Application.Features.Crypto.GetHistoricalPrices;
 using AkashTrends.Application.Features.Crypto.GetHistoricalCandlestickData;
+using AkashTrends.Application.Features.Crypto.CalculateMultiTimeframeIndicators;
+using AkashTrends.Core.Analysis;
 using AkashTrends.Core.Analysis.Indicators;
+using AkashTrends.Core.Domain;
 using AkashTrends.Core.Exceptions;
 using AkashTrends.Core.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -232,6 +235,107 @@ public class CryptoController : ControllerBase
                 Close = c.Close,
                 Volume = c.Volume
             }).ToList()
+        };
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Calculate indicators across multiple timeframes for advanced analysis
+    /// </summary>
+    /// <param name="symbol">The cryptocurrency symbol (e.g., BTC-USD)</param>
+    /// <param name="timeframes">Comma-separated list of timeframes (e.g., FiveMinutes,Hour,Day)</param>
+    /// <param name="type">The type of technical indicator to calculate</param>
+    /// <param name="period">The period for the indicator calculation</param>
+    /// <param name="startTime">Optional start time for data range</param>
+    /// <param name="endTime">Optional end time for data range</param>
+    /// <returns>Multi-timeframe indicator analysis</returns>
+    /// <response code="200">Returns the multi-timeframe indicator analysis</response>
+    /// <response code="400">Invalid parameters provided</response>
+    /// <response code="404">Symbol not found</response>
+    [HttpGet("multi-timeframe/{symbol}")]
+    [ProducesResponseType(typeof(MultiTimeframeIndicatorResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<ActionResult<MultiTimeframeIndicatorResponse>> GetMultiTimeframeIndicators(
+        [Required] string symbol,
+        [FromQuery, Required] string timeframes,
+        [FromQuery, Required] IndicatorType type,
+        [FromQuery, Required, Range(1, 200)] int period,
+        [FromQuery] DateTimeOffset? startTime = null,
+        [FromQuery] DateTimeOffset? endTime = null)
+    {
+        _logger.LogInformation($"Calculating multi-timeframe {type} for {symbol} with period {period} across timeframes {timeframes}");
+
+        // Parse timeframes from comma-separated string
+        var timeframeList = new List<Timeframe>();
+        try
+        {
+            var timeframeStrings = timeframes.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var tf in timeframeStrings)
+            {
+                if (Enum.TryParse<Timeframe>(tf.Trim(), true, out var timeframe))
+                {
+                    timeframeList.Add(timeframe);
+                }
+                else
+                {
+                    return BadRequest($"Invalid timeframe: {tf}");
+                }
+            }
+        }
+        catch (Exception)
+        {
+            return BadRequest("Invalid timeframes format. Use comma-separated values like 'FiveMinutes,Hour,Day'");
+        }
+
+        if (!timeframeList.Any())
+        {
+            return BadRequest("At least one valid timeframe must be specified");
+        }
+
+        // Use the query dispatcher to handle the query
+        var query = new CalculateMultiTimeframeIndicatorsQuery
+        {
+            Symbol = symbol,
+            Timeframes = timeframeList,
+            IndicatorType = type,
+            Period = period,
+            StartTime = startTime,
+            EndTime = endTime
+        };
+
+        var result = await _queryDispatcher.Dispatch<CalculateMultiTimeframeIndicatorsQuery, CalculateMultiTimeframeIndicatorsResult>(query);
+
+        _logger.LogInformation($"Calculated multi-timeframe {type} for {symbol} with alignment score {result.Alignment.AlignmentScore}");
+
+        // Map to response model
+        var response = new MultiTimeframeIndicatorResponse
+        {
+            Symbol = result.Symbol,
+            IndicatorType = result.IndicatorType,
+            Period = result.Period,
+            Results = result.IndicatorResults.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new TimeframeIndicatorResult
+                {
+                    Value = kvp.Value.Value,
+                    StartTime = kvp.Value.StartTime,
+                    EndTime = kvp.Value.EndTime
+                }
+            ),
+            Alignment = new TimeframeAlignmentResponse
+            {
+                AlignmentScore = result.Alignment.AlignmentScore,
+                TrendDirection = result.Alignment.TrendDirection,
+                IndicatorValues = result.Alignment.IndicatorValues,
+                StrongestTimeframe = result.Alignment.StrongestTimeframe,
+                WeakestTimeframe = result.Alignment.WeakestTimeframe,
+                ConfluenceStrength = result.Alignment.GetConfluenceStrength(),
+                IsStrongConfluence = result.Alignment.IsStrongConfluence()
+            },
+            StartTime = result.StartTime,
+            EndTime = result.EndTime
         };
 
         return Ok(response);
