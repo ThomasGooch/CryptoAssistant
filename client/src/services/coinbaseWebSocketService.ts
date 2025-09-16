@@ -38,8 +38,8 @@ class CoinbaseWebSocketService {
   private priceCallbacks = new Map<string, (price: CryptoPrice) => void>();
   private connectionStateCallbacks = new Set<(connected: boolean) => void>();
 
-  // Using sandbox URL for now - in production this would be wss://ws-feed.exchange.coinbase.com
-  private readonly wsUrl = "wss://ws-feed-public.sandbox.exchange.coinbase.com";
+  // Using production URL for real-time price data
+  private readonly wsUrl = "wss://ws-feed.exchange.coinbase.com";
 
   /**
    * Connect to Coinbase WebSocket feed
