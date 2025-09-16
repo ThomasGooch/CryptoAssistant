@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import MultiTimeframeAnalysis from "../MultiTimeframeAnalysis";
-import { IndicatorType, Timeframe, TrendDirection } from "../../../types/domain";
+import {
+  IndicatorType,
+  Timeframe,
+  TrendDirection,
+} from "../../../types/domain";
 import * as multiTimeframeService from "../../../services/multiTimeframeService";
 import * as indicatorService from "../../../services/indicatorService";
 
@@ -67,11 +71,11 @@ describe("MultiTimeframeAnalysis", () => {
         const names: { [key in Timeframe]?: string } = {
           [Timeframe.Minute]: "1m",
           [Timeframe.FiveMinutes]: "5m",
-          [Timeframe.FifteenMinutes]: "15m", 
-          [Timeframe.Hour]: "1h", 
+          [Timeframe.FifteenMinutes]: "15m",
+          [Timeframe.Hour]: "1h",
           [Timeframe.FourHours]: "4h",
           [Timeframe.Day]: "1d",
-          [Timeframe.Week]: "1w"
+          [Timeframe.Week]: "1w",
         };
         return names[tf] || "Unknown";
       }),
@@ -87,7 +91,7 @@ describe("MultiTimeframeAnalysis", () => {
       }),
       getAlignmentScoreInfo: vi.fn().mockReturnValue({
         level: "Good",
-        color: "text-green-600", 
+        color: "text-green-600",
         description: "Indicators show good alignment",
       }),
     } as unknown as typeof multiTimeframeService.multiTimeframeService;
@@ -100,17 +104,22 @@ describe("MultiTimeframeAnalysis", () => {
 
   it("renders with loading state initially", () => {
     render(<MultiTimeframeAnalysis {...mockProps} />);
-    
-    // Should show loading skeleton initially  
+
+    // Should show loading skeleton initially
     expect(screen.getByTestId || screen.getByRole).toBeTruthy();
   });
 
   it("calls service methods with correct parameters", async () => {
     render(<MultiTimeframeAnalysis {...mockProps} />);
-    
+
     await waitFor(() => {
-      expect(mockMultiTimeframeService.createDateRange).toHaveBeenCalledWith(30);
-      expect(mockMultiTimeframeService.multiTimeframeService.getMultiTimeframeAnalysis).toHaveBeenCalledWith({
+      expect(mockMultiTimeframeService.createDateRange).toHaveBeenCalledWith(
+        30,
+      );
+      expect(
+        mockMultiTimeframeService.multiTimeframeService
+          .getMultiTimeframeAnalysis,
+      ).toHaveBeenCalledWith({
         symbol: "BTC",
         timeframes: [Timeframe.FiveMinutes, Timeframe.Hour, Timeframe.Day],
         indicatorType: IndicatorType.SimpleMovingAverage,
@@ -123,11 +132,13 @@ describe("MultiTimeframeAnalysis", () => {
 
   it("displays error state when API call fails", async () => {
     const errorMessage = "Failed to fetch data";
-    (mockMultiTimeframeService.multiTimeframeService.getMultiTimeframeAnalysis as unknown as ReturnType<typeof vi.fn>)
-      .mockRejectedValueOnce(new Error(errorMessage));
+    (
+      mockMultiTimeframeService.multiTimeframeService
+        .getMultiTimeframeAnalysis as unknown as ReturnType<typeof vi.fn>
+    ).mockRejectedValueOnce(new Error(errorMessage));
 
     render(<MultiTimeframeAnalysis {...mockProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText("Error")).toBeInTheDocument();
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -137,19 +148,22 @@ describe("MultiTimeframeAnalysis", () => {
 
   it("uses custom default timeframes when provided", async () => {
     const customTimeframes = [Timeframe.Hour, Timeframe.Day];
-    
+
     render(
-      <MultiTimeframeAnalysis 
-        {...mockProps} 
+      <MultiTimeframeAnalysis
+        {...mockProps}
         defaultTimeframes={customTimeframes}
-      />
+      />,
     );
-    
+
     await waitFor(() => {
-      expect(mockMultiTimeframeService.multiTimeframeService.getMultiTimeframeAnalysis).toHaveBeenCalledWith(
+      expect(
+        mockMultiTimeframeService.multiTimeframeService
+          .getMultiTimeframeAnalysis,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           timeframes: customTimeframes,
-        })
+        }),
       );
     });
   });

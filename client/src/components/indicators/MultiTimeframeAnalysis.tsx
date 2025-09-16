@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { MultiTimeframeIndicatorResponse } from "../../types/domain";
 import { IndicatorType, Timeframe } from "../../types/domain";
 import type { MultiTimeframeAnalysisRequest } from "../../services/multiTimeframeService";
-import { multiTimeframeService, createDateRange } from "../../services/multiTimeframeService";
+import {
+  multiTimeframeService,
+  createDateRange,
+} from "../../services/multiTimeframeService";
 import { indicatorService } from "../../services/indicatorService";
 import TimeframeGrid from "./TimeframeGrid";
 import AlignmentSummary from "./AlignmentSummary";
@@ -41,7 +44,7 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
 
     try {
       const dateRange = createDateRange(dateRangeDays);
-      
+
       const request: MultiTimeframeAnalysisRequest = {
         symbol,
         timeframes: selectedTimeframes,
@@ -71,7 +74,14 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
     if (symbol && selectedTimeframes.length > 0) {
       loadData();
     }
-  }, [symbol, selectedTimeframes, indicatorType, period, dateRangeDays, loadData]);
+  }, [
+    symbol,
+    selectedTimeframes,
+    indicatorType,
+    period,
+    dateRangeDays,
+    loadData,
+  ]);
 
   const handleTimeframeChange = (timeframes: Timeframe[]) => {
     setSelectedTimeframes(timeframes);
@@ -184,8 +194,8 @@ const MultiTimeframeAnalysis: React.FC<MultiTimeframeAnalysisProps> = ({
         <h3 className="text-lg font-semibold mb-2">Data Range</h3>
         <div className="text-sm text-gray-600 space-y-1">
           <div>
-            <span className="font-medium">Range:</span>{" "}
-            {dateRangeDays} days ({selectedDateRange})
+            <span className="font-medium">Range:</span> {dateRangeDays} days (
+            {selectedDateRange})
           </div>
           <div>
             <span className="font-medium">Start:</span>{" "}

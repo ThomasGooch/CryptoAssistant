@@ -92,12 +92,12 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedTimeframes.map((timeframe) => {
           const result = results[timeframe];
-          
+
           // Skip if result is undefined or doesn't have required properties
-          if (!result || typeof result.value !== 'number') {
+          if (!result || typeof result.value !== "number") {
             return null;
           }
-          
+
           const colorClass = getValueColorClass(timeframe, result.value);
 
           return (
@@ -113,7 +113,9 @@ const TimeframeGrid: React.FC<TimeframeGridProps> = ({
                   {formatValue(result.value)}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {result.endTime ? new Date(result.endTime).toLocaleTimeString() : 'N/A'}
+                  {result.endTime
+                    ? new Date(result.endTime).toLocaleTimeString()
+                    : "N/A"}
                 </div>
               </div>
             </div>

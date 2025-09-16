@@ -11,12 +11,7 @@ describe("DateRangeSelector", () => {
   });
 
   it("renders all date range preset buttons", () => {
-    render(
-      <DateRangeSelector
-        selectedRange="30d"
-        onChange={mockOnChange}
-      />
-    );
+    render(<DateRangeSelector selectedRange="30d" onChange={mockOnChange} />);
 
     DATE_RANGE_PRESETS.forEach((preset) => {
       expect(screen.getByText(preset.label)).toBeInTheDocument();
@@ -24,27 +19,17 @@ describe("DateRangeSelector", () => {
   });
 
   it("highlights the selected range", () => {
-    render(
-      <DateRangeSelector
-        selectedRange="7d"
-        onChange={mockOnChange}
-      />
-    );
+    render(<DateRangeSelector selectedRange="7d" onChange={mockOnChange} />);
 
     const sevenDayButton = screen.getByText("7 Days");
     expect(sevenDayButton).toHaveClass("bg-blue-600", "text-white");
-    
+
     const thirtyDayButton = screen.getByText("30 Days");
     expect(thirtyDayButton).toHaveClass("bg-white", "text-gray-700");
   });
 
   it("calls onChange when a button is clicked", () => {
-    render(
-      <DateRangeSelector
-        selectedRange="30d"
-        onChange={mockOnChange}
-      />
-    );
+    render(<DateRangeSelector selectedRange="30d" onChange={mockOnChange} />);
 
     const ninetyDayButton = screen.getByText("90 Days");
     fireEvent.click(ninetyDayButton);
@@ -53,12 +38,7 @@ describe("DateRangeSelector", () => {
   });
 
   it("handles max range button correctly", () => {
-    render(
-      <DateRangeSelector
-        selectedRange="30d"
-        onChange={mockOnChange}
-      />
-    );
+    render(<DateRangeSelector selectedRange="30d" onChange={mockOnChange} />);
 
     const maxRangeButton = screen.getByText("Max Range");
     fireEvent.click(maxRangeButton);
@@ -72,7 +52,7 @@ describe("DateRangeSelector", () => {
         selectedRange="30d"
         onChange={mockOnChange}
         disabled={true}
-      />
+      />,
     );
 
     DATE_RANGE_PRESETS.forEach((preset) => {
@@ -88,7 +68,7 @@ describe("DateRangeSelector", () => {
         selectedRange="30d"
         onChange={mockOnChange}
         disabled={true}
-      />
+      />,
     );
 
     const sevenDayButton = screen.getByText("7 Days");
@@ -98,12 +78,7 @@ describe("DateRangeSelector", () => {
   });
 
   it("displays the date range label", () => {
-    render(
-      <DateRangeSelector
-        selectedRange="30d"
-        onChange={mockOnChange}
-      />
-    );
+    render(<DateRangeSelector selectedRange="30d" onChange={mockOnChange} />);
 
     expect(screen.getByText("Date Range:")).toBeInTheDocument();
   });
