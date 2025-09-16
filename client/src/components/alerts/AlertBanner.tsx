@@ -1,9 +1,6 @@
 import React from "react";
-import {
-  AlertNotification,
-  AlertSeverity,
-  AlertCondition,
-} from "../../types/domain";
+import { AlertSeverity, AlertCondition } from "../../types/domain";
+import type { AlertNotification } from "../../types/domain";
 
 interface AlertBannerProps {
   alerts: AlertNotification[];

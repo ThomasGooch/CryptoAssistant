@@ -1,13 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { alertService } from "../alertService";
-import {
-  AlertCondition,
-  AlertSeverity,
-  AlertNotification,
-  PriceAlert,
-} from "../../types/domain";
-
-import type { IndicatorAlert } from "../../types/domain";
+import { AlertCondition, AlertSeverity } from "../../types/domain";
+import type { AlertNotification, PriceAlert, IndicatorAlert } from "../../types/domain";
 
 describe("alertService", () => {
   beforeEach(() => {
@@ -176,9 +170,9 @@ describe("alertService", () => {
 
     it("should mark notification as read", () => {
       alertService.markAsRead("notif-1");
-      const notifications = alertService.getNotifications();
-      const notification1 = notifications.find(n => n.id === "notif-1");
-      const notification2 = notifications.find(n => n.id === "notif-2");
+      const notifications: AlertNotification[] = alertService.getNotifications();
+      const notification1 = notifications.find((n: AlertNotification) => n.id === "notif-1");
+      const notification2 = notifications.find((n: AlertNotification) => n.id === "notif-2");
 
       expect(notification1?.isRead).toBe(true);
       expect(notification2?.isRead).toBe(false);

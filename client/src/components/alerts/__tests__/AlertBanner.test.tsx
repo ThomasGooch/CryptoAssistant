@@ -1,11 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { AlertBanner } from "../AlertBanner";
-import {
-  AlertNotification,
-  AlertSeverity,
-  AlertCondition,
-} from "../../../types/domain";
+import { AlertSeverity, AlertCondition } from "../../../types/domain";
+import type { AlertNotification } from "../../../types/domain";
 
 describe("AlertBanner", () => {
   const mockOnDismiss = vi.fn();
