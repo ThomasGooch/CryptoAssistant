@@ -23,16 +23,18 @@ class SignalRService {
    * @returns Promise that resolves when connected
    */
   public async startConnection(): Promise<void> {
-    const hubUrl = import.meta.env.VITE_API_BASE_URL 
-      ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/crypto`
+    const hubUrl = import.meta.env.VITE_API_BASE_URL
+      ? `${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}/hubs/crypto`
       : "http://localhost:5052/hubs/crypto";
-      
+
     console.log(`Connecting to SignalR hub: ${hubUrl}`);
 
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(hubUrl, {
         skipNegotiation: false,
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+        transport:
+          signalR.HttpTransportType.WebSockets |
+          signalR.HttpTransportType.LongPolling,
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000]) // Custom retry delays
       .configureLogging(signalR.LogLevel.Information)
@@ -78,9 +80,11 @@ class SignalRService {
     );
 
     try {
-      console.log(`🔌 Starting SignalR connection (attempt ${this.connectionAttempts + 1}/${this.maxConnectionAttempts})...`);
+      console.log(
+        `🔌 Starting SignalR connection (attempt ${this.connectionAttempts + 1}/${this.maxConnectionAttempts})...`,
+      );
       this.connectionAttempts++;
-      
+
       await this.connection.start();
       console.log("✅ SignalR connected successfully");
       this.connectionAttempts = 0; // Reset on successful connection
@@ -88,29 +92,35 @@ class SignalRService {
       this.notifyStateChange({ isConnected: true, error: null });
     } catch (err) {
       console.error("❌ SignalR connection error:", err);
-      
+
       // Provide more specific error guidance
       if (err instanceof Error) {
-        if (err.message.includes('negotiate')) {
-          console.error("🔍 Negotiation failed - check if backend is running on correct port");
-        } else if (err.message.includes('CORS')) {
+        if (err.message.includes("negotiate")) {
+          console.error(
+            "🔍 Negotiation failed - check if backend is running on correct port",
+          );
+        } else if (err.message.includes("CORS")) {
           console.error("🔍 CORS error - check backend CORS configuration");
-        } else if (err.message.includes('timeout')) {
+        } else if (err.message.includes("timeout")) {
           console.error("🔍 Connection timeout - backend may be overloaded");
-        } else if (err.message.includes('AbortError')) {
-          console.error("🔍 Connection aborted - likely network or firewall issue");
+        } else if (err.message.includes("AbortError")) {
+          console.error(
+            "🔍 Connection aborted - likely network or firewall issue",
+          );
         }
       }
-      
+
       // Enable fallback mode after max attempts
       if (this.connectionAttempts >= this.maxConnectionAttempts) {
-        console.warn("⚠️ Max SignalR connection attempts reached. Enabling fallback mode.");
+        console.warn(
+          "⚠️ Max SignalR connection attempts reached. Enabling fallback mode.",
+        );
         this.fallbackMode = true;
         this.notifyStateChange({ isConnected: false, error: err as Error });
         // Don't throw error in fallback mode - let the app continue without real-time updates
         return;
       }
-      
+
       this.notifyStateChange({ isConnected: false, error: err as Error });
       throw err;
     }
@@ -129,7 +139,7 @@ class SignalRService {
       console.warn("📡 SignalR in fallback mode - skipping subscription");
       return;
     }
-    
+
     if (!this.connection) {
       throw new Error("SignalR connection not initialized");
     }

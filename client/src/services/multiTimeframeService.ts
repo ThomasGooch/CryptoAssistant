@@ -10,6 +10,38 @@ export interface MultiTimeframeAnalysisRequest {
   endTime?: string;
 }
 
+export interface DateRange {
+  days: number;
+  startTime: string;
+  endTime: string;
+}
+
+export function createDateRange(days: number): DateRange {
+  const endTime = new Date();
+  const startTime = new Date();
+
+  // Apply intelligent limits based on the time range
+  // Coinbase API has limitations on historical data granularity
+  let adjustedDays = days;
+
+  if (days > 90) {
+    // For ranges > 90 days, limit to 90 days to avoid API issues
+    // This is a reasonable limit for technical analysis
+    adjustedDays = 90;
+    console.warn(
+      `Date range adjusted from ${days} days to ${adjustedDays} days due to API limitations`,
+    );
+  }
+
+  startTime.setDate(startTime.getDate() - adjustedDays);
+
+  return {
+    days: adjustedDays,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+  };
+}
+
 class MultiTimeframeService {
   private readonly baseUrl =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5052/api";
