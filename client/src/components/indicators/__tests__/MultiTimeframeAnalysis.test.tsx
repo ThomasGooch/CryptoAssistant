@@ -59,7 +59,7 @@ describe("MultiTimeframeAnalysis", () => {
     vi.clearAllMocks();
     mockIndicatorService.indicatorService = {
       getIndicatorDisplayName: vi.fn().mockReturnValue("Simple Moving Average"),
-    } as any;
+    } as unknown as typeof indicatorService.indicatorService;
     mockMultiTimeframeService.multiTimeframeService = {
       getMultiTimeframeAnalysis: vi.fn().mockResolvedValue(mockResponse),
       getTimeframeDisplayName: vi.fn().mockImplementation((tf: Timeframe) => {
@@ -89,7 +89,7 @@ describe("MultiTimeframeAnalysis", () => {
         color: "text-green-600", 
         description: "Indicators show good alignment",
       }),
-    } as any;
+    } as unknown as typeof multiTimeframeService.multiTimeframeService;
     mockMultiTimeframeService.createDateRange = vi.fn().mockReturnValue({
       days: 30,
       startTime: "2025-01-01T12:00:00Z",
@@ -122,7 +122,7 @@ describe("MultiTimeframeAnalysis", () => {
 
   it("displays error state when API call fails", async () => {
     const errorMessage = "Failed to fetch data";
-    (mockMultiTimeframeService.multiTimeframeService.getMultiTimeframeAnalysis as any)
+    (mockMultiTimeframeService.multiTimeframeService.getMultiTimeframeAnalysis as unknown as ReturnType<typeof vi.fn>)
       .mockRejectedValueOnce(new Error(errorMessage));
 
     render(<MultiTimeframeAnalysis {...mockProps} />);

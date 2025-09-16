@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import DateRangeSelector, { DATE_RANGE_PRESETS } from "../DateRangeSelector";
+import DateRangeSelector from "../DateRangeSelector";
+import { DATE_RANGE_PRESETS } from "../dateRangeConstants";
 
 describe("DateRangeSelector", () => {
   const mockOnChange = vi.fn();
