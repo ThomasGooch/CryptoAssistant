@@ -208,3 +208,96 @@ export interface MultiTimeframeIndicatorResponse {
   startTime: string;
   endTime: string;
 }
+
+/**
+ * Alert condition types
+ */
+export enum AlertCondition {
+  PriceAbove = 0,
+  PriceBelow = 1,
+  RSIAbove = 2,
+  RSIBelow = 3,
+  VolumeAbove = 4,
+  PriceChangeAbove = 5,
+  PriceChangeBelow = 6,
+}
+
+/**
+ * Alert severity levels
+ */
+export enum AlertSeverity {
+  Info = 0,
+  Warning = 1,
+  Critical = 2,
+}
+
+/**
+ * Alert status
+ */
+export enum AlertStatus {
+  Active = 0,
+  Triggered = 1,
+  Disabled = 2,
+  Expired = 3,
+}
+
+/**
+ * Price alert configuration
+ */
+export interface PriceAlert {
+  id: string;
+  symbol: string;
+  condition: AlertCondition;
+  targetValue: number;
+  message: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  createdAt: string;
+  triggeredAt?: string;
+  expiresAt?: string;
+}
+
+/**
+ * Technical indicator alert configuration
+ */
+export interface IndicatorAlert {
+  id: string;
+  symbol: string;
+  indicatorType: IndicatorType;
+  period: number;
+  condition: AlertCondition;
+  targetValue: number;
+  message: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  createdAt: string;
+  triggeredAt?: string;
+  expiresAt?: string;
+}
+
+/**
+ * Triggered alert notification
+ */
+export interface AlertNotification {
+  id: string;
+  alertId: string;
+  symbol: string;
+  message: string;
+  severity: AlertSeverity;
+  triggeredAt: string;
+  currentValue: number;
+  targetValue: number;
+  condition: AlertCondition;
+  isRead: boolean;
+}
+
+/**
+ * Alert system configuration
+ */
+export interface AlertConfig {
+  enableBrowserNotifications: boolean;
+  enableSoundNotifications: boolean;
+  maxActiveAlerts: number;
+  defaultExpiryHours: number;
+  autoMarkAsRead: boolean;
+}
