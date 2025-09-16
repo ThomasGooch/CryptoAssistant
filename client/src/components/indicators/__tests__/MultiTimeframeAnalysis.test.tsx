@@ -50,6 +50,7 @@ describe("MultiTimeframeAnalysis", () => {
       },
       strongestTimeframe: Timeframe.Day,
       weakestTimeframe: Timeframe.FiveMinutes,
+      confluenceStrength: 0.85,
     },
     startTime: "2025-01-01T12:00:00Z",
     endTime: "2025-01-15T12:00:00Z",
