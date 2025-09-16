@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AkashTrends.Application.Features.Crypto.CalculateMultiTimeframeIndicators;
 
-public class CalculateMultiTimeframeIndicatorsQueryHandler 
+public class CalculateMultiTimeframeIndicatorsQueryHandler
     : IQueryHandler<CalculateMultiTimeframeIndicatorsQuery, CalculateMultiTimeframeIndicatorsResult>
 {
     private readonly ICryptoExchangeService _exchangeService;
@@ -24,7 +24,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandler
 
     public async Task<CalculateMultiTimeframeIndicatorsResult> Handle(CalculateMultiTimeframeIndicatorsQuery query)
     {
-        _logger.LogInformation("Calculating multi-timeframe {IndicatorType} for {Symbol} across {TimeframeCount} timeframes", 
+        _logger.LogInformation("Calculating multi-timeframe {IndicatorType} for {Symbol} across {TimeframeCount} timeframes",
             query.IndicatorType, query.Symbol, query.Timeframes.Count());
 
         // Get historical candlestick data for the finest timeframe
@@ -51,7 +51,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandler
         // Analyze timeframe alignment
         var alignment = _multiTimeframeService.GetTimeframeAlignment(results);
 
-        _logger.LogInformation("Calculated multi-timeframe {IndicatorType} for {Symbol} with alignment score {AlignmentScore}", 
+        _logger.LogInformation("Calculated multi-timeframe {IndicatorType} for {Symbol} with alignment score {AlignmentScore}",
             query.IndicatorType, query.Symbol, alignment.AlignmentScore);
 
         return new CalculateMultiTimeframeIndicatorsResult

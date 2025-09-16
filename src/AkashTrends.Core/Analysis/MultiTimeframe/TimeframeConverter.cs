@@ -14,7 +14,7 @@ public interface ITimeframeConverter
     /// <param name="targetTimeframe">Target timeframe to aggregate to</param>
     /// <returns>Aggregated price data</returns>
     IEnumerable<CandlestickData> AggregateToTimeframe(
-        IEnumerable<CandlestickData> sourceData, 
+        IEnumerable<CandlestickData> sourceData,
         Timeframe targetTimeframe);
 
     /// <summary>
@@ -29,7 +29,7 @@ public interface ITimeframeConverter
 public class TimeframeConverter : ITimeframeConverter
 {
     public IEnumerable<CandlestickData> AggregateToTimeframe(
-        IEnumerable<CandlestickData> sourceData, 
+        IEnumerable<CandlestickData> sourceData,
         Timeframe targetTimeframe)
     {
         if (!sourceData.Any())
@@ -38,9 +38,9 @@ public class TimeframeConverter : ITimeframeConverter
         var sortedData = sourceData.OrderBy(x => x.Timestamp).ToList();
         var aggregatedData = new List<CandlestickData>();
         var intervalMinutes = GetTimeframeInMinutes(targetTimeframe);
-        
+
         var groups = GroupByTimeframe(sortedData, intervalMinutes);
-        
+
         foreach (var group in groups)
         {
             var candles = group.OrderBy(x => x.Timestamp).ToList();
@@ -65,14 +65,14 @@ public class TimeframeConverter : ITimeframeConverter
     {
         var sourceMinutes = GetTimeframeInMinutes(sourceTimeframe);
         var targetMinutes = GetTimeframeInMinutes(targetTimeframe);
-        
+
         // Can only convert to higher timeframes (more minutes)
         // and target must be evenly divisible by source
         return targetMinutes > sourceMinutes && targetMinutes % sourceMinutes == 0;
     }
 
     private IEnumerable<IGrouping<DateTimeOffset, CandlestickData>> GroupByTimeframe(
-        IList<CandlestickData> data, 
+        IList<CandlestickData> data,
         int intervalMinutes)
     {
         return data.GroupBy(x => GetTimeframeStartTime(x.Timestamp, intervalMinutes));
@@ -82,14 +82,14 @@ public class TimeframeConverter : ITimeframeConverter
     {
         var totalMinutes = timestamp.Hour * 60 + timestamp.Minute;
         var intervalStart = (totalMinutes / intervalMinutes) * intervalMinutes;
-        
+
         return new DateTimeOffset(
-            timestamp.Year, 
-            timestamp.Month, 
-            timestamp.Day, 
-            intervalStart / 60, 
-            intervalStart % 60, 
-            0, 
+            timestamp.Year,
+            timestamp.Month,
+            timestamp.Day,
+            intervalStart / 60,
+            intervalStart % 60,
+            0,
             timestamp.Offset);
     }
 

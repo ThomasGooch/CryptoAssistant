@@ -78,12 +78,12 @@ public class MultiTimeframeIndicatorService : IMultiTimeframeIndicatorService
 
                 // Convert candlestick data to crypto prices for the indicator
                 var currency = CryptoCurrency.Create(symbol);
-                var cryptoPrices = timeframeDataList.Select(c => 
+                var cryptoPrices = timeframeDataList.Select(c =>
                     CryptoPrice.Create(currency, c.Close, c.Timestamp)).ToList();
 
                 // Calculate indicator for this timeframe
                 var result = indicator.Calculate(cryptoPrices);
-                
+
                 if (result != null)
                 {
                     results[timeframe] = result;
@@ -113,10 +113,10 @@ public class MultiTimeframeIndicatorService : IMultiTimeframeIndicatorService
 
         // Calculate alignment score based on value consistency
         var alignmentScore = CalculateAlignmentScore(indicatorValues);
-        
+
         // Determine trend direction
         var trendDirection = DetermineTrendDirection(indicatorValues);
-        
+
         // Find strongest and weakest timeframes
         var strongestTimeframe = GetStrongestTimeframe(values, trendDirection);
         var weakestTimeframe = GetWeakestTimeframe(values, trendDirection);
@@ -144,7 +144,7 @@ public class MultiTimeframeIndicatorService : IMultiTimeframeIndicatorService
         // Lower standard deviation = higher alignment
         var maxExpectedDeviation = mean * 0.2m; // 20% of mean as maximum expected deviation
         var normalizedDeviation = Math.Min(standardDeviation / maxExpectedDeviation, 1m);
-        
+
         return Math.Max(0m, 1m - normalizedDeviation);
     }
 

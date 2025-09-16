@@ -42,13 +42,13 @@ public class MultiTimeframeIndicatorServiceTests
         var smaIndicator = Substitute.For<IIndicator>();
         var fiveMinResult = new IndicatorResult(50.0m, DateTime.UtcNow, DateTime.UtcNow);
         var hourlyResult = new IndicatorResult(55.0m, DateTime.UtcNow, DateTime.UtcNow);
-        
+
         _indicatorFactory.CreateIndicator(indicatorType, period).Returns(smaIndicator);
-        
+
         // Set up sequential returns for multiple calls
         var callCount = 0;
         smaIndicator.Calculate(Arg.Any<IReadOnlyList<CryptoPrice>>())
-            .Returns(x => 
+            .Returns(x =>
             {
                 callCount++;
                 return callCount == 1 ? fiveMinResult : hourlyResult;
@@ -56,10 +56,10 @@ public class MultiTimeframeIndicatorServiceTests
 
         // Act
         var results = _service.CalculateMultiTimeframeIndicators(
-            "BTC", 
-            sourceData, 
-            targetTimeframes, 
-            indicatorType, 
+            "BTC",
+            sourceData,
+            targetTimeframes,
+            indicatorType,
             period);
 
         // Assert
@@ -85,9 +85,9 @@ public class MultiTimeframeIndicatorServiceTests
         // Act
         var results = _service.CalculateMultiTimeframeIndicators(
             "BTC",
-            emptyData, 
-            targetTimeframes, 
-            indicatorType, 
+            emptyData,
+            targetTimeframes,
+            indicatorType,
             period);
 
         // Assert
@@ -105,10 +105,10 @@ public class MultiTimeframeIndicatorServiceTests
 
         // Act
         var results = _service.CalculateMultiTimeframeIndicators(
-            "BTC", 
-            sourceData, 
-            targetTimeframes, 
-            indicatorType, 
+            "BTC",
+            sourceData,
+            targetTimeframes,
+            indicatorType,
             period);
 
         // Assert
@@ -194,12 +194,12 @@ public class MultiTimeframeIndicatorServiceTests
     {
         var data = new List<CandlestickData>();
         var baseTime = new DateTimeOffset(2025, 1, 1, 10, 0, 0, TimeSpan.Zero);
-        
+
         for (int i = 0; i < count; i++)
         {
             var timestamp = baseTime.AddMinutes(i);
             var price = 100 + i * 0.5m;
-            
+
             data.Add(CandlestickData.Create(
                 timestamp: timestamp,
                 open: price,
@@ -209,7 +209,7 @@ public class MultiTimeframeIndicatorServiceTests
                 volume: 1000 + i * 10
             ));
         }
-        
+
         return data;
     }
 }

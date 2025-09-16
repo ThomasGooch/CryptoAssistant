@@ -82,7 +82,7 @@ public class TimeframeConverterTests
 
         // Assert
         result.Should().HaveCount(2);
-        
+
         // First 5-minute candle
         var firstCandle = result[0];
         firstCandle.Timestamp.Should().Be(baseTime); // 10:00:00
@@ -138,10 +138,10 @@ public class TimeframeConverterTests
     {
         // This test validates the private method indirectly through CanConvert behavior
         // We test that conversion ratios work correctly
-        
+
         // Arrange & Act
         var canConvertFromMinute = _converter.CanConvert(Timeframe.Minute, timeframe);
-        
+
         // Assert
         if (expectedMinutes > 1)
         {

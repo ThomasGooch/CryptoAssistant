@@ -81,7 +81,7 @@ public class CryptoControllerMultiTimeframeTests
 
         // Verify query dispatcher was called with correct parameters
         await _queryDispatcher.Received(1).Dispatch<CalculateMultiTimeframeIndicatorsQuery, CalculateMultiTimeframeIndicatorsResult>(
-            Arg.Is<CalculateMultiTimeframeIndicatorsQuery>(q => 
+            Arg.Is<CalculateMultiTimeframeIndicatorsQuery>(q =>
                 q.Symbol == symbol &&
                 q.IndicatorType == indicatorType &&
                 q.Period == period &&
@@ -177,7 +177,7 @@ public class CryptoControllerMultiTimeframeTests
 
         // Verify query dispatcher was called with single timeframe
         await _queryDispatcher.Received(1).Dispatch<CalculateMultiTimeframeIndicatorsQuery, CalculateMultiTimeframeIndicatorsResult>(
-            Arg.Is<CalculateMultiTimeframeIndicatorsQuery>(q => 
+            Arg.Is<CalculateMultiTimeframeIndicatorsQuery>(q =>
                 q.Symbol == symbol &&
                 q.Timeframes.Count() == 1 &&
                 q.Timeframes.First() == Timeframe.Hour

@@ -9,12 +9,12 @@ public enum TrendDirection
     /// Trend is bearish (downward)
     /// </summary>
     Bearish,
-    
+
     /// <summary>
     /// Trend is neutral (sideways)
     /// </summary>
     Neutral,
-    
+
     /// <summary>
     /// Trend is bullish (upward)
     /// </summary>
@@ -31,22 +31,22 @@ public class TimeframeAlignment
     /// 1 = Perfect alignment, 0 = Complete divergence
     /// </summary>
     public decimal AlignmentScore { get; }
-    
+
     /// <summary>
     /// The overall trend direction across all timeframes
     /// </summary>
     public TrendDirection TrendDirection { get; }
-    
+
     /// <summary>
     /// Dictionary of individual indicator values by timeframe
     /// </summary>
     public Dictionary<Timeframe, decimal> IndicatorValues { get; }
-    
+
     /// <summary>
     /// The strongest timeframe (highest value for bullish, lowest for bearish)
     /// </summary>
     public Timeframe? StrongestTimeframe { get; }
-    
+
     /// <summary>
     /// The weakest timeframe (lowest value for bullish, highest for bearish)
     /// </summary>
@@ -65,7 +65,7 @@ public class TimeframeAlignment
         StrongestTimeframe = strongestTimeframe;
         WeakestTimeframe = weakestTimeframe;
     }
-    
+
     /// <summary>
     /// Gets the confluence strength (alignment score with direction weighting)
     /// </summary>
@@ -79,10 +79,10 @@ public class TimeframeAlignment
             TrendDirection.Neutral => 0m,
             _ => 0m
         };
-        
+
         return AlignmentScore * directionMultiplier;
     }
-    
+
     /// <summary>
     /// Determines if this represents a strong confluence setup
     /// </summary>

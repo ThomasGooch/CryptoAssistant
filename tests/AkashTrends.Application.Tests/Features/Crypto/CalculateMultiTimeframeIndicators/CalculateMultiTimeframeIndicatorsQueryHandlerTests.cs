@@ -42,7 +42,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
         };
 
         var candlestickData = CreateSampleCandlestickData();
-        _exchangeService.GetHistoricalCandlestickDataAsync(query.Symbol, 
+        _exchangeService.GetHistoricalCandlestickDataAsync(query.Symbol,
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
             .Returns(candlestickData);
 
@@ -53,12 +53,12 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
         };
 
         var alignment = new TimeframeAlignment(
-            0.8m, 
-            TrendDirection.Bullish, 
-            new Dictionary<Timeframe, decimal> 
-            { 
-                { Timeframe.FiveMinutes, 50.0m }, 
-                { Timeframe.Hour, 55.0m } 
+            0.8m,
+            TrendDirection.Bullish,
+            new Dictionary<Timeframe, decimal>
+            {
+                { Timeframe.FiveMinutes, 50.0m },
+                { Timeframe.Hour, 55.0m }
             });
 
         _multiTimeframeService.CalculateMultiTimeframeIndicators(
@@ -100,7 +100,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
         };
 
         var candlestickData = CreateSampleCandlestickData();
-        _exchangeService.GetHistoricalCandlestickDataAsync(Arg.Any<string>(), 
+        _exchangeService.GetHistoricalCandlestickDataAsync(Arg.Any<string>(),
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
             .Returns(candlestickData);
 
@@ -108,7 +108,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
         var alignment = new TimeframeAlignment(0m, TrendDirection.Neutral, new Dictionary<Timeframe, decimal>());
 
         _multiTimeframeService.CalculateMultiTimeframeIndicators(
-            Arg.Any<string>(), Arg.Any<IEnumerable<CandlestickData>>(), Arg.Any<IEnumerable<Timeframe>>(), 
+            Arg.Any<string>(), Arg.Any<IEnumerable<CandlestickData>>(), Arg.Any<IEnumerable<Timeframe>>(),
             Arg.Any<IndicatorType>(), Arg.Any<int>())
             .Returns(indicatorResults);
 
@@ -136,7 +136,7 @@ public class CalculateMultiTimeframeIndicatorsQueryHandlerTests
             Period = 20
         };
 
-        _exchangeService.GetHistoricalCandlestickDataAsync(Arg.Any<string>(), 
+        _exchangeService.GetHistoricalCandlestickDataAsync(Arg.Any<string>(),
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>())
             .Returns(new List<CandlestickData>()); // Empty data
 
