@@ -220,6 +220,12 @@ export enum AlertCondition {
   VolumeAbove = 4,
   PriceChangeAbove = 5,
   PriceChangeBelow = 6,
+  // Elliott Wave Pattern Alerts
+  ElliottWaveImpulseDetected = 7,
+  ElliottWaveCorrectiveDetected = 8,
+  FibonacciLevelApproached = 9,
+  WaveTargetReached = 10,
+  PatternValidationChanged = 11,
 }
 
 /**
@@ -311,6 +317,133 @@ export interface SignalRAlertNotification {
 }
 
 /**
+ * Elliott Wave Analysis Types
+ */
+
+/**
+ * Wave types in Elliott Wave theory
+ */
+export enum WaveType {
+  Impulse = "impulse",
+  Corrective = "corrective",
+}
+
+/**
+ * Individual wave within an Elliott Wave pattern
+ */
+export interface Wave {
+  label: string; // "1", "2", "3", "4", "5" for impulse; "A", "B", "C" for corrective
+  start: {
+    timestamp: Date;
+    price: number;
+    index: number;
+  };
+  end: {
+    timestamp: Date;
+    price: number;
+    index: number;
+  };
+  direction: "up" | "down";
+  retracement?: number; // For corrective waves, retracement percentage
+  extension?: number; // For extension waves
+}
+
+/**
+ * Fibonacci analysis for waves
+ */
+export interface FibonacciAnalysis {
+  retracements: number[]; // Standard levels: [0.236, 0.382, 0.5, 0.618, 0.786]
+  extensions: number[]; // Extension levels: [1.272, 1.618, 2.618]
+  levels: Record<number, number>; // Actual price levels for each ratio
+}
+
+/**
+ * Wave relationship analysis
+ */
+export interface WaveRelationships {
+  wave3ToWave1Ratio: number;
+  wave5ToWave1Ratio: number;
+  wave2RetracePercent: number;
+  wave4RetracePercent: number;
+}
+
+/**
+ * Elliott Wave pattern validation rules
+ */
+export interface ElliottWaveValidation {
+  wave2NoOverlap: boolean; // Wave 2 doesn't retrace more than 100% of wave 1
+  wave4NoOverlapWithWave1: boolean; // Wave 4 doesn't overlap with wave 1 price territory
+  wave3IsNotShortest: boolean; // Wave 3 is never the shortest impulse wave
+  alternation: boolean; // Waves 2 and 4 are different types of corrections
+}
+
+/**
+ * Complete Elliott Wave pattern
+ */
+export interface ElliottWavePattern {
+  id: string;
+  type: "impulse" | "abc_correction" | "complex_correction";
+  waves: Wave[];
+  startTime: Date;
+  endTime: Date;
+  priceRange: {
+    high: number;
+    low: number;
+  };
+  fibonacciLevels: FibonacciAnalysis;
+  fibonacciRelationships?: WaveRelationships; // For impulse waves
+  confidence: number; // 0-1 confidence score
+  validationRules: ElliottWaveValidation;
+  projections?: {
+    nextWaveTarget?: number;
+    supportLevels: number[];
+    resistanceLevels: number[];
+  };
+}
+
+/**
+ * Elliott Wave analysis result for a symbol/timeframe
+ */
+export interface ElliottWaveAnalysis {
+  symbol: string;
+  timeframe: Timeframe;
+  patterns: ElliottWavePattern[];
+  currentPhase?: {
+    pattern: ElliottWavePattern;
+    currentWave: Wave;
+    nextWaveExpectation: string;
+  };
+  fibonacciLevels: {
+    retracements: FibonacciAnalysis;
+    extensions: FibonacciAnalysis;
+  };
+  lastUpdated: Date;
+}
+
+/**
+ * Elliott Wave pattern alert configuration
+ */
+export interface ElliottWaveAlert {
+  id: string;
+  symbol: string;
+  alertType: "pattern_detected" | "fibonacci_level" | "wave_target" | "pattern_validation";
+  condition: AlertCondition;
+  patternType?: "impulse" | "abc_correction";
+  fibonacciLevel?: number; // e.g., 0.382, 0.618
+  waveLabel?: string; // e.g., "3", "5", "A", "B", "C"
+  targetPrice?: number;
+  minimumConfidence: number; // 0-1, minimum pattern confidence to trigger alert
+  message: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  createdAt: string;
+  triggeredAt?: string;
+  expiresAt?: string;
+  cooldownSeconds?: number;
+  patternId?: string; // Reference to the Elliott Wave pattern that triggered this alert
+}
+
+/**
  * Alert system configuration
  */
 export interface AlertConfig {
@@ -319,4 +452,10 @@ export interface AlertConfig {
   maxActiveAlerts: number;
   defaultExpiryHours: number;
   autoMarkAsRead: boolean;
+  elliottWaveAlerts: {
+    enabled: boolean;
+    minimumConfidence: number;
+    fibonacciLevelsToWatch: number[];
+    cooldownMinutes: number;
+  };
 }

@@ -3,7 +3,7 @@ import PriceDisplay from "../components/crypto/PriceDisplay";
 import { PriceChart } from "../components/crypto/PriceChart";
 import { CandlestickChart } from "../components/crypto/CandlestickChart";
 import IndicatorDisplay from "../components/indicators/IndicatorDisplay";
-import { AlertManager } from "../components/alerts/AlertManager";
+import { AlertManagerWithSignalR } from "../components/alerts/AlertManagerWithSignalR";
 import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
@@ -115,6 +115,25 @@ export function CryptoAnalysis() {
     loadIndicators();
   }, []);
 
+  // Load initial indicator data
+  useEffect(() => {
+    const loadInitialIndicator = async () => {
+      try {
+        setIsLoadingIndicator(true);
+        const response = await indicatorService.getIndicator(symbol, indicatorType, period);
+        setIndicatorValue(response.value);
+        setStartTime(response.timestamp);
+        setEndTime(response.timestamp);
+      } catch (error) {
+        console.error("Error loading initial indicator:", error);
+      } finally {
+        setIsLoadingIndicator(false);
+      }
+    };
+
+    loadInitialIndicator();
+  }, [symbol, indicatorType, period]);
+
   // Subscribe to real-time updates
   useEffect(() => {
     if (!isConnected || !hasInitialData) return;
@@ -130,13 +149,23 @@ export function CryptoAnalysis() {
       setEndTime(new Date().toLocaleString());
     };
 
-    subscribeToPriceUpdates(symbol, priceCallback);
-    subscribeToIndicatorUpdates(
-      symbol,
-      indicatorType,
-      period,
-      indicatorCallback,
-    );
+    // Only attempt subscriptions if SignalR is available
+    const setupSubscriptions = async () => {
+      try {
+        await subscribeToPriceUpdates(symbol, priceCallback);
+        await subscribeToIndicatorUpdates(
+          symbol,
+          indicatorType,
+          period,
+          indicatorCallback,
+        );
+      } catch (error) {
+        // Silently handle subscription errors when backend is unavailable
+        console.log("🌊 Real-time subscriptions not available in mock data mode");
+      }
+    };
+
+    setupSubscriptions();
   }, [
     isConnected,
     hasInitialData,
@@ -329,10 +358,7 @@ export function CryptoAnalysis() {
           </div>
 
           {/* Alert Management Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Alert Management</h2>
-            <AlertManager />
-          </div>
+          <AlertManagerWithSignalR />
         </div>
       </div>
 

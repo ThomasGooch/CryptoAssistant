@@ -28,6 +28,7 @@ export function LiveCryptoAnalysis() {
   const [chartType, setChartType] = useState(ChartType.Line);
   const [timeframe, setTimeframe] = useState(Timeframe.Hour);
   const [showVolume, setShowVolume] = useState(false);
+  const [showElliottWaves, setShowElliottWaves] = useState(false);
   const [enableLiveUpdates, setEnableLiveUpdates] = useState(true);
 
   // State for indicator data
@@ -382,23 +383,51 @@ export function LiveCryptoAnalysis() {
               </div>
 
               {chartType === ChartType.Candlestick && (
-                <div>
-                  <label
-                    htmlFor="showVolume"
-                    className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"
-                  >
-                    Show Volume
-                  </label>
-                  <div className="flex items-center">
-                    <input
-                      id="showVolume"
-                      type="checkbox"
-                      checked={showVolume}
-                      onChange={(e) => setShowVolume(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">Display volume bars</span>
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="showVolume"
+                      className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"
+                    >
+                      Chart Options
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          id="showVolume"
+                          type="checkbox"
+                          checked={showVolume}
+                          onChange={(e) => setShowVolume(e.target.checked)}
+                          className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">Display volume bars</span>
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          id="showElliottWaves"
+                          type="checkbox"
+                          checked={showElliottWaves}
+                          onChange={(e) => setShowElliottWaves(e.target.checked)}
+                          className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">Elliott Wave patterns</span>
+                      </div>
+                    </div>
                   </div>
+                  
+                  {showElliottWaves && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                      <div className="text-xs text-blue-700 dark:text-blue-300 mb-1 font-medium">
+                        💡 Elliott Wave Analysis
+                      </div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        Patterns and Fibonacci levels are overlaid on the chart. 
+                        <a href="/elliott-wave" className="underline ml-1">
+                          Visit dedicated Elliott Wave page for advanced features →
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -410,6 +439,7 @@ export function LiveCryptoAnalysis() {
                   symbol={symbol}
                   timeframe={timeframe}
                   showVolume={showVolume}
+                  showElliottWaves={showElliottWaves}
                 />
               ) : (
                 <LivePriceChart

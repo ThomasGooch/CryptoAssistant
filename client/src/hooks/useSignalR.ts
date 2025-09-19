@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import signalRService from "../services/signalRService";
 import { IndicatorType, Timeframe } from "../types/domain";
+import { isBackendAvailable } from "../utils/environment";
 
 /**
  * Custom hook for managing SignalR connections
@@ -8,9 +9,36 @@ import { IndicatorType, Timeframe } from "../types/domain";
 export const useSignalR = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null);
 
-  // Connect to SignalR when the hook is first used
+  // Check if backend is available
   useEffect(() => {
+    const checkBackend = async () => {
+      const available = await isBackendAvailable();
+      setBackendAvailable(available);
+      
+      if (!available) {
+        console.log("🌊 Backend unavailable - disabling real-time updates for mock data mode");
+        setIsConnected(false);
+        setError(null);
+      }
+    };
+
+    checkBackend();
+  }, []);
+
+  // Connect to SignalR only if backend is available
+  useEffect(() => {
+    if (backendAvailable === false) {
+      // Backend not available, don't attempt connection
+      return;
+    }
+
+    if (backendAvailable === null) {
+      // Still checking backend availability
+      return;
+    }
+
     let mounted = true;
 
     const connectToSignalR = async () => {
@@ -40,7 +68,7 @@ export const useSignalR = () => {
       mounted = false;
       signalRService.stopConnection();
     };
-  }, []);
+  }, [backendAvailable]);
 
   // Clear error state when reconnected
   useEffect(() => {
@@ -82,6 +110,12 @@ export const useSignalR = () => {
     symbol: string,
     callback: (price: number) => void,
   ) => {
+    if (backendAvailable === false) {
+      // Backend not available, silently ignore real-time subscription
+      console.log("🌊 Mock data mode - real-time price updates disabled");
+      return;
+    }
+
     if (!isConnected) {
       throw new Error("SignalR not connected");
     }
@@ -133,6 +167,12 @@ export const useSignalR = () => {
     callback: (value: number) => void,
     timeframe?: Timeframe,
   ) => {
+    if (backendAvailable === false) {
+      // Backend not available, silently ignore real-time subscription
+      console.log("🌊 Mock data mode - real-time indicator updates disabled");
+      return;
+    }
+
     if (!isConnected) {
       throw new Error("SignalR not connected");
     }

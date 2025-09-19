@@ -160,9 +160,29 @@ export function PreferencesProvider({
       const preferences = await preferencesService.getUserPreferences(userId);
       dispatch({ type: "SET_PREFERENCES", payload: preferences });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to load preferences";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      console.warn("Failed to load preferences, using fallback:", error);
+      // If all else fails, use hardcoded defaults directly
+      const fallbackPreferences = {
+        userId: userId || "guest",
+        chart: {
+          type: "line" as const,
+          timeFrame: "1h",
+          showVolume: true,
+          showGrid: true,
+          colorScheme: "default",
+        },
+        indicators: [],
+        favoritePairs: ["BTC-USD", "ETH-USD", "ADA-USD", "SOL-USD"],
+        ui: {
+          darkMode: false,
+          language: "en",
+          showAdvancedFeatures: true, // Enable Elliott Wave features by default
+          refreshInterval: 5000,
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+      dispatch({ type: "SET_PREFERENCES", payload: fallbackPreferences });
+      // Don't set error state - we successfully loaded fallback preferences
     }
   };
 

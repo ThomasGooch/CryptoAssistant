@@ -4,12 +4,14 @@ import type {
 } from "../types/api";
 import type { UserPreferences } from "../types/domain";
 import { ChartType } from "../types/domain";
+import { isDevelopment, showBackendUnavailableNotice } from "../utils/environment";
 
 /**
  * Service for interacting with user preferences API endpoints
  */
 class PreferencesService {
   private baseUrl = "/api/Preferences";
+  private hasShownBackendNotice = false;
 
   /**
    * Get user preferences by user ID
@@ -21,18 +23,18 @@ class PreferencesService {
       const response = await fetch(`${this.baseUrl}/${userId}`);
       if (!response.ok) {
         if (response.status === 404) {
-          // Return default preferences if not found
+          // Return default preferences if user not found
+          console.info(`No saved preferences found for user ${userId}. Loading defaults.`);
           return await this.getDefaultPreferences();
         }
-        throw new Error(
-          `Failed to fetch user preferences: ${response.statusText}`,
-        );
+        console.warn(`Error fetching user preferences (${response.status}): ${response.statusText}. Loading defaults.`);
+        return await this.getDefaultPreferences();
       }
       const data: UserPreferencesResponse = await response.json();
       return this.convertResponseToDomain(data);
     } catch (error) {
-      console.error("Error fetching user preferences:", error);
-      // Fallback to default preferences
+      console.warn("Error fetching user preferences:", error instanceof Error ? error.message : error, ". Loading defaults.");
+      // Fallback to default preferences (which will use hardcoded defaults if backend unavailable)
       return await this.getDefaultPreferences();
     }
   }
@@ -81,14 +83,20 @@ class PreferencesService {
     try {
       const response = await fetch(`${this.baseUrl}/default`);
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch default preferences: ${response.statusText}`,
-        );
+        console.warn(`Backend preferences service unavailable (${response.status}): ${response.statusText}. Using client-side defaults.`);
+        return this.getHardcodedDefaults();
       }
       const data: UserPreferencesResponse = await response.json();
       return this.convertResponseToDomain(data);
     } catch (error) {
-      console.error("Error fetching default preferences:", error);
+      console.warn("Backend preferences service unavailable:", error instanceof Error ? error.message : error, ". Using client-side defaults.");
+      
+      // Show helpful notice in development mode (only once)
+      if (isDevelopment() && !this.hasShownBackendNotice) {
+        showBackendUnavailableNotice();
+        this.hasShownBackendNotice = true;
+      }
+      
       // Return hardcoded defaults as fallback
       return this.getHardcodedDefaults();
     }
@@ -168,11 +176,11 @@ class PreferencesService {
         colorScheme: "default",
       },
       indicators: [],
-      favoritePairs: ["BTC-USD", "ETH-USD"],
+      favoritePairs: ["BTC-USD", "ETH-USD", "ADA-USD", "SOL-USD"],
       ui: {
         darkMode: false,
         language: "en",
-        showAdvancedFeatures: false,
+        showAdvancedFeatures: true, // Enable Elliott Wave features by default
         refreshInterval: 5000,
       },
       lastUpdated: new Date().toISOString(),
