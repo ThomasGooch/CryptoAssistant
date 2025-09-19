@@ -16,12 +16,12 @@ public class InMemoryAlertService : IAlertService
         _alerts = new ConcurrentDictionary<Guid, Alert>();
     }
 
-    public Task<Alert> CreateAlertAsync(string userId, string symbol, decimal threshold, AlertCondition condition, string title, string message)
+    public Task<Alert> CreateAlertAsync(string userId, string symbol, decimal threshold, AlertCondition condition, string title, string message, int? cooldownSeconds = null)
     {
         _logger.LogInformation("Creating alert for user {UserId} for symbol {Symbol} with threshold {Threshold}",
             userId, symbol, threshold);
 
-        var alert = Alert.Create(userId, symbol, threshold, condition, title, message);
+        var alert = Alert.Create(userId, symbol, threshold, condition, title, message, cooldownSeconds);
         _alerts.TryAdd(alert.Id, alert);
 
         _logger.LogInformation("Created alert {AlertId} for user {UserId}", alert.Id, userId);

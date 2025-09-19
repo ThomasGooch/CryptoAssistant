@@ -2,12 +2,14 @@ using AkashTrends.Application;
 using AkashTrends.Core;
 using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure;
+using AkashTrends.Infrastructure.Data;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
 using AkashTrends.API.Hubs;
 using AkashTrends.API.Services;
 using AkashTrends.API.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -112,6 +114,22 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Ensure database is created and migrations are applied
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AlertDbContext>();
+    try
+    {
+        dbContext.Database.EnsureCreated();
+        Log.Information("AlertDbContext database ensured to exist");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Failed to ensure AlertDbContext database exists");
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

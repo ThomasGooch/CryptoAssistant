@@ -77,7 +77,9 @@ describe("AlertBanner", () => {
       const alertElement = screen.getByRole("alert");
       expect(alertElement).toBeInTheDocument();
       expect(alertElement).toHaveClass("bg-blue-50", "border-blue-200");
-      expect(screen.getByText("Bitcoin price reached $50,000")).toBeInTheDocument();
+      expect(
+        screen.getByText("Bitcoin price reached $50,000"),
+      ).toBeInTheDocument();
       expect(screen.getByText("BTC")).toBeInTheDocument();
       expect(screen.getByText("Current: $50,000")).toBeInTheDocument();
     });
@@ -127,7 +129,9 @@ describe("AlertBanner", () => {
 
       const alertElements = screen.getAllByRole("alert");
       expect(alertElements).toHaveLength(2);
-      expect(screen.getByText("Bitcoin price reached $50,000")).toBeInTheDocument();
+      expect(
+        screen.getByText("Bitcoin price reached $50,000"),
+      ).toBeInTheDocument();
       expect(
         screen.getByText("Ethereum RSI indicates overbought conditions"),
       ).toBeInTheDocument();

@@ -20,8 +20,14 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
 
   // Sort alerts by severity (Critical > Warning > Info)
   const sortedAlerts = [...alerts].sort((a, b) => {
-    const severityOrder = [AlertSeverity.Critical, AlertSeverity.Warning, AlertSeverity.Info];
-    return severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity);
+    const severityOrder = [
+      AlertSeverity.Critical,
+      AlertSeverity.Warning,
+      AlertSeverity.Info,
+    ];
+    return (
+      severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity)
+    );
   });
 
   const getSeverityStyles = (severity: AlertSeverity) => {
@@ -111,7 +117,7 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
         return value.toLocaleString();
       case AlertCondition.PriceChangeAbove:
       case AlertCondition.PriceChangeBelow:
-        return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+        return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
       default:
         return value.toString();
     }
@@ -122,22 +128,24 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
     const alertTime = new Date(timestamp);
     const diffMs = now.getTime() - alertTime.getTime();
     const diffMinutes = Math.floor(diffMs / 60000);
-    
+
     if (diffMinutes < 1) return "just now";
-    if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-    
+    if (diffMinutes < 60)
+      return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
   };
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
       {sortedAlerts.map((alert) => {
         const styles = getSeverityStyles(alert.severity);
-        
+
         return (
           <div
             key={alert.id}
@@ -149,7 +157,7 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
               <div className={`flex-shrink-0 mr-3 ${styles.icon}`}>
                 {getSeverityIcon(alert.severity)}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold text-sm">{alert.symbol}</span>
@@ -157,14 +165,14 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
                     {getRelativeTime(alert.triggeredAt)}
                   </span>
                 </div>
-                
+
                 <p className="text-sm mb-2">{alert.message}</p>
-                
+
                 <div className="text-xs opacity-75">
                   Current: {formatValue(alert.condition, alert.currentValue)}
                 </div>
               </div>
-              
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -173,7 +181,11 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
                 className={`flex-shrink-0 ml-2 ${styles.button}`}
                 aria-label="Close alert"
               >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"

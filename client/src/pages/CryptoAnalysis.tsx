@@ -3,6 +3,7 @@ import PriceDisplay from "../components/crypto/PriceDisplay";
 import { PriceChart } from "../components/crypto/PriceChart";
 import { CandlestickChart } from "../components/crypto/CandlestickChart";
 import IndicatorDisplay from "../components/indicators/IndicatorDisplay";
+import { AlertManager } from "../components/alerts/AlertManager";
 import ConnectionStatus from "../components/ConnectionStatus";
 import { cryptoService } from "../services/cryptoService";
 import { indicatorService } from "../services/indicatorService";
@@ -325,6 +326,12 @@ export function CryptoAnalysis() {
               endTime={endTime}
               isLoading={isLoadingIndicator}
             />
+          </div>
+
+          {/* Alert Management Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-4">Alert Management</h2>
+            <AlertManager />
           </div>
         </div>
       </div>

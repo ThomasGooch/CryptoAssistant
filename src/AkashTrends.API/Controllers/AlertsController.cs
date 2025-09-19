@@ -86,7 +86,8 @@ public class AlertsController : ControllerBase
                 Threshold = request.Threshold,
                 Condition = request.Condition,
                 Title = request.Title,
-                Message = request.Message
+                Message = request.Message,
+                CooldownSeconds = request.CooldownSeconds
             };
 
             var result = await _queryDispatcher.Dispatch<CreateAlertCommand, CreateAlertResult>(command);
@@ -121,7 +122,8 @@ public class AlertsController : ControllerBase
             Message = request.Message,
             Threshold = request.Threshold,
             IsActive = request.IsActive,
-            Reset = request.Reset
+            Reset = request.Reset,
+            CooldownSeconds = request.CooldownSeconds
         };
 
         var result = await _queryDispatcher.Dispatch<UpdateAlertCommand, UpdateAlertResult>(command);
@@ -179,7 +181,8 @@ public class AlertsController : ControllerBase
             IsTriggered = alert.IsTriggered,
             CreatedAt = alert.CreatedAt,
             TriggeredAt = alert.TriggeredAt,
-            TriggeredPrice = alert.TriggeredPrice
+            TriggeredPrice = alert.TriggeredPrice,
+            CooldownSeconds = alert.CooldownSeconds
         };
     }
 }

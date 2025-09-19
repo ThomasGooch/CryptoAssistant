@@ -29,7 +29,7 @@ describe("smoke: alert cooldown", () => {
       severity: 1,
       status: 0,
       createdAt: new Date().toISOString(),
-  } as IndicatorAlert;
+    } as IndicatorAlert;
 
     alertManager.addAlert(rsiAlert);
 
@@ -37,9 +37,15 @@ describe("smoke: alert cooldown", () => {
       const active = alertManager.getActiveAlertsForSymbol("BTC");
       active.forEach((a) => {
         const possibleIA = a as IndicatorAlert;
-        if (possibleIA && (possibleIA as IndicatorAlert).indicatorType !== undefined) {
+        if (
+          possibleIA &&
+          (possibleIA as IndicatorAlert).indicatorType !== undefined
+        ) {
           if (alertService.evaluateIndicatorAlert(possibleIA, val)) {
-            const n = alertService.createNotification(possibleIA as unknown as PriceAlert, val);
+            const n = alertService.createNotification(
+              possibleIA as unknown as PriceAlert,
+              val,
+            );
             alertService.addNotification(n);
           }
         } else {

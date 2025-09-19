@@ -14,6 +14,7 @@ public class Alert
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? TriggeredAt { get; private set; }
     public decimal? TriggeredPrice { get; private set; }
+    public int? CooldownSeconds { get; private set; }
 
     private Alert(
         string userId,
@@ -21,7 +22,8 @@ public class Alert
         decimal threshold,
         AlertCondition condition,
         string title,
-        string message)
+        string message,
+        int? cooldownSeconds = null)
     {
         if (string.IsNullOrWhiteSpace(userId))
             throw new ArgumentException("User ID cannot be empty or null", nameof(userId));
@@ -50,6 +52,7 @@ public class Alert
         CreatedAt = DateTimeOffset.UtcNow;
         TriggeredAt = null;
         TriggeredPrice = null;
+        CooldownSeconds = cooldownSeconds;
     }
 
     public static Alert Create(
@@ -58,9 +61,10 @@ public class Alert
         decimal threshold,
         AlertCondition condition,
         string title,
-        string message)
+        string message,
+        int? cooldownSeconds = null)
     {
-        return new Alert(userId, symbol, threshold, condition, title, message);
+        return new Alert(userId, symbol, threshold, condition, title, message, cooldownSeconds);
     }
 
     public void Trigger(decimal currentPrice)
@@ -134,6 +138,14 @@ public class Alert
         {
             Reset();
         }
+    }
+
+    public void UpdateCooldown(int? cooldownSeconds)
+    {
+        if (cooldownSeconds.HasValue && cooldownSeconds.Value < 0)
+            throw new ArgumentException("Cooldown seconds cannot be negative", nameof(cooldownSeconds));
+
+        CooldownSeconds = cooldownSeconds;
     }
 }
 

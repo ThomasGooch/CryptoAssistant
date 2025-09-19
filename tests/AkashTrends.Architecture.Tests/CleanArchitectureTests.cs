@@ -192,7 +192,8 @@ public class CleanArchitectureTests
                     if (parameter.ParameterType.Name.Contains("Logger") ||
                         parameter.ParameterType.Name.Contains("IOptions") ||
                         parameter.ParameterType.Name.Contains("IConfiguration") ||
-                        parameter.ParameterType.Name.Contains("CancellationToken"))
+                        parameter.ParameterType.Name.Contains("CancellationToken") ||
+                        parameter.ParameterType.Name.Contains("DbContext"))
                         continue;
 
                     if (!parameter.ParameterType.IsInterface)

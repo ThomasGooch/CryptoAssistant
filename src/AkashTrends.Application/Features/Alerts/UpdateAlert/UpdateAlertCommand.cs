@@ -11,6 +11,7 @@ public class UpdateAlertCommand : IQuery<UpdateAlertResult>
     public decimal? Threshold { get; set; }
     public bool? IsActive { get; set; }
     public bool? Reset { get; set; } // Reset triggered state
+    public int? CooldownSeconds { get; set; }
 }
 
 public class UpdateAlertResult

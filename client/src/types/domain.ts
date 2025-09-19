@@ -255,6 +255,7 @@ export interface PriceAlert {
   createdAt: string;
   triggeredAt?: string;
   expiresAt?: string;
+  cooldownSeconds?: number;
 }
 
 /**
@@ -273,6 +274,7 @@ export interface IndicatorAlert {
   createdAt: string;
   triggeredAt?: string;
   expiresAt?: string;
+  cooldownSeconds?: number;
 }
 
 /**

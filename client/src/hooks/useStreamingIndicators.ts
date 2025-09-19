@@ -3,7 +3,11 @@ import { streamingIndicatorService } from "../services/streamingIndicatorService
 import { alertManager } from "../services/alertManagerService";
 import { alertService } from "../services/alertService";
 import { cryptoService } from "../services/cryptoService";
-import type { CryptoPrice, IndicatorConfig, IndicatorAlert } from "../types/domain";
+import type {
+  CryptoPrice,
+  IndicatorConfig,
+  IndicatorAlert,
+} from "../types/domain";
 import { IndicatorType, Timeframe } from "../types/domain";
 
 interface IndicatorValue {
@@ -111,21 +115,30 @@ export const useStreamingIndicators = (
 
             // Evaluate any configured indicator alerts (e.g., RSI) for this symbol
             try {
-              const activeAlerts = alertManager.getActiveAlertsForSymbol(symbol);
+              const activeAlerts =
+                alertManager.getActiveAlertsForSymbol(symbol);
               activeAlerts.forEach((a) => {
                 try {
                   const ia = a as IndicatorAlert;
                   if (ia && ia.indicatorType !== undefined) {
                     // Only handle RSI conditions for now
                     if (ia.condition === 2 || ia.condition === 3) {
-                      if (alertService.evaluateIndicatorAlert(ia, value.value)) {
-                        const notification = alertService.createNotification(ia, value.value);
+                      if (
+                        alertService.evaluateIndicatorAlert(ia, value.value)
+                      ) {
+                        const notification = alertService.createNotification(
+                          ia,
+                          value.value,
+                        );
                         alertService.addNotification(notification);
                       }
                     }
                   }
                 } catch (err) {
-                  console.warn("Error evaluating streaming indicator alert:", err);
+                  console.warn(
+                    "Error evaluating streaming indicator alert:",
+                    err,
+                  );
                 }
               });
             } catch (e) {

@@ -1,4 +1,8 @@
-import type { PriceAlert, AlertNotification, IndicatorAlert } from "../types/domain";
+import type {
+  PriceAlert,
+  AlertNotification,
+  IndicatorAlert,
+} from "../types/domain";
 import { AlertCondition, AlertSeverity } from "../types/domain";
 
 type Subscriber = (notifications: AlertNotification[]) => void;
@@ -31,10 +35,14 @@ export const alertService = {
 
     if (!triggered) return false;
 
+    // Use per-alert cooldown if specified, otherwise use default
+    const cooldownMs =
+      (alert.cooldownSeconds ?? DEFAULT_COOLDOWN_MS / 1000) * 1000;
+
     // Hysteresis / de-duplication: don't retrigger if within cooldown
     const last = alertLastTriggered.get(alert.id) || 0;
     const now = Date.now();
-    if (now - last < DEFAULT_COOLDOWN_MS) return false;
+    if (now - last < cooldownMs) return false;
 
     // mark as triggered now
     alertLastTriggered.set(alert.id, now);
@@ -42,7 +50,10 @@ export const alertService = {
   },
 
   // Evaluate indicator-based alerts (e.g., RSIAbove / RSIBelow)
-  evaluateIndicatorAlert(alert: IndicatorAlert, indicatorValue: number): boolean {
+  evaluateIndicatorAlert(
+    alert: IndicatorAlert,
+    indicatorValue: number,
+  ): boolean {
     const triggered = (() => {
       switch (alert.condition) {
         case AlertCondition.RSIAbove:
@@ -56,17 +67,24 @@ export const alertService = {
 
     if (!triggered) return false;
 
+    // Use per-alert cooldown if specified, otherwise use default
+    const cooldownMs =
+      (alert.cooldownSeconds ?? DEFAULT_COOLDOWN_MS / 1000) * 1000;
+
     // Hysteresis / de-duplication: don't retrigger if within cooldown
     const last = alertLastTriggered.get(alert.id) || 0;
     const now = Date.now();
-    if (now - last < DEFAULT_COOLDOWN_MS) return false;
+    if (now - last < cooldownMs) return false;
 
     // mark as triggered now
     alertLastTriggered.set(alert.id, now);
     return true;
   },
 
-  createNotification(alert: PriceAlert, currentPrice: number): AlertNotification {
+  createNotification(
+    alert: PriceAlert,
+    currentPrice: number,
+  ): AlertNotification {
     const notification: AlertNotification = {
       id: generateId(),
       alertId: alert.id,
@@ -135,7 +153,7 @@ export const alertService = {
       } catch (err) {
         // swallow subscriber errors to avoid breaking service
         // callers (tests) won't rely on exceptions here
-        console.warn('Subscriber callback error:', err);
+        console.warn("Subscriber callback error:", err);
       }
     });
   },
