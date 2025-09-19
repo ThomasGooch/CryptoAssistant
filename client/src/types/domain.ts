@@ -294,6 +294,23 @@ export interface AlertNotification {
 }
 
 /**
+ * Real-time alert notification from SignalR
+ * This matches the format sent by AlertNotificationService in the backend
+ */
+export interface SignalRAlertNotification {
+  AlertId: string;
+  UserId: string;
+  Symbol: string;
+  Title: string;
+  Message: string;
+  Threshold: number;
+  Condition: string;
+  TriggerPrice: number;
+  TriggerTime: string;
+  Type: "alert_triggered";
+}
+
+/**
  * Alert system configuration
  */
 export interface AlertConfig {
