@@ -62,3 +62,41 @@ export interface UserPreferencesRequest {
     refreshInterval: number;
   };
 }
+
+/**
+ * Alert API types that match the C# backend models
+ */
+export interface AlertResponse {
+  id: string;
+  userId: string;
+  symbol: string;
+  threshold: number;
+  condition: "Above" | "Below";
+  title: string;
+  message: string;
+  isActive: boolean;
+  isTriggered: boolean;
+  createdAt: string;
+  triggeredAt?: string;
+  triggerPrice?: number;
+  cooldownSeconds?: number;
+}
+
+export interface CreateAlertRequest {
+  userId: string;
+  symbol: string;
+  threshold: number;
+  condition: "Above" | "Below";
+  title: string;
+  message: string;
+  cooldownSeconds?: number;
+}
+
+export interface UpdateAlertRequest {
+  threshold?: number;
+  condition?: "Above" | "Below";
+  title?: string;
+  message?: string;
+  isActive?: boolean;
+  cooldownSeconds?: number;
+}

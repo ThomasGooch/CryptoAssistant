@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { alertManager } from "../../services/alertManagerService";
+import React, { useState, useEffect } from "react";
+import { alertManagerServiceV2 } from "../../services/alertManagerServiceV2";
 import {
   AlertCondition,
   AlertSeverity,
@@ -21,10 +21,29 @@ export const AlertManager: React.FC = () => {
   );
   const [period, setPeriod] = useState<number>(14);
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(30);
-  const [alerts, setAlerts] = useState<(PriceAlert | IndicatorAlert)[]>(
-    alertManager.getAlerts(),
-  );
+  const [alerts, setAlerts] = useState<(PriceAlert | IndicatorAlert)[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load alerts from backend on component mount
+  useEffect(() => {
+    loadAlerts();
+  }, []);
+
+  const loadAlerts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fetchedAlerts = await alertManagerServiceV2.getAlerts();
+      setAlerts(fetchedAlerts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load alerts");
+      console.error("Error loading alerts:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // derived form validity
   const isIndicatorCondition =
@@ -36,46 +55,66 @@ export const AlertManager: React.FC = () => {
     targetValue !== "" &&
     (!isIndicatorCondition || (period > 0 && indicatorType !== undefined));
 
-  const createAlert = () => {
+  const createAlert = async () => {
     if (!canCreate) return;
 
-    const base = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      symbol: symbol.toUpperCase(),
-      condition,
-      targetValue: Number(targetValue),
-      message: message || `${symbol} alert`,
-      severity,
-      status: AlertStatus.Active,
-      createdAt: new Date().toISOString(),
-      cooldownSeconds,
-    } as PriceAlert;
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    let newAlert: PriceAlert | IndicatorAlert = base;
-    if (isIndicatorCondition) {
-      newAlert = {
-        ...base,
-        indicatorType,
-        period,
-      } as IndicatorAlert;
+      const base = {
+        symbol: symbol.toUpperCase(),
+        condition,
+        targetValue: Number(targetValue),
+        message: message || `${symbol} alert`,
+        severity,
+        status: AlertStatus.Active,
+        createdAt: new Date().toISOString(),
+        cooldownSeconds,
+      } as Omit<PriceAlert, "id">;
+
+      let newAlert: Omit<PriceAlert | IndicatorAlert, "id"> = base;
+      if (isIndicatorCondition) {
+        newAlert = {
+          ...base,
+          indicatorType,
+          period,
+        } as Omit<IndicatorAlert, "id">;
+      }
+
+      await alertManagerServiceV2.addAlert(newAlert);
+      await loadAlerts(); // Refresh the list
+      
+      // Clear form
+      setSymbol("");
+      setTargetValue("");
+      setMessage("");
+      setPeriod(14);
+      setCooldownSeconds(30);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create alert");
+      console.error("Error creating alert:", err);
+    } finally {
+      setIsLoading(false);
     }
-
-    alertManager.addAlert(newAlert);
-    setAlerts(alertManager.getAlerts());
-    setSymbol("");
-    setTargetValue("");
-    setMessage("");
-    setPeriod(14);
-    setCooldownSeconds(30);
   };
 
-  const deleteAlert = (id: string) => {
-    alertManager.deleteAlert(id);
-    setAlerts(alertManager.getAlerts());
+  const deleteAlert = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await alertManagerServiceV2.removeAlert(id);
+      await loadAlerts(); // Refresh the list
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete alert");
+      console.error("Error deleting alert:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const startEdit = (id: string) => {
-    const a = alertManager.getAlertById(id);
+    const a = alerts.find(alert => alert.id === id);
     if (!a) return;
     setEditingId(id);
     setSymbol(a.symbol);
@@ -94,29 +133,36 @@ export const AlertManager: React.FC = () => {
     }
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId) return;
-    const patch: Partial<PriceAlert & IndicatorAlert> = {
-      symbol: symbol.toUpperCase(),
-      condition,
-      targetValue: Number(targetValue),
-      message,
-      severity,
-      cooldownSeconds,
-    };
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const patch: Partial<PriceAlert & IndicatorAlert> = {
+        symbol: symbol.toUpperCase(),
+        condition,
+        targetValue: Number(targetValue),
+        message,
+        severity,
+        cooldownSeconds,
+      };
 
-    if (isIndicatorCondition) {
-      (patch as Partial<IndicatorAlert>).indicatorType = indicatorType;
-      (patch as Partial<IndicatorAlert>).period = period;
+      if (isIndicatorCondition) {
+        (patch as Partial<IndicatorAlert>).indicatorType = indicatorType;
+        (patch as Partial<IndicatorAlert>).period = period;
+      }
+
+      await alertManagerServiceV2.updateAlert(editingId, patch);
+      await loadAlerts(); // Refresh the list
+      cancelEdit();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update alert");
+      console.error("Error updating alert:", err);
+    } finally {
+      setIsLoading(false);
     }
-
-    alertManager.updateAlert(editingId, patch);
-    setAlerts(alertManager.getAlerts());
-    setEditingId(null);
-    setSymbol("");
-    setTargetValue("");
-    setMessage("");
-    setCooldownSeconds(30);
   };
 
   const cancelEdit = () => {
@@ -135,6 +181,13 @@ export const AlertManager: React.FC = () => {
           <span className="mr-2">🔔</span>
           {editingId ? "Edit Alert" : "Create New Alert"}
         </h3>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-600 rounded-md">
+            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Symbol Input */}
@@ -299,14 +352,24 @@ export const AlertManager: React.FC = () => {
           )}
           <button
             onClick={editingId ? saveEdit : createAlert}
-            disabled={!canCreate}
+            disabled={!canCreate || isLoading}
             className={`px-6 py-2 rounded-md font-medium transition-colors ${
-              canCreate
+              canCreate && !isLoading
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-gray-400 text-gray-200 cursor-not-allowed"
             }`}
           >
-            {editingId ? "✓ Update Alert" : "+ Create Alert"}
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {editingId ? "Updating..." : "Creating..."}
+              </span>
+            ) : (
+              editingId ? "✓ Update Alert" : "+ Create Alert"
+            )}
           </button>
         </div>
       </div>
@@ -318,7 +381,12 @@ export const AlertManager: React.FC = () => {
           Active Alerts ({alerts.length})
         </h4>
 
-        {alerts.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-4xl mb-2">⏳</div>
+            <p>Loading alerts...</p>
+          </div>
+        ) : alerts.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <div className="text-4xl mb-2">📭</div>
             <p>No alerts created yet. Create your first alert above!</p>
