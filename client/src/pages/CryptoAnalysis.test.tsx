@@ -152,7 +152,11 @@ describe("CryptoAnalysis", () => {
     const user = userEvent.setup();
     render(<CryptoAnalysis />);
 
-    const input = screen.getByLabelText(/Symbol/i);
+    // Find the symbol input in the price section specifically
+    const priceSection = screen.getByText(/Current Price/i).closest('.bg-white');
+    const input = priceSection?.querySelector('input[id="symbol"]') as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+    
     await user.clear(input);
     await user.type(input, "ETH");
 

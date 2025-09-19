@@ -2,8 +2,10 @@ using AkashTrends.Core.Analysis.Indicators;
 using AkashTrends.Core.Cache;
 using AkashTrends.Core.Services;
 using AkashTrends.Infrastructure.Cache;
+using AkashTrends.Infrastructure.Data;
 using AkashTrends.Infrastructure.ExternalApis.Coinbase;
 using AkashTrends.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -54,11 +56,15 @@ public static class DependencyInjection
             return new CachedIndicatorService(indicatorFactory, exchangeService, cacheService, timeProvider, logger);
         });
 
+        // Register SQLite database for alerts
+        services.AddDbContext<AlertDbContext>(options =>
+            options.UseSqlite(configuration.GetConnectionString("DefaultConnection") ?? "Data Source=alerts.db"));
+
         // Register user preferences service (in-memory for demo purposes)
         services.AddSingleton<IUserPreferencesService, InMemoryUserPreferencesService>();
 
-        // Register alert services
-        services.AddSingleton<IAlertService, InMemoryAlertService>();
+        // Register alert services - using SQLite for persistence
+        services.AddScoped<IAlertService, SqliteAlertService>();
         services.AddSingleton<IAlertMonitoringService, AlertMonitoringService>();
 
         return services;

@@ -11,6 +11,7 @@ public class CreateAlertCommand : IQuery<CreateAlertResult>
     public AlertCondition Condition { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public int? CooldownSeconds { get; set; }
 }
 
 public class CreateAlertResult

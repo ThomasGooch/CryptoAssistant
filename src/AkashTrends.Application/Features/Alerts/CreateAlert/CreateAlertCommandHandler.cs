@@ -28,7 +28,8 @@ public class CreateAlertCommandHandler : IQueryHandler<CreateAlertCommand, Creat
                 command.Threshold,
                 command.Condition,
                 command.Title,
-                command.Message);
+                command.Message,
+                command.CooldownSeconds);
 
             _logger.LogInformation("Successfully created alert {AlertId} for user {UserId}", alert.Id, command.UserId);
 

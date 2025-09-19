@@ -13,9 +13,7 @@ export const alertManager = {
 
   getActiveAlertsForSymbol(symbol: string): PriceAlert[] {
     const s = symbol.trim().toUpperCase();
-    return alerts.filter(
-      (a) => a.symbol.toUpperCase() === s && a.status === 0,
-    );
+    return alerts.filter((a) => a.symbol.toUpperCase() === s && a.status === 0);
   },
 
   getAlertById(id: string) {

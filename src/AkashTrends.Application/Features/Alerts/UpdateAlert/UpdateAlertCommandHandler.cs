@@ -65,6 +65,11 @@ public class UpdateAlertCommandHandler : IQueryHandler<UpdateAlertCommand, Updat
                 alert.Reset();
             }
 
+            if (command.CooldownSeconds.HasValue)
+            {
+                alert.UpdateCooldown(command.CooldownSeconds.Value == 0 ? null : command.CooldownSeconds);
+            }
+
             await _alertService.UpdateAlertAsync(alert);
 
             _logger.LogInformation("Successfully updated alert {AlertId}", command.AlertId);

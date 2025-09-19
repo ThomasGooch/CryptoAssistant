@@ -9,17 +9,24 @@ import type { IndicatorAlert } from "../../types/domain";
 
 // Mock streamingIndicatorService to capture subscription callback
 vi.mock("../../services/streamingIndicatorService", () => {
-  let callback: ((v: { value: number; timestamp: string | Date }) => void) | null = null;
+  let callback:
+    | ((v: { value: number; timestamp: string | Date }) => void)
+    | null = null;
   return {
     streamingIndicatorService: {
       initializeIndicator: () => {
         return "sub-key";
       },
-      subscribeToIndicator: (_symbol: string, _type: number, _period: number, cb: (v: { value: number; timestamp: string | Date }) => void) => {
+      subscribeToIndicator: (
+        _symbol: string,
+        _type: number,
+        _period: number,
+        cb: (v: { value: number; timestamp: string | Date }) => void,
+      ) => {
         callback = cb;
         return "sub-key";
       },
-  unsubscribeFromIndicator: () => {},
+      unsubscribeFromIndicator: () => {},
       getCurrentValue: () => null,
       updateIndicator: () => null,
       clearAll: () => {},
@@ -34,7 +41,10 @@ vi.mock("../../services/streamingIndicatorService", () => {
 // Mock cryptoService to avoid real network calls
 vi.mock("../../services/cryptoService", () => ({
   cryptoService: {
-    getCurrentPrice: async () => ({ price: 1, timestamp: new Date().toISOString() }),
+    getCurrentPrice: async () => ({
+      price: 1,
+      timestamp: new Date().toISOString(),
+    }),
     getHistoricalPrices: async () => ({ prices: [] }),
   },
 }));
@@ -81,11 +91,13 @@ describe("LiveCryptoAnalysis streaming indicator alerts integration", () => {
       severity: 1,
       status: 0,
       createdAt: new Date().toISOString(),
-  } as IndicatorAlert;
+    } as IndicatorAlert;
 
     alertManager.addAlert(rsiAlert);
 
-    const imported = (await import("../../services/streamingIndicatorService")) as {
+    const imported = (await import(
+      "../../services/streamingIndicatorService"
+    )) as {
       __triggerStreamingIndicator?: (v: number) => void;
     };
     const { __triggerStreamingIndicator } = imported;

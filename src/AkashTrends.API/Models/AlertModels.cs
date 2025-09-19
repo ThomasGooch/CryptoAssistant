@@ -16,6 +16,7 @@ public class AlertResponse
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? TriggeredAt { get; set; }
     public decimal? TriggeredPrice { get; set; }
+    public int? CooldownSeconds { get; set; }
 }
 
 public class CreateAlertRequest
@@ -26,6 +27,7 @@ public class CreateAlertRequest
     public AlertCondition Condition { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public int? CooldownSeconds { get; set; }
 }
 
 public class UpdateAlertRequest
@@ -35,4 +37,5 @@ public class UpdateAlertRequest
     public decimal? Threshold { get; set; }
     public bool? IsActive { get; set; }
     public bool? Reset { get; set; }
+    public int? CooldownSeconds { get; set; }
 }

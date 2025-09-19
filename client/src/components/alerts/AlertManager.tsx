@@ -20,12 +20,16 @@ export const AlertManager: React.FC = () => {
     IndicatorType.RelativeStrengthIndex,
   );
   const [period, setPeriod] = useState<number>(14);
-  const [alerts, setAlerts] = useState<(PriceAlert | IndicatorAlert)[]>(alertManager.getAlerts());
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(30);
+  const [alerts, setAlerts] = useState<(PriceAlert | IndicatorAlert)[]>(
+    alertManager.getAlerts(),
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // derived form validity
   const isIndicatorCondition =
-    condition === AlertCondition.RSIAbove || condition === AlertCondition.RSIBelow;
+    condition === AlertCondition.RSIAbove ||
+    condition === AlertCondition.RSIBelow;
 
   const canCreate =
     symbol.trim() !== "" &&
@@ -44,9 +48,10 @@ export const AlertManager: React.FC = () => {
       severity,
       status: AlertStatus.Active,
       createdAt: new Date().toISOString(),
-  } as PriceAlert;
+      cooldownSeconds,
+    } as PriceAlert;
 
-  let newAlert: PriceAlert | IndicatorAlert = base;
+    let newAlert: PriceAlert | IndicatorAlert = base;
     if (isIndicatorCondition) {
       newAlert = {
         ...base,
@@ -61,6 +66,7 @@ export const AlertManager: React.FC = () => {
     setTargetValue("");
     setMessage("");
     setPeriod(14);
+    setCooldownSeconds(30);
   };
 
   const deleteAlert = (id: string) => {
@@ -77,6 +83,7 @@ export const AlertManager: React.FC = () => {
     setTargetValue(a.targetValue);
     setMessage(a.message || "");
     setSeverity(a.severity);
+    setCooldownSeconds(a.cooldownSeconds || 30);
     if ((a as unknown as IndicatorAlert).indicatorType !== undefined) {
       const ia = a as unknown as IndicatorAlert;
       setIndicatorType(ia.indicatorType);
@@ -95,6 +102,7 @@ export const AlertManager: React.FC = () => {
       targetValue: Number(targetValue),
       message,
       severity,
+      cooldownSeconds,
     };
 
     if (isIndicatorCondition) {
@@ -108,6 +116,7 @@ export const AlertManager: React.FC = () => {
     setSymbol("");
     setTargetValue("");
     setMessage("");
+    setCooldownSeconds(30);
   };
 
   const cancelEdit = () => {
@@ -115,99 +124,366 @@ export const AlertManager: React.FC = () => {
     setSymbol("");
     setTargetValue("");
     setMessage("");
+    setCooldownSeconds(30);
   };
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-2">Alert Management</h3>
+    <div className="space-y-6">
+      {/* Create Alert Form */}
+      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+          <span className="mr-2">🔔</span>
+          {editingId ? "Edit Alert" : "Create New Alert"}
+        </h3>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        <label>
-          Symbol
-          <input aria-label="symbol" value={symbol} onChange={(e) => setSymbol(e.target.value)} />
-        </label>
-
-        <label>
-          Condition
-          <select aria-label="condition" value={condition} onChange={(e) => setCondition(Number(e.target.value))}>
-            <option value={AlertCondition.PriceAbove}>Price Above</option>
-            <option value={AlertCondition.PriceBelow}>Price Below</option>
-            <option value={AlertCondition.RSIAbove}>RSI Above</option>
-            <option value={AlertCondition.RSIBelow}>RSI Below</option>
-          </select>
-        </label>
-
-        <label>
-          Target Value
-          <input aria-label="target value" value={String(targetValue)} onChange={(e) => setTargetValue(e.target.value === "" ? "" : Number(e.target.value))} />
-        </label>
-
-        {isIndicatorCondition && (
-          <>
-            <label>
-              Indicator
-              <select aria-label="indicator type" value={indicatorType} onChange={(e) => setIndicatorType(Number(e.target.value))}>
-                <option value={IndicatorType.RelativeStrengthIndex}>RSI</option>
-                <option value={IndicatorType.SimpleMovingAverage}>SMA</option>
-                <option value={IndicatorType.ExponentialMovingAverage}>EMA</option>
-              </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Symbol Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Symbol
             </label>
+            <input
+              aria-label="symbol"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="e.g., BTC"
+            />
+          </div>
 
-            <label>
-              Period
-              <input aria-label="period" type="number" value={period} onChange={(e) => setPeriod(Math.max(1, Number(e.target.value)))} />
+          {/* Condition Select */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Condition
             </label>
-          </>
-        )}
+            <select
+              aria-label="condition"
+              value={condition}
+              onChange={(e) => setCondition(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+            >
+              <option value={AlertCondition.PriceAbove}>Price Above</option>
+              <option value={AlertCondition.PriceBelow}>Price Below</option>
+              <option value={AlertCondition.RSIAbove}>RSI Above</option>
+              <option value={AlertCondition.RSIBelow}>RSI Below</option>
+            </select>
+          </div>
 
-        <label>
-          Severity
-          <select aria-label="severity" value={severity} onChange={(e) => setSeverity(Number(e.target.value))}>
-            <option value={AlertSeverity.Info}>Info</option>
-            <option value={AlertSeverity.Warning}>Warning</option>
-            <option value={AlertSeverity.Critical}>Critical</option>
-          </select>
-        </label>
+          {/* Target Value */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Target Value
+            </label>
+            <input
+              aria-label="target value"
+              type="number"
+              step="0.01"
+              value={String(targetValue)}
+              onChange={(e) =>
+                setTargetValue(
+                  e.target.value === "" ? "" : Number(e.target.value),
+                )
+              }
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="0.00"
+            />
+          </div>
 
-        <label className="col-span-2">
-          Message
-          <input aria-label="message" value={message} onChange={(e) => setMessage(e.target.value)} />
-        </label>
+          {/* Indicator-specific fields */}
+          {isIndicatorCondition && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Indicator Type
+                </label>
+                <select
+                  aria-label="indicator type"
+                  value={indicatorType}
+                  onChange={(e) => setIndicatorType(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+                >
+                  <option value={IndicatorType.RelativeStrengthIndex}>
+                    RSI
+                  </option>
+                  <option value={IndicatorType.SimpleMovingAverage}>SMA</option>
+                  <option value={IndicatorType.ExponentialMovingAverage}>
+                    EMA
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Period
+                </label>
+                <input
+                  aria-label="period"
+                  type="number"
+                  min="1"
+                  value={period}
+                  onChange={(e) =>
+                    setPeriod(Math.max(1, Number(e.target.value)))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Severity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Severity
+            </label>
+            <select
+              aria-label="severity"
+              value={severity}
+              onChange={(e) => setSeverity(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+            >
+              <option value={AlertSeverity.Info}>ℹ️ Info</option>
+              <option value={AlertSeverity.Warning}>⚠️ Warning</option>
+              <option value={AlertSeverity.Critical}>🚨 Critical</option>
+            </select>
+          </div>
+
+          {/* Cooldown - Highlighted as the new feature */}
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+              <span className="mr-1">⏱️</span>
+              Cooldown (seconds)
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                NEW
+              </span>
+            </label>
+            <input
+              aria-label="cooldown seconds"
+              type="number"
+              min="0"
+              value={cooldownSeconds}
+              onChange={(e) =>
+                setCooldownSeconds(Math.max(0, Number(e.target.value)))
+              }
+              className="w-full px-3 py-2 border-2 border-blue-300 dark:border-blue-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="30"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Time between alert notifications
+            </p>
+          </div>
+
+          {/* Message */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Message
+            </label>
+            <input
+              aria-label="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-200"
+              placeholder="Optional custom message"
+            />
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end mt-6 space-x-3">
+          {editingId && (
+            <button
+              onClick={cancelEdit}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            onClick={editingId ? saveEdit : createAlert}
+            disabled={!canCreate}
+            className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              canCreate
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-gray-400 text-gray-200 cursor-not-allowed"
+            }`}
+          >
+            {editingId ? "✓ Update Alert" : "+ Create Alert"}
+          </button>
+        </div>
       </div>
 
-      <button onClick={createAlert} className="btn" aria-label="create alert" disabled={!canCreate}>Create Alert</button>
-      {editingId && (
-        <div className="mt-2">
-          <button onClick={saveEdit} aria-label="save" className="btn">Save</button>
-          <button onClick={cancelEdit} aria-label="cancel" className="btn ml-2">Cancel</button>
-        </div>
-      )}
+      {/* Active Alerts List */}
+      <div>
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+          <span className="mr-2">📋</span>
+          Active Alerts ({alerts.length})
+        </h4>
 
-      <div className="mt-4">
-        <h4 className="font-medium">Active Alerts</h4>
-        <ul>
-          {alerts.map((a) => (
-            <li key={a.id} className="flex items-center justify-between">
-              <div>
-                <span className="font-medium">{a.symbol}</span>
-                <div className="text-sm opacity-80">{a.message}</div>
-                {/* Show indicator details when present */}
-                {((a as unknown) as IndicatorAlert).indicatorType !== undefined && (
-                  <div className="text-xs text-gray-500">
-                    {(() => {
-                      const ia = a as IndicatorAlert;
-                      return `Indicator: ${IndicatorType[ia.indicatorType]} | Period: ${ia.period} | Target: ${ia.targetValue}`;
-                    })()}
+        {alerts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-4xl mb-2">📭</div>
+            <p>No alerts created yet. Create your first alert above!</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {alerts.map((a) => {
+              const isIndicator =
+                (a as unknown as IndicatorAlert).indicatorType !== undefined;
+              const indicator = isIndicator ? (a as IndicatorAlert) : null;
+
+              const severityColors = {
+                [AlertSeverity.Info]:
+                  "border-blue-300 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 dark:border-blue-600",
+                [AlertSeverity.Warning]:
+                  "border-yellow-300 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 dark:border-yellow-600",
+                [AlertSeverity.Critical]:
+                  "border-red-300 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 dark:border-red-600",
+              };
+
+              const severityIcons = {
+                [AlertSeverity.Info]: "ℹ️",
+                [AlertSeverity.Warning]: "⚠️",
+                [AlertSeverity.Critical]: "🚨",
+              };
+
+              return (
+                <div
+                  key={a.id}
+                  className={`p-8 rounded-2xl border-2 ${severityColors[a.severity]} shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform`}
+                >
+                  {/* Header with symbol, severity, and actions */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-4 py-3 rounded-xl shadow-md border border-gray-200 dark:border-gray-600">
+                        {a.symbol}
+                      </div>
+                      <div
+                        className="text-3xl drop-shadow-sm"
+                        title={`${AlertSeverity[a.severity]} Alert`}
+                      >
+                        {severityIcons[a.severity]}
+                      </div>
+                      <div className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-semibold border border-gray-300 dark:border-gray-600">
+                        {AlertCondition[a.condition]
+                          .replace(/([A-Z])/g, " $1")
+                          .trim()}
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => startEdit(a.id)}
+                        className="p-4 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl transition-all hover:scale-110 shadow-sm hover:shadow-md border border-transparent hover:border-blue-200"
+                        title="Edit Alert"
+                        aria-label="Edit Alert"
+                      >
+                        <span className="text-xl">✏️</span>
+                      </button>
+                      <button
+                        onClick={() => deleteAlert(a.id)}
+                        className="p-4 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-xl transition-all hover:scale-110 shadow-sm hover:shadow-md border border-transparent hover:border-red-200"
+                        title="Delete Alert"
+                        aria-label="Delete Alert"
+                      >
+                        <span className="text-xl">🗑️</span>
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div>
-                <button aria-label="edit alert" onClick={() => startEdit(a.id)}>Edit</button>
-                <button aria-label="delete alert" onClick={() => deleteAlert(a.id)}>Delete</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+
+                  {/* Message */}
+                  <div className="mb-6 p-4 bg-white/60 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed italic font-medium">
+                      "{a.message || `${a.symbol} alert`}"
+                    </p>
+                  </div>
+
+                  {/* Alert Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    {/* Target Value */}
+                    <div className="text-center p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 font-semibold">
+                        Target Value
+                      </div>
+                      <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1">
+                        ${a.targetValue.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500">
+                        {AlertCondition[a.condition].includes("Above")
+                          ? "Trigger when above"
+                          : "Trigger when below"}
+                      </div>
+                    </div>
+
+                    {/* Indicator Details (if applicable) */}
+                    {indicator && (
+                      <>
+                        <div className="text-center p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 font-semibold">
+                            Indicator
+                          </div>
+                          <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1">
+                            {IndicatorType[indicator.indicatorType]}
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500">
+                            Technical indicator
+                          </div>
+                        </div>
+                        <div className="text-center p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 font-semibold">
+                            Period
+                          </div>
+                          <div className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-1">
+                            {indicator.period}
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500">
+                            Time periods
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Cooldown - Highlighted */}
+                    <div
+                      className={`text-center p-5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl shadow-sm border-2 border-blue-300 dark:border-blue-600 hover:shadow-md transition-all ${!indicator ? "md:col-span-2 lg:col-span-1" : ""}`}
+                    >
+                      <div className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 font-semibold flex items-center justify-center">
+                        <span className="mr-1">⏱️</span>
+                        Cooldown
+                      </div>
+                      <div className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+                        {a.cooldownSeconds || 30}s
+                      </div>
+                      <div className="text-xs text-blue-500 dark:text-blue-400">
+                        Between notifications
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status and Timestamps */}
+                  <div className="pt-4 border-t-2 border-gray-200 dark:border-gray-600">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          Active & Monitoring
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                        Created:{" "}
+                        {new Date(a.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

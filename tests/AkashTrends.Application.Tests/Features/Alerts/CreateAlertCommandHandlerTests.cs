@@ -40,7 +40,7 @@ public class CreateAlertCommandHandlerTests
 
         _mockAlertService
             .Setup(x => x.CreateAlertAsync(command.UserId, command.Symbol, command.Threshold,
-                command.Condition, command.Title, command.Message))
+                command.Condition, command.Title, command.Message, null))
             .ReturnsAsync(expectedAlert);
 
         // Act
@@ -60,7 +60,7 @@ public class CreateAlertCommandHandlerTests
 
         _mockAlertService.Verify(x => x.CreateAlertAsync(
             command.UserId, command.Symbol, command.Threshold,
-            command.Condition, command.Title, command.Message), Times.Once);
+            command.Condition, command.Title, command.Message, null), Times.Once);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class CreateAlertCommandHandlerTests
         var expectedException = new ArgumentException("Invalid symbol");
         _mockAlertService
             .Setup(x => x.CreateAlertAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
-                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>()))
+                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()))
             .ThrowsAsync(expectedException);
 
         // Act
@@ -112,7 +112,7 @@ public class CreateAlertCommandHandlerTests
 
         _mockAlertService
             .Setup(x => x.CreateAlertAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
-                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>()))
+                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()))
             .ReturnsAsync(alert);
 
         // Act
@@ -155,7 +155,7 @@ public class CreateAlertCommandHandlerTests
         var expectedException = new InvalidOperationException("Database error");
         _mockAlertService
             .Setup(x => x.CreateAlertAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(),
-                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>()))
+                It.IsAny<AlertCondition>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()))
             .ThrowsAsync(expectedException);
 
         // Act

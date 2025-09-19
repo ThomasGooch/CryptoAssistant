@@ -32,7 +32,10 @@ vi.mock("../../hooks/useSignalR", () => {
 // Mock cryptoService to avoid real network calls
 vi.mock("../../services/cryptoService", () => ({
   cryptoService: {
-    getCurrentPrice: async () => ({ price: 1, timestamp: new Date().toISOString() }),
+    getCurrentPrice: async () => ({
+      price: 1,
+      timestamp: new Date().toISOString(),
+    }),
     getHistoricalPrices: async () => ({ prices: [] }),
   },
 }));

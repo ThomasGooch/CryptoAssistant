@@ -15,15 +15,23 @@ describe("AlertManager", () => {
     expect(screen.getByLabelText(/symbol/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/condition/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/target value/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /create alert/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create alert/i }),
+    ).toBeInTheDocument();
   });
 
   it("creates a new alert and shows it in the list", () => {
     render(<AlertManager />);
 
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "BTC" } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "50000" } });
-    fireEvent.change(screen.getByLabelText(/message/i), { target: { value: "Test alert" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "BTC" },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "50000" },
+    });
+    fireEvent.change(screen.getByLabelText(/message/i), {
+      target: { value: "Test alert" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /create alert/i }));
 
     expect(screen.getByText(/BTC/)).toBeInTheDocument();
@@ -33,29 +41,45 @@ describe("AlertManager", () => {
   it("creates an RSI indicator alert and shows indicator details", () => {
     render(<AlertManager />);
 
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "BTC" } });
-    fireEvent.change(screen.getByLabelText(/condition/i), { target: { value: String(AlertCondition.RSIAbove) } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "70" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "BTC" },
+    });
+    fireEvent.change(screen.getByLabelText(/condition/i), {
+      target: { value: String(AlertCondition.RSIAbove) },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "70" },
+    });
     // period and indicator inputs appear when RSI condition is selected
     const indicatorSelect = screen.getByLabelText(/indicator type|indicator/i);
     expect(indicatorSelect).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/period/i), { target: { value: "14" } });
+    fireEvent.change(screen.getByLabelText(/period/i), {
+      target: { value: "14" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /create alert/i }));
 
-  expect(screen.getByText(/^BTC$/)).toBeInTheDocument();
-  expect(screen.getByText(/70/)).toBeInTheDocument();
-  expect(screen.getByText(/RelativeStrengthIndex/)).toBeInTheDocument();
+    expect(screen.getByText(/^BTC$/)).toBeInTheDocument();
+    expect(screen.getByText(/70/)).toBeInTheDocument();
+    expect(screen.getByText(/RelativeStrengthIndex/)).toBeInTheDocument();
   });
 
   it("edits an existing indicator alert and updates period", () => {
     render(<AlertManager />);
 
     // create RSI alert
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "BTC" } });
-    fireEvent.change(screen.getByLabelText(/condition/i), { target: { value: String(AlertCondition.RSIAbove) } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "70" } });
-    fireEvent.change(screen.getByLabelText(/period/i), { target: { value: "14" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "BTC" },
+    });
+    fireEvent.change(screen.getByLabelText(/condition/i), {
+      target: { value: String(AlertCondition.RSIAbove) },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "70" },
+    });
+    fireEvent.change(screen.getByLabelText(/period/i), {
+      target: { value: "14" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /create alert/i }));
 
     // edit
@@ -64,19 +88,25 @@ describe("AlertManager", () => {
 
     const periodInput = screen.getByLabelText(/period/i);
     fireEvent.change(periodInput, { target: { value: "7" } });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /update alert/i }));
 
-  // The list should reflect updated period (label or value may be present)
-  expect(screen.getByText(/^BTC$/)).toBeInTheDocument();
-    expect(screen.getByText(/7/)).toBeInTheDocument();
+    // The list should reflect updated period (label or value may be present)
+    expect(screen.getByText(/^BTC$/)).toBeInTheDocument();
+    // Check that the period input field now has value 7
+    const periodInputAfterEdit = screen.getByLabelText(/period/i);
+    expect(periodInputAfterEdit).toHaveValue(7);
   });
 
   it("allows dismissing (deleting) an alert", () => {
     render(<AlertManager />);
 
     // create
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "ETH" } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "3000" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "ETH" },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "3000" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /create alert/i }));
 
     const deleteButton = screen.getByRole("button", { name: /delete alert/i });
@@ -90,9 +120,15 @@ describe("AlertManager", () => {
     render(<AlertManager />);
 
     // create
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "ADA" } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "1.23" } });
-    fireEvent.change(screen.getByLabelText(/message/i), { target: { value: "Initial message" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "ADA" },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "1.23" },
+    });
+    fireEvent.change(screen.getByLabelText(/message/i), {
+      target: { value: "Initial message" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /create alert/i }));
 
     // click edit
@@ -101,7 +137,7 @@ describe("AlertManager", () => {
 
     const messageInput = screen.getByLabelText(/message/i);
     fireEvent.change(messageInput, { target: { value: "Updated message" } });
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    fireEvent.click(screen.getByRole("button", { name: /update alert/i }));
 
     expect(screen.getByText(/Updated message/)).toBeInTheDocument();
   });
@@ -111,8 +147,12 @@ describe("AlertManager", () => {
     const createBtn = screen.getByRole("button", { name: /create alert/i });
     expect(createBtn).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: "BTC" } });
-    fireEvent.change(screen.getByLabelText(/target value/i), { target: { value: "45000" } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), {
+      target: { value: "BTC" },
+    });
+    fireEvent.change(screen.getByLabelText(/target value/i), {
+      target: { value: "45000" },
+    });
     expect(createBtn).not.toBeDisabled();
   });
 });

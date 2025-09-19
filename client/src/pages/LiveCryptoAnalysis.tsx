@@ -226,7 +226,10 @@ export function LiveCryptoAnalysis() {
             if (ia && ia.indicatorType !== undefined) {
               if (ia.condition === 2 || ia.condition === 3) {
                 if (alertService.evaluateIndicatorAlert(ia, value)) {
-                  const notification = alertService.createNotification(ia, value);
+                  const notification = alertService.createNotification(
+                    ia,
+                    value,
+                  );
                   alertService.addNotification(notification);
                 }
               }
